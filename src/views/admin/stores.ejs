@@ -1,0 +1,23 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>Stores</h1><a class="btn" href="/admin/stores/new">+ New Store</a></div>
+<div class="panel">
+  <table>
+    <thead><tr><th>Store</th><th>Category</th><th>Affiliate</th><th>Deals</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% stores.forEach(s => { %>
+        <tr>
+          <td><span class="dot" style="background:<%= s.color %>"></span> <b><%= s.name %></b> <small class="muted">/store/<%= s.slug %></small></td>
+          <td><%= s.category %></td>
+          <td><%= s.affiliate_type %></td>
+          <td><%= s.deal_count %></td>
+          <td><span class="pill <%= s.is_active ? 'ok' : 'off' %>"><%= s.is_active ? 'live' : 'off' %></span></td>
+          <td class="row-actions">
+            <a class="lnk" href="/admin/stores/<%= s.id %>/edit">Edit</a>
+            <form method="post" action="/admin/stores/<%= s.id %>/delete" onsubmit="return confirm('Hide store AND its deals?')"><button class="lnk danger">Hide</button></form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('_bottom') %>

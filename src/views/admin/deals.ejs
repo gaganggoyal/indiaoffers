@@ -1,0 +1,25 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>Deals</h1><a class="btn" href="/admin/deals/new">+ New Deal</a></div>
+<div class="panel">
+  <table>
+    <thead><tr><th>Deal</th><th>Store</th><th>Price</th><th>Badge</th><th>Clicks</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% deals.forEach(d => { %>
+        <tr>
+          <td><b><%= d.title %></b><br><small class="muted">/deal/<%= d.slug %></small></td>
+          <td><%= d.store_name %></td>
+          <td><%= d.price != null ? '₹' + Number(d.price).toLocaleString('en-IN') : '—' %>
+              <% if (d.mrp) { %><small class="muted"><s>₹<%= Number(d.mrp).toLocaleString('en-IN') %></s></small><% } %></td>
+          <td><%= d.badge || '—' %></td>
+          <td><%= d.clicks %></td>
+          <td><span class="pill <%= d.is_active ? 'ok' : 'off' %>"><%= d.is_active ? 'live' : 'hidden' %></span></td>
+          <td class="row-actions">
+            <a class="lnk" href="/admin/deals/<%= d.id %>/edit">Edit</a>
+            <form method="post" action="/admin/deals/<%= d.id %>/delete" onsubmit="return confirm('Hide this deal?')"><button class="lnk danger">Hide</button></form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('_bottom') %>

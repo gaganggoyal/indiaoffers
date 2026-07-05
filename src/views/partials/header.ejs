@@ -1,0 +1,19 @@
+<div class="topbar">💡 Every deal shows its <b>true price</b> — product discount + card offer + coupon, stacked.</div>
+<header class="header">
+  <div class="header-in">
+    <a class="brand" href="/">
+      <img src="/img/logo-icon.svg" alt="IndiaOffers logo" width="34" height="34">
+      <span>India<em>Offers</em>.in</span>
+    </a>
+    <form class="search" action="/search" method="get" role="search">
+      <input type="search" name="q" placeholder="Search deals, products, stores…" autocomplete="off">
+      <button type="submit" aria-label="Search">🔍</button>
+    </form>
+    <nav class="nav">
+      <a href="/deals" class="<%= path.startsWith('/deals') || path.startsWith('/deal/') ? 'on' : '' %>">Deals</a>
+      <a href="/bank-offers" class="<%= path.startsWith('/bank-offers') ? 'on' : '' %>">Card Offers</a>
+      <a href="/stores" class="<%= path.startsWith('/store') ? 'on' : '' %>">Stores</a>
+    </nav>
+  </div>
+</header>
+<main>

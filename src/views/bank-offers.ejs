@@ -1,0 +1,42 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <div class="page-head">
+    <h1><%= activeBank ? `${activeBank} Offers This Week` : 'Bank & Card Offers This Week' %></h1>
+    <p>Every live card, UPI and EMI offer across India's top stores — so you always pay with the right instrument.</p>
+  </div>
+
+  <div class="filters">
+    <a class="f <%= !activeBank ? 'on' : '' %>" href="/bank-offers">All banks</a>
+    <% banks.forEach(b => { %>
+      <a class="f <%= activeBank === b ? 'on' : '' %>" href="/bank-offers?bank=<%= encodeURIComponent(b) %>"><%= b %></a>
+    <% }) %>
+  </div>
+
+  <div class="offer-grid">
+    <% offers.forEach(o => { const st = o.store_id ? storeMap[o.store_id] : null; %>
+      <div class="offer-big">
+        <div class="ob-top">
+          <span class="ob-bank"><%= o.bank %></span>
+          <span class="ob-inst"><%= o.instrument.toUpperCase() %></span>
+        </div>
+        <h3><%= o.title %></h3>
+        <div class="ob-facts">
+          <span><%= o.discount_type === 'flat' ? `Flat ${fmt(o.discount_value)} off` : `${o.discount_value}% off` %></span>
+          <% if (o.max_discount) { %><span>max <%= fmt(o.max_discount) %></span><% } %>
+          <% if (o.min_order) { %><span>min order <%= fmt(o.min_order) %></span><% } %>
+          <% if (o.promo_code) { %><span>code <b><%= o.promo_code %></b></span><% } %>
+        </div>
+        <div class="ob-foot">
+          <span><%= st ? '🏪 ' + st.name : '🌐 All stores' %></span>
+          <span>valid till <%= o.valid_till ? String(o.valid_till).slice(0,10) : '—' %></span>
+        </div>
+        <% if (st) { %><a class="ob-link" href="/store/<%= st.slug %>">See <%= st.name %> deals it applies to →</a>
+        <% } else { %><a class="ob-link" href="/deals">Browse deals →</a><% } %>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

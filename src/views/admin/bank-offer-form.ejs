@@ -1,0 +1,37 @@
+<%- include('_top') %>
+<div class="page-bar"><h1><%= offer ? 'Edit Bank Offer' : 'New Bank Offer' %></h1><a class="lnk" href="/admin/bank-offers">← Back</a></div>
+<form class="panel form" method="post" action="/admin/bank-offers/save">
+  <% if (offer) { %><input type="hidden" name="id" value="<%= offer.id %>"><% } %>
+  <label class="full">Title *<input name="title" required value="<%= offer ? offer.title : '' %>" placeholder="10% instant discount on Amazon with HDFC cards"></label>
+  <label>Bank *<input name="bank" required value="<%= offer ? offer.bank : '' %>" placeholder="HDFC Bank"></label>
+  <label>Instrument
+    <select name="instrument">
+      <% ['credit','debit','upi','netbanking','emi','any'].forEach(i => { %>
+        <option value="<%= i %>" <%= offer && offer.instrument === i ? 'selected' : '' %>><%= i %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label>Discount type
+    <select name="discount_type">
+      <option value="percent" <%= offer && offer.discount_type === 'percent' ? 'selected' : '' %>>percent (%)</option>
+      <option value="flat" <%= offer && offer.discount_type === 'flat' ? 'selected' : '' %>>flat (₹)</option>
+    </select>
+  </label>
+  <label>Value *<input type="number" step="0.01" name="discount_value" required value="<%= offer ? offer.discount_value : '' %>"></label>
+  <label>Max discount cap (₹, blank = none)<input type="number" step="0.01" name="max_discount" value="<%= offer && offer.max_discount != null ? offer.max_discount : '' %>"></label>
+  <label>Min order (₹)<input type="number" step="0.01" name="min_order" value="<%= offer ? offer.min_order : 0 %>"></label>
+  <label>Store (blank = all stores)
+    <select name="store_id">
+      <option value="">— all stores —</option>
+      <% stores.forEach(s => { %><option value="<%= s.id %>" <%= offer && offer.store_id === s.id ? 'selected' : '' %>><%= s.name %></option><% }) %>
+    </select>
+  </label>
+  <label>Promo code<input name="promo_code" value="<%= offer ? (offer.promo_code || '') : '' %>"></label>
+  <label>Valid from<input type="date" name="valid_from" value="<%= offer && offer.valid_from ? String(offer.valid_from).slice(0,10) : '' %>"></label>
+  <label>Valid till<input type="date" name="valid_till" value="<%= offer && offer.valid_till ? String(offer.valid_till).slice(0,10) : '' %>"></label>
+  <label class="full">Source URL (bank T&C page)<input name="source_url" value="<%= offer ? (offer.source_url || '') : '' %>"></label>
+  <label class="full">Description<textarea name="description" rows="2"><%= offer ? (offer.description || '') : '' %></textarea></label>
+  <label class="check"><input type="checkbox" name="is_active" <%= !offer || offer.is_active ? 'checked' : '' %>> Live</label>
+  <button class="btn" type="submit"><%= offer ? 'Save changes' : 'Create offer' %></button>
+</form>
+<%- include('_bottom') %>

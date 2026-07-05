@@ -1,0 +1,32 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <div class="page-head">
+    <h1><%= active.q ? `Deals matching “${active.q}”` : active.category ? `${active.category.charAt(0).toUpperCase() + active.category.slice(1)} Deals` : "Today's Best Deals" %></h1>
+    <p>Every card shows the true price after stacking the best applicable bank offer.</p>
+  </div>
+
+  <div class="filters">
+    <a class="f <%= !active.category ? 'on' : '' %>" href="/deals">All</a>
+    <% categories.forEach(c => { %>
+      <a class="f <%= active.category === c ? 'on' : '' %>" href="/deals?category=<%= c %>"><%= catIcons[c] %> <%= c.charAt(0).toUpperCase() + c.slice(1) %></a>
+    <% }) %>
+    <span class="f-spacer"></span>
+    <% const qs = p => { const u = new URLSearchParams(); if (active.category) u.set('category', active.category); if (active.q) u.set('q', active.q); u.set('sort', p); return '/deals?' + u.toString(); } %>
+    <a class="f <%= active.sort === 'latest' ? 'on' : '' %>" href="<%= qs('latest') %>">Latest</a>
+    <a class="f <%= active.sort === 'discount' ? 'on' : '' %>" href="<%= qs('discount') %>">Biggest saving</a>
+    <a class="f <%= active.sort === 'price' ? 'on' : '' %>" href="<%= qs('price') %>">Price ↑</a>
+    <a class="f <%= active.sort === 'popular' ? 'on' : '' %>" href="<%= qs('popular') %>">Popular</a>
+  </div>
+
+  <% if (deals.length === 0) { %>
+    <div class="empty">No deals found<%= active.q ? ` for “${active.q}”` : '' %>. <a href="/deals">See all deals</a></div>
+  <% } else { %>
+    <div class="grid">
+      <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>

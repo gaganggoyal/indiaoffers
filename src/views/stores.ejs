@@ -1,0 +1,22 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <div class="page-head">
+    <h1>All Stores</h1>
+    <p>Deals, working coupons and this week's card offers — per store.</p>
+  </div>
+
+  <div class="store-grid">
+    <% stores.forEach(s => { %>
+      <a class="store-card" href="/store/<%= s.slug %>">
+        <span class="sc-logo" style="background:<%= s.color %>"><%= s.name.charAt(0) %></span>
+        <b><%= s.name %></b>
+        <small><%= s.deal_count %> live deal<%= s.deal_count == 1 ? '' : 's' %></small>
+        <% if (s.cashback_text) { %><span class="sc-cb"><%= s.cashback_text %></span><% } %>
+      </a>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

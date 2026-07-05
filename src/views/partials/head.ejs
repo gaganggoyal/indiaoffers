@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= title %></title>
+<% if (meta && meta.description) { %><meta name="description" content="<%= meta.description %>"><% } %>
+<link rel="canonical" href="<%= siteUrl %><%= path %>">
+<meta property="og:site_name" content="<%= siteName %>">
+<meta property="og:title" content="<%= title %>">
+<% if (meta && meta.description) { %><meta property="og:description" content="<%= meta.description %>"><% } %>
+<meta property="og:url" content="<%= siteUrl %><%= path %>">
+<meta property="og:image" content="<%= (meta && meta.image) || (siteUrl + '/og-image.jpg') %>">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="/img/logo-icon.svg">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<% if (meta && meta.jsonld) { %><script type="application/ld+json"><%- JSON.stringify(meta.jsonld) %></script><% } %>
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>

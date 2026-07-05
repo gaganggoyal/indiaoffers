@@ -1,0 +1,23 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>Homepage Banners</h1><a class="btn" href="/admin/banners/new">+ New Banner</a></div>
+<div class="panel">
+  <table>
+    <thead><tr><th>Preview</th><th>Title</th><th>Link</th><th>Sort</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% banners.forEach(b => { %>
+        <tr>
+          <td><div class="thumb" style="<%= b.image_url ? `background-image:url('${b.image_url}')` : `background:${b.bg_color}` %>"></div></td>
+          <td><b><%= b.title %></b><br><small class="muted"><%= b.subtitle || '' %></small></td>
+          <td><small class="mono"><%= b.link_url || '—' %></small></td>
+          <td><%= b.sort_order %></td>
+          <td><span class="pill <%= b.is_active ? 'ok' : 'off' %>"><%= b.is_active ? 'live' : 'off' %></span></td>
+          <td class="row-actions">
+            <a class="lnk" href="/admin/banners/<%= b.id %>/edit">Edit</a>
+            <form method="post" action="/admin/banners/<%= b.id %>/delete" onsubmit="return confirm('Delete banner?')"><button class="lnk danger">Delete</button></form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('_bottom') %>

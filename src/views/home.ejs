@@ -1,0 +1,65 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<!-- Hero banners -->
+<section class="wrap">
+  <div class="banner-row">
+    <% banners.forEach(b => { %>
+      <a class="banner" href="<%= b.link_url || '/deals' %>"
+         style="<%= b.image_url ? `background-image:url('${b.image_url}')` : `background:linear-gradient(120deg, ${b.bg_color}, #111827)` %>">
+        <% if (b.image_url) { %><div class="banner-shade"></div><% } %>
+        <div class="banner-txt">
+          <h2><%= b.title %></h2>
+          <p><%= b.subtitle %></p>
+          <span class="banner-cta">Explore →</span>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+</section>
+
+<!-- How the stack works -->
+<section class="wrap">
+  <div class="stackline">
+    <span class="sl-item">🏷️ Product discount</span><span class="sl-plus">+</span>
+    <span class="sl-item">💳 Your card's offer</span><span class="sl-plus">+</span>
+    <span class="sl-item">🎟️ Coupon code</span><span class="sl-eq">=</span>
+    <span class="sl-item sl-final">✅ The true price</span>
+  </div>
+</section>
+
+<!-- Categories -->
+<section class="wrap">
+  <div class="cat-row">
+    <% categories.forEach(c => { %>
+      <a class="cat" href="/deals?category=<%= c %>"><span><%= catIcons[c] %></span><%= c.charAt(0).toUpperCase() + c.slice(1) %></a>
+    <% }) %>
+  </div>
+</section>
+
+<!-- Card offers strip -->
+<section class="wrap">
+  <div class="sec-head"><h2>💳 This Week's Card Offers</h2><a href="/bank-offers">All bank offers →</a></div>
+  <div class="offer-row">
+    <% topOffers.forEach(o => { const st = o.store_id ? storeMap[o.store_id] : null; %>
+      <a class="offer-card" href="/bank-offers?bank=<%= encodeURIComponent(o.bank) %>">
+        <div class="oc-bank"><%= o.bank %> <span><%= o.instrument.toUpperCase() %></span></div>
+        <div class="oc-title"><%= o.title %></div>
+        <div class="oc-meta">
+          <%= st ? 'On ' + st.name : 'On all stores' %>
+          <% if (o.max_discount) { %> · save up to <%= fmt(o.max_discount) %><% } %>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+</section>
+
+<!-- Deals grid -->
+<section class="wrap">
+  <div class="sec-head"><h2>🔥 Today's Best Deals</h2><a href="/deals">All deals →</a></div>
+  <div class="grid">
+    <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

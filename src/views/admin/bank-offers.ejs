@@ -1,0 +1,24 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>Bank Offers</h1><a class="btn" href="/admin/bank-offers/new">+ New Offer</a></div>
+<div class="panel">
+  <table>
+    <thead><tr><th>Offer</th><th>Bank</th><th>Discount</th><th>Store</th><th>Valid till</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% offers.forEach(o => { %>
+        <tr>
+          <td><b><%= o.title %></b></td>
+          <td><%= o.bank %> <small class="muted"><%= o.instrument %></small></td>
+          <td><%= o.discount_type === 'flat' ? '₹' + o.discount_value : o.discount_value + '%' %><% if (o.max_discount) { %> <small class="muted">cap ₹<%= o.max_discount %></small><% } %></td>
+          <td><%= o.store_name || 'All stores' %></td>
+          <td><%= o.valid_till ? String(o.valid_till).slice(0,10) : '—' %></td>
+          <td><span class="pill <%= o.is_active ? 'ok' : 'off' %>"><%= o.is_active ? 'live' : 'off' %></span></td>
+          <td class="row-actions">
+            <a class="lnk" href="/admin/bank-offers/<%= o.id %>/edit">Edit</a>
+            <form method="post" action="/admin/bank-offers/<%= o.id %>/delete" onsubmit="return confirm('Deactivate this offer?')"><button class="lnk danger">Off</button></form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('_bottom') %>

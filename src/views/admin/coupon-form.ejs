@@ -1,0 +1,20 @@
+<%- include('_top') %>
+<div class="page-bar"><h1><%= coupon ? 'Edit Coupon' : 'New Coupon' %></h1><a class="lnk" href="/admin/coupons">← Back</a></div>
+<form class="panel form" method="post" action="/admin/coupons/save">
+  <% if (coupon) { %><input type="hidden" name="id" value="<%= coupon.id %>"><% } %>
+  <label class="full">Title *<input name="title" required value="<%= coupon ? coupon.title : '' %>" placeholder="Flat ₹200 OFF above ₹1,499"></label>
+  <label>Store *
+    <select name="store_id" required>
+      <% stores.forEach(s => { %><option value="<%= s.id %>" <%= coupon && coupon.store_id === s.id ? 'selected' : '' %>><%= s.name %></option><% }) %>
+    </select>
+  </label>
+  <label>Code *<input name="code" required value="<%= coupon ? coupon.code : '' %>"></label>
+  <label>Discount text<input name="discount_text" value="<%= coupon ? (coupon.discount_text || '') : '' %>" placeholder="Flat ₹200 OFF"></label>
+  <label>Min order (₹)<input type="number" step="0.01" name="min_order" value="<%= coupon ? coupon.min_order : 0 %>"></label>
+  <label>Expiry<input type="date" name="expiry_date" value="<%= coupon && coupon.expiry_date ? String(coupon.expiry_date).slice(0,10) : '' %>"></label>
+  <label class="full">Description<textarea name="description" rows="2"><%= coupon ? (coupon.description || '') : '' %></textarea></label>
+  <label class="check"><input type="checkbox" name="is_verified" <%= coupon && coupon.is_verified ? 'checked' : '' %>> Verified (tested & working)</label>
+  <label class="check"><input type="checkbox" name="is_active" <%= !coupon || coupon.is_active ? 'checked' : '' %>> Live</label>
+  <button class="btn" type="submit"><%= coupon ? 'Save changes' : 'Create coupon' %></button>
+</form>
+<%- include('_bottom') %>

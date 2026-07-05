@@ -1,0 +1,30 @@
+<%
+  // expects: d (decorated deal with .stack), storeMap
+  const st = storeMap[d.store_id] || { name: '', color: '#64748b' };
+  const stack = d.stack;
+%>
+<a class="card" href="/deal/<%= d.slug %>">
+  <div class="card-img" style="background-image:url('<%= d.image_url || '' %>')">
+    <% if (stack.discountPct) { %><span class="chip chip-off"><%= stack.discountPct %>% OFF</span><% } %>
+    <% if (d.badge) { %><span class="chip chip-badge"><%= d.badge %></span><% } %>
+  </div>
+  <div class="card-body">
+    <div class="card-store"><i style="background:<%= st.color %>"></i><%= st.name %></div>
+    <h3 class="card-title"><%= d.title %></h3>
+    <% if (stack.price != null) { %>
+      <div class="card-prices">
+        <b><%= fmt(stack.price) %></b>
+        <% if (stack.mrp != null && stack.mrp > stack.price) { %><s><%= fmt(stack.mrp) %></s><% } %>
+      </div>
+    <% } %>
+    <% if (stack.best) { %>
+      <div class="card-true">
+        <span class="tp-label">true price</span>
+        <b><%= fmt(stack.truePrice) %></b>
+        <span class="tp-with">with <%= stack.best.bank %> <%= stack.best.instrumentLabel %></span>
+      </div>
+    <% } else { %>
+      <div class="card-true muted">No card offer applies — this is the best price</div>
+    <% } %>
+  </div>
+</a>

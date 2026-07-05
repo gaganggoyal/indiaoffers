@@ -1,0 +1,56 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <nav class="crumbs"><a href="/">Home</a> / <a href="/stores">Stores</a> / <span><%= store.name %></span></nav>
+
+  <div class="store-hero">
+    <span class="sc-logo lg" style="background:<%= store.color %>"><%= store.name.charAt(0) %></span>
+    <div>
+      <h1><%= store.name %> Deals & Offers</h1>
+      <p><%= store.description || '' %></p>
+      <% if (store.cashback_text) { %><span class="chip chip-badge"><%= store.cashback_text %></span><% } %>
+    </div>
+    <a class="btn-go sm" href="/go/s/<%= store.id %>" target="_blank" rel="noopener nofollow">Visit <%= store.name %> →</a>
+  </div>
+
+  <% if (storeOffers.length) { %>
+    <div class="panel">
+      <h2>💳 Card offers that work on <%= store.name %></h2>
+      <div class="offer-row">
+        <% storeOffers.forEach(o => { %>
+          <div class="offer-card static">
+            <div class="oc-bank"><%= o.bank %> <span><%= o.instrument.toUpperCase() %></span></div>
+            <div class="oc-title"><%= o.title %></div>
+            <div class="oc-meta"><%= o.max_discount ? 'save up to ' + fmt(o.max_discount) : '' %><%= o.min_order ? ' · min ' + fmt(o.min_order) : '' %></div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (coupons.length) { %>
+    <div class="panel">
+      <h2>🎟️ Working coupons</h2>
+      <div class="coupon-list">
+        <% coupons.forEach(c => { %>
+          <div class="coupon">
+            <div><b><%= c.title %></b><small><%= c.discount_text %><%= c.min_order ? ` · min order ${fmt(c.min_order)}` : '' %><%= c.is_verified ? ' · ✅ verified' : '' %></small></div>
+            <button class="btn-copy" data-code="<%= c.code %>"><%= c.code %></button>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="sec-head" style="margin-top:26px"><h2>Live deals</h2></div>
+  <% if (deals.length === 0) { %>
+    <div class="empty">No live deals right now — check the coupons above.</div>
+  <% } else { %>
+    <div class="grid">
+      <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>

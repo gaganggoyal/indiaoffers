@@ -1,0 +1,29 @@
+<%- include('_top') %>
+<div class="page-bar"><h1><%= store ? 'Edit Store' : 'New Store' %></h1><a class="lnk" href="/admin/stores">← Back</a></div>
+<form class="panel form" method="post" action="/admin/stores/save">
+  <% if (store) { %><input type="hidden" name="id" value="<%= store.id %>"><% } %>
+  <label>Name *<input name="name" required value="<%= store ? store.name : '' %>"></label>
+  <label>Brand color<input type="color" name="color" value="<%= store ? store.color : '#4f46e5' %>"></label>
+  <label>Category
+    <select name="category">
+      <% ['shopping','electronics','fashion','food','beauty','grocery','travel'].forEach(c => { %>
+        <option value="<%= c %>" <%= store && store.category === c ? 'selected' : '' %>><%= c %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label>Affiliate type
+    <select name="affiliate_type">
+      <% ['none','amazon','flipkart'].forEach(t => { %>
+        <option value="<%= t %>" <%= store && store.affiliate_type === t ? 'selected' : '' %>><%= t %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label class="full">Website URL *<input name="website_url" required value="<%= store ? (store.website_url || '') : '' %>"></label>
+  <label class="full">Affiliate URL (blank = website URL)<input name="affiliate_url" value="<%= store ? (store.affiliate_url || '') : '' %>"></label>
+  <label class="full">Logo URL<input name="logo_url" value="<%= store ? (store.logo_url || '') : '' %>"></label>
+  <label>Cashback note<input name="cashback_text" value="<%= store ? (store.cashback_text || '') : '' %>" placeholder="Upto 5% IO rewards"></label>
+  <label class="full">Description<textarea name="description" rows="2"><%= store ? (store.description || '') : '' %></textarea></label>
+  <label class="check"><input type="checkbox" name="is_active" <%= !store || store.is_active ? 'checked' : '' %>> Live</label>
+  <button class="btn" type="submit"><%= store ? 'Save changes' : 'Create store' %></button>
+</form>
+<%- include('_bottom') %>

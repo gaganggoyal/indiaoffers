@@ -1,0 +1,103 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <nav class="crumbs"><a href="/">Home</a> / <a href="/deals">Deals</a> / <span><%= deal.title %></span></nav>
+
+  <div class="dd">
+    <div class="dd-media">
+      <img src="<%= deal.image_url || '' %>" alt="<%= deal.title %>" loading="lazy">
+    </div>
+
+    <div class="dd-main">
+      <a class="dd-store" href="/store/<%= store.slug %>"><i style="background:<%= store.color %>"></i><%= store.name %></a>
+      <h1><%= deal.title %></h1>
+
+      <% if (stack.price != null) { %>
+        <div class="dd-prices">
+          <b class="dd-price"><%= fmt(stack.price) %></b>
+          <% if (stack.mrp != null && stack.mrp > stack.price) { %>
+            <s><%= fmt(stack.mrp) %></s>
+            <span class="chip chip-off"><%= stack.discountPct %>% OFF</span>
+          <% } %>
+        </div>
+      <% } %>
+
+      <% if (deal.coupon_code) { %>
+        <div class="codebox">
+          <div><small>COUPON CODE</small><b class="code" id="dealCode"><%= deal.coupon_code %></b></div>
+          <button class="btn-copy" data-code="<%= deal.coupon_code %>">Copy</button>
+        </div>
+      <% } %>
+
+      <!-- ═══ THE SAVINGS STACK ═══ -->
+      <div class="stack">
+        <div class="stack-head">💡 Best way to pay</div>
+        <% if (stack.payOptions.length === 0) { %>
+          <div class="stack-row"><span>No extra card offers apply to this deal right now — the deal price is the true price.</span></div>
+        <% } else { %>
+          <% stack.payOptions.forEach((o, i) => { %>
+            <div class="stack-row <%= i === 0 ? 'best' : '' %>">
+              <div class="sr-left">
+                <b><%= o.bank %></b> <span class="sr-inst"><%= o.instrumentLabel %></span>
+                <small><%= o.label %><%= o.promoCode ? ` · code ${o.promoCode}` : '' %></small>
+              </div>
+              <div class="sr-right">
+                <span class="sr-save">−<%= fmt(o.saving) %></span>
+                <b class="sr-eff"><%= fmt(o.effectivePrice) %></b>
+                <% if (i === 0) { %><span class="sr-tag">BEST</span><% } %>
+              </div>
+            </div>
+          <% }) %>
+          <div class="stack-total">
+            Total saved vs MRP: <b><%= fmt(stack.maxSaving) %></b>
+            <% if (stack.mrp) { %> (<%= Math.round(stack.maxSaving / stack.mrp * 100) %>%)<% } %>
+          </div>
+        <% } %>
+      </div>
+
+      <a class="btn-go" href="/go/d/<%= deal.id %>" target="_blank" rel="noopener nofollow">Grab this deal at <%= store.name %> →</a>
+      <div class="dd-meta">
+        ⏰ Expires <%= deal.expiry_date ? String(deal.expiry_date).slice(0,10) : 'soon' %>
+        · 👆 <%= (deal.clicks || 0).toLocaleString('en-IN') %> clicks
+        <% if (deal.cashback_text) { %> · 💰 <%= deal.cashback_text %><% } %>
+      </div>
+    </div>
+  </div>
+
+  <% if (howTo.length) { %>
+    <div class="panel">
+      <h2>📋 How to get this deal</h2>
+      <ol class="steps">
+        <% howTo.forEach(s => { %><li><%= s %></li><% }) %>
+      </ol>
+    </div>
+  <% } %>
+
+  <% if (deal.description) { %>
+    <div class="panel"><h2>ℹ️ About this deal</h2><p><%= deal.description %></p></div>
+  <% } %>
+
+  <% if (coupons.length) { %>
+    <div class="panel">
+      <h2>🎟️ More <%= store.name %> coupons</h2>
+      <div class="coupon-list">
+        <% coupons.forEach(c => { %>
+          <div class="coupon">
+            <div><b><%= c.title %></b><small><%= c.discount_text %><%= c.min_order ? ` · min order ${fmt(c.min_order)}` : '' %><%= c.is_verified ? ' · ✅ verified' : '' %></small></div>
+            <button class="btn-copy" data-code="<%= c.code %>"><%= c.code %></button>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (related.length) { %>
+    <div class="sec-head" style="margin-top:34px"><h2>More from <%= store.name %></h2><a href="/store/<%= store.slug %>">View store →</a></div>
+    <div class="grid">
+      <% related.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>
