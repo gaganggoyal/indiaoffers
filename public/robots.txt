@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /wallet
+Disallow: /admin
+Disallow: /profile
+Disallow: /cashbacks
+Disallow: /favorites
+Disallow: /referrals
+Disallow: /api/
+
+Sitemap: https://indiaoffers.in/sitemap.xml

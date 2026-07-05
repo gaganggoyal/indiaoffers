@@ -1,0 +1,72 @@
+<!-- ═══════════════════════════════════════════════════════════════════════
+     IndiaOffers.in — Shopify Integration Guide & Code Snippets
+     ═══════════════════════════════════════════════════════════════════════
+
+     STEP 1 ──────────────────────────────────────────────────────────────────
+     Go to: Shopify Admin › Settings › Checkout › (scroll to bottom)
+            "Order status page — Additional scripts"
+
+     Paste the code block below. Replace YOUR_MERCHANT_ID with the ID
+     given to you by IndiaOffers.
+
+     STEP 2 ──────────────────────────────────────────────────────────────────
+     That's it. The pixel auto-reads Shopify Liquid variables.
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<!-- ════════════ PASTE THIS INTO SHOPIFY › CHECKOUT › ADDITIONAL SCRIPTS ═══ -->
+<script>
+  /* IndiaOffers.in Cashback Tracking — Shopify Integration */
+  window.IOPixelConfig = {
+    merchantId : 'YOUR_MERCHANT_ID',   // ← Replace with your IndiaOffers Merchant ID
+    secretKey  : 'YOUR_SECRET_KEY',    // ← Replace with your IndiaOffers Secret Key
+    debug      : false                 // ← Set true during testing
+  };
+
+  /* Pass Shopify Liquid order data to the pixel */
+  window.IOShopifyOrder = {
+    orderId     : '{{ order.order_number }}',
+    orderAmount : {{ order.total_price | divided_by: 100.0 }},
+    currency    : '{{ order.currency }}',
+    email       : '{{ order.email }}'
+  };
+</script>
+<script src="https://cdn.indiaoffers.in/pixel.js" async></script>
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+
+
+<!--
+  ═══════════════════════════════════════════════════════════════════════════
+  ADVANCED: Shopify App Bridge / Custom Storefront (Hydrogen / Headless)
+  ═══════════════════════════════════════════════════════════════════════════
+  If you use a headless storefront, fire the pixel from your client JS
+  after the checkout mutation resolves:
+
+  import { IndiaOffersPixel } from 'https://cdn.indiaoffers.in/pixel.esm.js';
+  // or load synchronously and call:
+  window.IndiaOffersPixel.track({
+    orderId    : order.name,           // e.g. "#1001"
+    orderAmount: order.totalPriceV2.amount,
+    currency   : order.totalPriceV2.currencyCode,
+    email      : order.email
+  });
+
+  ═══════════════════════════════════════════════════════════════════════════
+  TESTING CHECKLIST
+  ═══════════════════════════════════════════════════════════════════════════
+  1. Visit indiaoffers.in, click a deal link for your store
+  2. Complete a test purchase in Shopify (use Bogus Gateway)
+  3. Open browser DevTools › Console — look for "[IO Pixel] Payload: {...}"
+  4. Check IndiaOffers Merchant Dashboard › Tracking › Recent Sales
+  5. You should see the test sale within 60 seconds
+
+  ═══════════════════════════════════════════════════════════════════════════
+  TROUBLESHOOTING
+  ═══════════════════════════════════════════════════════════════════════════
+  ✗ No console log → Pixel script not loading. Check CDN URL.
+  ✗ "merchantId missing" → Ensure IOPixelConfig is set BEFORE pixel.js
+  ✗ Sale not appearing → Confirm you clicked from indiaoffers.in first
+  ✗ 403 from API → Wrong secretKey; regenerate in IO Merchant Dashboard
+
+  Support: merchant-support@indiaoffers.in
+  ═══════════════════════════════════════════════════════════════════════════
+-->
