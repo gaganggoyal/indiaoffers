@@ -1,14 +1,50 @@
 <%- include('_top') %>
 <div class="page-bar">
-  <h1>Card-Sale Alerts</h1>
-  <% if (pending) { %>
-    <form method="post" action="/admin/alerts/mark-sent"><button class="btn"><%= pending %> pending — mark all sent</button></form>
+  <h1>User Alerts</h1>
+  <div class="al-actions">
+    <% if (pending) { %>
+      <form method="post" action="/admin/alerts/send"><button class="btn"><%= pending %> pending — Send now</button></form>
+    <% } %>
+    <form method="post" action="/admin/alerts/test"><button class="btn-sec" type="submit">Test email setup</button></form>
+    <% if (pending) { %>
+      <form method="post" action="/admin/alerts/mark-sent" onsubmit="return confirm('Flag all pending as sent WITHOUT emailing?')"><button class="btn-sec" type="submit">Mark sent (no email)</button></form>
+    <% } %>
+  </div>
+</div>
+
+<div class="al-mode <%= mailer === 'smtp' ? 'live' : 'logonly' %>">
+  <% if (mailer === 'smtp') { %>
+    📧 <b>Email is live (SMTP).</b> “Send now” delivers real emails to users.
+  <% } else { %>
+    📝 <b>Log mode — no SMTP configured.</b> “Send now” marks alerts delivered and <b>prints</b> each email to the server log instead of sending it.
+    Add <code>SMTP_HOST</code> / <code>SMTP_USER</code> / <code>SMTP_PASS</code> to your <code>.env</code> and restart to send for real.
   <% } %>
 </div>
-<p class="muted" style="margin-bottom:14px">Alerts are queued automatically when you publish a bank offer that targets a specific card. A delivery worker (WhatsApp/email) reads the pending rows and sends them.</p>
+
+<% if (error) { %><div class="panel imp-msg err" style="margin:0 0 14px">⚠ <%= error %></div><% } %>
+
+<% if (result) { %>
+  <div class="panel al-result">
+    <% if (result.markedOnly) { %>
+      <b>✓ All pending alerts flagged as sent</b> <span class="muted">— no emails were sent.</span>
+    <% } else if (typeof result.test !== 'undefined') { %>
+      <b>✓ Email setup OK</b> <span class="muted">— <%= result.test %> (mode: <%= result.mode %>).</span>
+    <% } else { %>
+      <b><%= result.mode === 'log' ? 'Logged' : 'Sent' %> <%= result.sent %></b> alert<%= result.sent === 1 ? '' : 's' %> to <%= result.users %> user<%= result.users === 1 ? '' : 's' %><% if (result.mode === 'log') { %> <span class="muted">(log mode — printed to server console, not emailed)</span><% } %>.
+      <% if (result.skipped) { %> · <b><%= result.skipped %></b> skipped (no valid email)<% } %>
+      <% if (result.failed) { %> · <b class="bad"><%= result.failed %></b> failed<% } %>
+      <% if (result.attempted === 0) { %> <span class="muted">Nothing was pending.</span><% } %>
+      <% if (result.errors && result.errors.length) { %>
+        <ul class="al-errs"><% result.errors.forEach(function(e){ %><li><%= e %></li><% }); %></ul>
+      <% } %>
+    <% } %>
+  </div>
+<% } %>
+
+<p class="muted" style="margin-bottom:14px">Alerts are queued automatically when you publish a bank offer that targets a specific card. <b>Send now</b> emails each user their pending alerts (batched into one email per user); a failed send stays pending and is retried next run.</p>
 <div class="panel">
   <table>
-    <thead><tr><th>User</th><th>Reach</th><th>Alert</th><th>Sent</th><th>Read</th><th>When</th></tr></thead>
+    <thead><tr><th>User</th><th>Reach</th><th>Alert</th><th>Status</th><th>Read</th><th>Sent / Queued</th></tr></thead>
     <tbody>
       <% alerts.forEach(a => { %>
         <tr>
@@ -17,7 +53,7 @@
           <td><b><%= a.title %></b><br><small class="muted"><%= a.body %></small></td>
           <td><span class="pill <%= a.is_sent ? 'ok' : 'off' %>"><%= a.is_sent ? 'sent' : 'pending' %></span></td>
           <td><%= a.is_read ? '👁' : '—' %></td>
-          <td><small class="muted"><%= String(a.created_at).slice(0, 16) %></small></td>
+          <td><small class="muted"><%= a.is_sent && a.sent_at ? String(a.sent_at).slice(0, 16) : String(a.created_at).slice(0, 16) %></small></td>
         </tr>
       <% }) %>
     </tbody>

@@ -221,6 +221,7 @@ CREATE TABLE IF NOT EXISTS alerts (
   bank_offer_id   VARCHAR(32),
   is_sent         TINYINT(1) DEFAULT 0,
   is_read         TINYINT(1) DEFAULT 0,
+  sent_at         DATETIME NULL,
   created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_user (user_id, is_read)
 ) ENGINE=InnoDB;

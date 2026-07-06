@@ -14,6 +14,8 @@ const db = require('../db');
 const { adminAuth, signAdmin } = require('../middleware/auth');
 const { savingsStack, activeBankOffers } = require('../services/savings');
 const { generateCardOfferAlerts } = require('../services/alerts');
+const { deliverPendingAlerts } = require('../services/alertSender');
+const { mailerMode, verifyTransport } = require('../services/mailer');
 const { entityList, templateCsv, importCsv } = require('../services/importer');
 const { buildFromLink, geminiConfigured } = require('../services/quickdeal');
 const { CATEGORIES, CAT_NAMES } = require('../data/taxonomy');
@@ -621,21 +623,44 @@ router.get('/users', async (req, res, next) => {
 });
 
 // ALERTS — queued card-sale notifications
+async function renderAlerts(req, res, extra = {}) {
+  const alerts = await db.query(`
+    SELECT a.*, u.username, u.email, u.mobile, u.whatsapp_optin
+    FROM alerts a JOIN users u ON u.id = a.user_id
+    ORDER BY a.created_at DESC LIMIT 500`);
+  const pending = alerts.filter(a => !a.is_sent).length;
+  res.render('admin/alerts', Object.assign(
+    { title: 'Admin — Alerts', admin: req.admin, section: 'alerts', alerts, pending,
+      mailer: mailerMode(), result: null, error: null }, extra));
+}
+
 router.get('/alerts', async (req, res, next) => {
+  try { await renderAlerts(req, res); } catch (err) { next(err); }
+});
+
+// Actually deliver: emails every active user their pending alerts, marks them sent.
+router.post('/alerts/send', async (req, res, next) => {
   try {
-    const alerts = await db.query(`
-      SELECT a.*, u.username, u.email, u.mobile, u.whatsapp_optin
-      FROM alerts a JOIN users u ON u.id = a.user_id
-      ORDER BY a.created_at DESC LIMIT 500`);
-    const pending = alerts.filter(a => !a.is_sent).length;
-    res.render('admin/alerts', { title: 'Admin — Alerts', admin: req.admin, section: 'alerts', alerts, pending });
+    const result = await deliverPendingAlerts();
+    await renderAlerts(req, res, { result });
   } catch (err) { next(err); }
 });
 
+// Check the SMTP connection (or confirm log mode) without sending anything.
+router.post('/alerts/test', async (req, res, next) => {
+  try {
+    const t = await verifyTransport();
+    await renderAlerts(req, res, t.ok
+      ? { result: { mode: t.mode, users: 0, attempted: 0, sent: 0, failed: 0, skipped: 0, errors: [], test: t.note || 'Connection OK' } }
+      : { error: `SMTP test failed: ${t.error}` });
+  } catch (err) { next(err); }
+});
+
+// Manual override: flag everything sent without emailing (e.g. already handled elsewhere).
 router.post('/alerts/mark-sent', async (req, res, next) => {
   try {
-    await db.query('UPDATE alerts SET is_sent = 1 WHERE is_sent = 0');
-    res.redirect('/admin/alerts');
+    await db.query('UPDATE alerts SET is_sent = 1, sent_at = ? WHERE is_sent = 0', [nowSql()]);
+    await renderAlerts(req, res, { result: { markedOnly: true } });
   } catch (err) { next(err); }
 });
 

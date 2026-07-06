@@ -46,6 +46,7 @@ if (config.db.driver === 'mysql') {
   addColumn('deals', 'true_price', 'true_price REAL');
   addColumn('deals', 'savings_note', 'savings_note TEXT');
   addColumn('deals', 'savings_rows', 'savings_rows TEXT');
+  addColumn('alerts', 'sent_at', 'sent_at TEXT');
 
   const toSqlite = sql => sql
     .replace(/INSERT\s+IGNORE/gi, 'INSERT OR IGNORE')

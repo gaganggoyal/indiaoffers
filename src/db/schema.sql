@@ -164,6 +164,7 @@ CREATE TABLE IF NOT EXISTS alerts (
   bank_offer_id   TEXT,
   is_sent         INTEGER DEFAULT 0,
   is_read         INTEGER DEFAULT 0,
+  sent_at         TEXT,
   created_at      TEXT DEFAULT (datetime('now'))
 );
 
