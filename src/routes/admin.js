@@ -15,7 +15,8 @@ const { adminAuth, signAdmin } = require('../middleware/auth');
 const { savingsStack, activeBankOffers } = require('../services/savings');
 const { generateCardOfferAlerts } = require('../services/alerts');
 const { entityList, templateCsv, importCsv } = require('../services/importer');
-const { CATEGORIES } = require('../data/taxonomy');
+const { buildFromLink, geminiConfigured } = require('../services/quickdeal');
+const { CATEGORIES, CAT_NAMES } = require('../data/taxonomy');
 
 const { uid, slugify, nowSql } = db;
 
@@ -128,6 +129,51 @@ router.get('/', async (req, res, next) => {
 // ── Generic list/save/delete helpers per entity ──────────────────────────────
 const boolInt = v => (v === 'on' || v === '1' || v === 1 || v === true) ? 1 : 0;
 const numOrNull = v => (v === undefined || v === null || v === '') ? null : parseFloat(v);
+
+// ── Quick add (Amazon link → live deal) ──────────────────────────────────────
+// Admin pastes an Amazon link + MRP + deal price. We fetch the product title,
+// tidy it with Gemini, prefix "[LOOT]" and publish the deal live in one step.
+router.get('/quick-add', (req, res) => {
+  res.render('admin/quick-add', {
+    title: 'Admin — Quick Add', admin: req.admin, section: 'quick-add',
+    ai: geminiConfigured(), result: null, error: null, form: {}
+  });
+});
+
+router.post('/quick-add', async (req, res, next) => {
+  const b = req.body || {};
+  const view = extra => res.render('admin/quick-add', Object.assign(
+    { title: 'Admin — Quick Add', admin: req.admin, section: 'quick-add', ai: geminiConfigured(), result: null, error: null, form: b }, extra));
+  try {
+    const url = String(b.url || '').trim();
+    const price = numOrNull(b.price);
+    const mrp = numOrNull(b.mrp);
+    if (!url) return view({ error: 'Paste an Amazon product link first' });
+    if (price == null || !(price > 0)) return view({ error: 'Enter a valid deal price' });
+    if (mrp != null && mrp < price) return view({ error: 'MRP looks lower than the deal price — please check' });
+
+    const info = await buildFromLink(url);              // { title, category, dealUrl, usedAi }
+    const dealTitle = `[LOOT] ${info.title}`.slice(0, 160);
+    const id = uid('dl');
+    const slug = slugify(info.title || 'deal') + '-' + Math.random().toString(36).slice(2, 5);
+
+    await db.query(`
+      INSERT INTO deals (id, slug, store_id, title, description, category, image_url, mrp, price,
+        coupon_code, deal_url, how_to, badge, cashback_text, is_trending, is_active, posted_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    `, [id, slug, 'st_amazon', dealTitle, '', info.category || '', info.image || null, mrp, price,
+        null, info.dealUrl, '[]', null, null, 0, 1]);
+
+    view({ result: {
+      id, slug, title: dealTitle, category: info.category, categoryName: CAT_NAMES[info.category] || null,
+      mrp, price, image: info.image, dealUrl: info.dealUrl, usedAi: info.usedAi
+    } });
+  } catch (err) {
+    // Expected, user-fixable problems (bad link, robot-check, timeout) → show inline.
+    if (err instanceof Error && err.message) return view({ error: err.message });
+    next(err);
+  }
+});
 
 // DEALS
 router.get('/deals', async (req, res, next) => {

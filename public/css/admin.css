@@ -115,3 +115,21 @@ tr.hl { background: #ecfdf5; }
 .imp-cols summary { cursor: pointer; font-weight: 600; color: #0c2b55; font-size: 14px; }
 .imp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
 .imp-chips .chip, code.chip { background: #eef2ff; color: #3730a3; border-radius: 6px; padding: 3px 8px; font-size: 12px; font-family: ui-monospace, Menlo, monospace; }
+
+/* ── Quick Add (Amazon link → live deal) ─────────────────────────────────── */
+.qa-note { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: 10px; padding: 11px 14px; font-size: 13px; margin-bottom: 14px; }
+.qa-note code { background: #fef3c7; border-radius: 4px; padding: 1px 5px; font-size: 12px; }
+.qa-result { border: 1px solid #bbf7d0; background: #f0fdf4; border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
+.qa-ok { display: inline-block; background: #16a34a; color: #fff; font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 12px; margin-bottom: 8px; }
+.qa-result h2 { font-size: 17px; color: #0c2b55; margin: 4px 0 10px; }
+.qa-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.qa-price { font-size: 18px; font-weight: 800; color: #0c2b55; }
+.qa-mrp { color: #64748b; font-size: 14px; }
+.qa-meta .chip { background: #e0e7ff; color: #3730a3; border-radius: 999px; padding: 3px 11px; font-size: 12px; font-weight: 600; }
+.qa-meta .chip.muted { background: #e2e8f0; color: #64748b; }
+.qa-link { font-size: 12px; word-break: break-all; margin-bottom: 12px; }
+.qa-link a { color: #2563eb; }
+.qa-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.qa-form { margin-top: 6px; }
+.qa-head { display: flex; gap: 14px; align-items: flex-start; }
+.qa-thumb { width: 84px; height: 84px; object-fit: contain; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; flex: none; }

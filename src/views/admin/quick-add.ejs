@@ -1,0 +1,60 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>⚡ Quick Add</h1><a class="lnk" href="/admin/deals">All deals →</a></div>
+
+<div class="panel">
+  <p class="muted" style="margin-bottom:14px">
+    Paste an <b>Amazon</b> product link with its MRP and deal price. We fetch the product name from the live page<%= ai ? ', tidy it with Gemini,' : '' %>
+    add <code>[LOOT]</code> in front of the title, and <b>publish the deal instantly</b> under the Amazon store.
+  </p>
+
+  <% if (!ai) { %>
+    <div class="qa-note">
+      🔑 <b>Gemini key not set.</b> Titles are still cleaned up automatically with built-in rules, but adding
+      <code>GEMINI_API_KEY</code> to your <code>.env</code> gives shorter, tidier titles and auto-categorisation.
+    </div>
+  <% } %>
+
+  <% if (error) { %><div class="panel imp-msg err" style="margin:0 0 14px">⚠ <%= error %></div><% } %>
+
+  <% if (result) { %>
+    <div class="qa-result">
+      <div class="qa-ok">✓ Published live</div>
+      <div class="qa-head">
+        <% if (result.image) { %><img class="qa-thumb" src="<%= result.image %>" alt="" loading="lazy"><% } %>
+        <div>
+          <h2><%= result.title %></h2>
+          <div class="qa-meta">
+            <span class="qa-price">₹<%= Number(result.price).toLocaleString('en-IN') %></span>
+            <% if (result.mrp) { %><span class="qa-mrp"><s>₹<%= Number(result.mrp).toLocaleString('en-IN') %></s></span><% } %>
+            <% if (result.categoryName) { %><span class="chip"><%= result.categoryName %></span>
+            <% } else { %><span class="chip muted">no category — set one on edit</span><% } %>
+            <span class="chip <%= result.usedAi ? '' : 'muted' %>"><%= result.usedAi ? '🤖 Gemini title' : '✂ auto-tidied title' %></span>
+            <span class="chip <%= result.image ? '' : 'muted' %>"><%= result.image ? '🖼️ image auto-added' : '🖼️ no image — add on edit' %></span>
+          </div>
+        </div>
+      </div>
+      <div class="qa-link"><a href="<%= result.dealUrl %>" target="_blank" rel="noopener"><%= result.dealUrl %></a></div>
+      <div class="qa-actions">
+        <a class="btn" href="/deal/<%= result.slug %>" target="_blank">View live ↗</a>
+        <a class="btn-sec" href="/admin/deals/<%= result.id %>/edit">Edit / add image</a>
+        <a class="btn-sec" href="/admin/quick-add">Add another</a>
+      </div>
+    </div>
+  <% } %>
+
+  <form class="form qa-form" method="post" action="/admin/quick-add">
+    <label class="full">Amazon product link *
+      <input name="url" required inputmode="url" value="<%= form && form.url ? form.url : '' %>"
+             placeholder="https://www.amazon.in/dp/… or an amzn.to short link">
+    </label>
+    <label>MRP (₹)
+      <input type="number" step="0.01" min="0" name="mrp" value="<%= form && form.mrp ? form.mrp : '' %>" placeholder="e.g. 4490">
+    </label>
+    <label>Deal price (₹) *
+      <input type="number" step="0.01" min="0" name="price" required value="<%= form && form.price ? form.price : '' %>" placeholder="e.g. 1099">
+    </label>
+    <button class="btn" type="submit">⚡ Fetch title &amp; publish</button>
+  </form>
+</div>
+
+<%- include('_bottom') %>
