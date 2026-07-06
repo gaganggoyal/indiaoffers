@@ -9,7 +9,7 @@ const { tagAffiliateUrl, recordClick } = require('../services/tracking');
 router.get('/d/:id', async (req, res) => {
   try {
     const rows = await db.query(`
-      SELECT d.id, d.store_id, d.deal_url, s.affiliate_type, s.affiliate_url
+      SELECT d.id, d.store_id, d.deal_url, s.affiliate_type, s.affiliate_url, s.affiliate_params
       FROM deals d JOIN stores s ON s.id = d.store_id
       WHERE d.id = ? AND d.is_active = 1
     `, [req.params.id]);
@@ -17,7 +17,7 @@ router.get('/d/:id', async (req, res) => {
 
     const deal = rows[0];
     const clickId = `c${Date.now().toString(36)}`;
-    const target = tagAffiliateUrl(deal.deal_url || deal.affiliate_url, deal.affiliate_type, clickId);
+    const target = tagAffiliateUrl(deal.deal_url || deal.affiliate_url, deal, clickId);
     await recordClick({ dealId: deal.id, storeId: deal.store_id, targetUrl: target, req });
     res.redirect(302, target);
   } catch (err) {
@@ -33,7 +33,7 @@ router.get('/s/:id', async (req, res) => {
 
     const store = rows[0];
     const clickId = `c${Date.now().toString(36)}`;
-    const target = tagAffiliateUrl(store.affiliate_url || store.website_url, store.affiliate_type, clickId);
+    const target = tagAffiliateUrl(store.affiliate_url || store.website_url, store, clickId);
     await recordClick({ storeId: store.id, targetUrl: target, req });
     res.redirect(302, target);
   } catch (err) {

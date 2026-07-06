@@ -1,0 +1,23 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>Registered Users</h1><span class="muted"><%= users.length %> users</span></div>
+<div class="panel">
+  <table>
+    <thead><tr><th>Username</th><th>Email</th><th>Mobile</th><th>WhatsApp</th><th>Bulk</th><th>Cards</th><th>Categories</th><th>Joined</th></tr></thead>
+    <tbody>
+      <% users.forEach(u => { %>
+        <tr>
+          <td><b><%= u.username %></b></td>
+          <td><small><%= u.email %></small></td>
+          <td><%= u.mobile || '—' %></td>
+          <td><span class="pill <%= u.whatsapp_optin ? 'ok' : 'off' %>"><%= u.whatsapp_optin ? 'yes' : 'no' %></span></td>
+          <td><%= u.is_bulk_buyer ? '🏬' : '—' %></td>
+          <td><%= u.card_count %></td>
+          <td><%= u.cat_count %></td>
+          <td><small class="muted"><%= String(u.created_at).slice(0, 10) %></small></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% if (users.length === 0) { %><p class="muted" style="padding:14px">No registered users yet.</p><% } %>
+</div>
+<%- include('_bottom') %>

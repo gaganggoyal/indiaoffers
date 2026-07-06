@@ -4,20 +4,24 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><%= title %></title>
 <meta name="robots" content="noindex">
-<link rel="icon" type="image/svg+xml" href="/img/logo-icon.svg">
+<link rel="icon" type="image/png" href="/img/logo-icon.png">
 <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
 <div class="shell">
   <aside class="side">
-    <a class="side-brand" href="/admin"><img src="/img/logo-icon.svg" width="28" height="28" alt=""> IndiaOffers</a>
+    <a class="side-brand" href="/admin"><img src="/img/logo-icon.png" width="28" height="28" alt=""> IndiaOffers</a>
     <nav>
       <a href="/admin"             class="<%= section === 'dashboard'   ? 'on' : '' %>">📊 Dashboard</a>
       <a href="/admin/deals"       class="<%= section === 'deals'       ? 'on' : '' %>">🏷️ Deals</a>
       <a href="/admin/bank-offers" class="<%= section === 'bank-offers' ? 'on' : '' %>">💳 Bank Offers</a>
+      <a href="/admin/cards"       class="<%= section === 'cards'       ? 'on' : '' %>">🏦 Bank Cards</a>
+      <a href="/admin/guides"      class="<%= section === 'guides'      ? 'on' : '' %>">🏆 Buying Guides</a>
       <a href="/admin/coupons"     class="<%= section === 'coupons'     ? 'on' : '' %>">🎟️ Coupons</a>
       <a href="/admin/stores"      class="<%= section === 'stores'      ? 'on' : '' %>">🏪 Stores</a>
       <a href="/admin/banners"     class="<%= section === 'banners'     ? 'on' : '' %>">🖼️ Banners</a>
+      <a href="/admin/users"       class="<%= section === 'users'       ? 'on' : '' %>">👥 Users</a>
+      <a href="/admin/alerts"      class="<%= section === 'alerts'      ? 'on' : '' %>">🔔 Alerts</a>
       <a href="/" target="_blank">🌐 View site</a>
     </nav>
     <form class="side-out" method="post" action="/admin/logout"><button>🚪 Logout (<%= admin.name %>)</button></form>

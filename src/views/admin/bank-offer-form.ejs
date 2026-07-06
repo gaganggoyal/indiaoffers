@@ -26,6 +26,12 @@
       <% stores.forEach(s => { %><option value="<%= s.id %>" <%= offer && offer.store_id === s.id ? 'selected' : '' %>><%= s.name %></option><% }) %>
     </select>
   </label>
+  <label>Target bank card (triggers alerts to holders)
+    <select name="bank_card_id">
+      <option value="">— none —</option>
+      <% cards.forEach(c => { %><option value="<%= c.id %>" <%= offer && offer.bank_card_id === c.id ? 'selected' : '' %>><%= c.bank %> — <%= c.name %></option><% }) %>
+    </select>
+  </label>
   <label>Promo code<input name="promo_code" value="<%= offer ? (offer.promo_code || '') : '' %>"></label>
   <label>Valid from<input type="date" name="valid_from" value="<%= offer && offer.valid_from ? String(offer.valid_from).slice(0,10) : '' %>"></label>
   <label>Valid till<input type="date" name="valid_till" value="<%= offer && offer.valid_till ? String(offer.valid_till).slice(0,10) : '' %>"></label>

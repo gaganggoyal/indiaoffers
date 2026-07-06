@@ -1,0 +1,30 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <div class="page-head">
+    <h1>Buying Guides — Best in Every Category</h1>
+    <p>Not sure which one to buy? Our editors shortlist the top few products in each category with real pros &amp; cons, video reviews and exactly who each pick is for.</p>
+  </div>
+
+  <% if (guides.length === 0) { %>
+    <div class="empty">Buying guides are coming soon.</div>
+  <% } else { %>
+    <div class="guide-grid">
+      <% guides.forEach(g => { %>
+        <a class="guide-card" href="/guide/<%= g.slug %>">
+          <div class="gc-img" style="background-image:url('<%= g.hero_image || '' %>')">
+            <span class="gc-badge"><%= catIcons[g.category] || '🏆' %> Guide</span>
+          </div>
+          <div class="gc-body">
+            <h3><%= g.title %></h3>
+            <p><%= g.subtitle || g.intro || '' %></p>
+            <span class="gc-cta">Read the guide →</span>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>

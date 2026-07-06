@@ -1,0 +1,24 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>Bank Cards</h1><a class="btn" href="/admin/cards/new">+ New Card</a></div>
+<div class="panel">
+  <table>
+    <thead><tr><th>Card</th><th>Bank</th><th>Type</th><th>Fees</th><th>Featured</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% cards.forEach(c => { %>
+        <tr>
+          <td><b><%= c.name %></b><br><small class="muted"><%= c.tagline || ('/card/' + c.slug) %></small></td>
+          <td><%= c.bank %></td>
+          <td><%= c.card_type %></td>
+          <td><small class="muted">J: <%= c.joining_fee || '—' %> · A: <%= c.annual_fee || '—' %></small></td>
+          <td><%= c.is_featured ? '★' : '—' %></td>
+          <td><span class="pill <%= c.is_active ? 'ok' : 'off' %>"><%= c.is_active ? 'live' : 'hidden' %></span></td>
+          <td class="row-actions">
+            <a class="lnk" href="/admin/cards/<%= c.id %>/edit">Edit</a>
+            <form method="post" action="/admin/cards/<%= c.id %>/delete" onsubmit="return confirm('Hide this card?')"><button class="lnk danger">Hide</button></form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('_bottom') %>

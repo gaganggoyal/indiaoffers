@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 
 const config = require('./config');
+const { attachUser } = require('./middleware/auth');
 
 const app = express();
 
@@ -30,7 +31,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Make the logged-in user (if any) available to every template
+app.use(attachUser);
+
 app.use('/', require('./routes/pages'));
+app.use('/', require('./routes/account'));
 app.use('/go', require('./routes/go'));
 app.use('/api', require('./routes/api'));
 app.use('/admin', require('./routes/admin'));

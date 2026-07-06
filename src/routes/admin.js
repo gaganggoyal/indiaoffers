@@ -10,8 +10,13 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { adminAuth, signAdmin } = require('../middleware/auth');
 const { savingsStack, activeBankOffers } = require('../services/savings');
+const { generateCardOfferAlerts } = require('../services/alerts');
+const { CATEGORIES } = require('../data/taxonomy');
 
 const { uid, slugify, nowSql } = db;
+
+// newline-separated textarea → JSON array of trimmed non-empty lines
+const linesToJson = v => JSON.stringify(String(v || '').split('\n').map(s => s.trim()).filter(Boolean));
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 router.get('/login', (req, res) => res.render('admin/login', { title: 'Admin Login', error: null }));
@@ -34,17 +39,21 @@ router.use(adminAuth);
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
   try {
-    const [deals, offers, coupons, banners, clicks, topDeals] = await Promise.all([
+    const [deals, offers, cards, guides, coupons, stores, users, clicks, topDeals] = await Promise.all([
       db.query('SELECT COUNT(*) AS c FROM deals WHERE is_active = 1'),
       db.query('SELECT COUNT(*) AS c FROM bank_offers WHERE is_active = 1'),
+      db.query('SELECT COUNT(*) AS c FROM bank_cards WHERE is_active = 1'),
+      db.query('SELECT COUNT(*) AS c FROM guides WHERE is_active = 1'),
       db.query('SELECT COUNT(*) AS c FROM coupons WHERE is_active = 1'),
-      db.query('SELECT COUNT(*) AS c FROM banners WHERE is_active = 1'),
+      db.query('SELECT COUNT(*) AS c FROM stores WHERE is_active = 1'),
+      db.query('SELECT COUNT(*) AS c FROM users WHERE is_active = 1'),
       db.query('SELECT COUNT(*) AS c FROM clicks'),
       db.query('SELECT id, title, clicks FROM deals ORDER BY clicks DESC LIMIT 8')
     ]);
     res.render('admin/dashboard', {
       title: 'Admin — Dashboard', admin: req.admin, section: 'dashboard',
-      stats: { deals: deals[0].c, offers: offers[0].c, coupons: coupons[0].c, banners: banners[0].c, clicks: clicks[0].c },
+      stats: { deals: deals[0].c, offers: offers[0].c, cards: cards[0].c, guides: guides[0].c,
+               coupons: coupons[0].c, stores: stores[0].c, users: users[0].c, clicks: clicks[0].c },
       topDeals
     });
   } catch (err) { next(err); }
@@ -67,7 +76,7 @@ router.get('/deals', async (req, res, next) => {
 router.get('/deals/new', async (req, res, next) => {
   try {
     const stores = await db.query('SELECT id, name FROM stores WHERE is_active = 1 ORDER BY name');
-    res.render('admin/deal-form', { title: 'Admin — New Deal', admin: req.admin, section: 'deals', deal: null, stores });
+    res.render('admin/deal-form', { title: 'Admin — New Deal', admin: req.admin, section: 'deals', deal: null, stores, categories: CATEGORIES });
   } catch (err) { next(err); }
 });
 
@@ -79,7 +88,7 @@ router.get('/deals/:id/edit', async (req, res, next) => {
     const offers = await activeBankOffers();
     res.render('admin/deal-form', {
       title: 'Admin — Edit Deal', admin: req.admin, section: 'deals',
-      deal: rows[0], stores, stack: savingsStack(rows[0], offers)
+      deal: rows[0], stores, categories: CATEGORIES, stack: savingsStack(rows[0], offers)
     });
   } catch (err) { next(err); }
 });
@@ -129,41 +138,58 @@ router.get('/bank-offers', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+async function offerFormData() {
+  const [stores, cards] = await Promise.all([
+    db.query('SELECT id, name FROM stores WHERE is_active = 1 ORDER BY name'),
+    db.query('SELECT id, name, bank FROM bank_cards WHERE is_active = 1 ORDER BY bank, name')
+  ]);
+  return { stores, cards };
+}
+
 router.get('/bank-offers/new', async (req, res, next) => {
-  const stores = await db.query('SELECT id, name FROM stores WHERE is_active = 1 ORDER BY name');
-  res.render('admin/bank-offer-form', { title: 'Admin — New Bank Offer', admin: req.admin, section: 'bank-offers', offer: null, stores });
+  try {
+    const { stores, cards } = await offerFormData();
+    res.render('admin/bank-offer-form', { title: 'Admin — New Bank Offer', admin: req.admin, section: 'bank-offers', offer: null, stores, cards });
+  } catch (err) { next(err); }
 });
 
 router.get('/bank-offers/:id/edit', async (req, res, next) => {
   try {
     const rows = await db.query('SELECT * FROM bank_offers WHERE id = ?', [req.params.id]);
     if (rows.length === 0) return res.redirect('/admin/bank-offers');
-    const stores = await db.query('SELECT id, name FROM stores WHERE is_active = 1 ORDER BY name');
-    res.render('admin/bank-offer-form', { title: 'Admin — Edit Bank Offer', admin: req.admin, section: 'bank-offers', offer: rows[0], stores });
+    const { stores, cards } = await offerFormData();
+    res.render('admin/bank-offer-form', { title: 'Admin — Edit Bank Offer', admin: req.admin, section: 'bank-offers', offer: rows[0], stores, cards });
   } catch (err) { next(err); }
 });
 
 router.post('/bank-offers/save', async (req, res, next) => {
   try {
     const b = req.body;
+    const id = b.id || uid('bo');
     const vals = [b.bank, b.instrument || 'credit', b.title, b.description || '',
       b.discount_type || 'percent', numOrNull(b.discount_value) || 0, numOrNull(b.max_discount),
-      numOrNull(b.min_order) || 0, b.store_id || null, b.promo_code || null,
+      numOrNull(b.min_order) || 0, b.store_id || null, b.bank_card_id || null, b.promo_code || null,
       b.valid_from || null, b.valid_till || null, b.source_url || null, boolInt(b.is_active)];
     if (b.id) {
       await db.query(`
         UPDATE bank_offers SET bank=?, instrument=?, title=?, description=?, discount_type=?,
-          discount_value=?, max_discount=?, min_order=?, store_id=?, promo_code=?,
+          discount_value=?, max_discount=?, min_order=?, store_id=?, bank_card_id=?, promo_code=?,
           valid_from=?, valid_till=?, source_url=?, is_active=? WHERE id=?
-      `, [...vals, b.id]);
+      `, [...vals, id]);
     } else {
       await db.query(`
         INSERT INTO bank_offers (bank, instrument, title, description, discount_type, discount_value,
-          max_discount, min_order, store_id, promo_code, valid_from, valid_till, source_url, is_active, id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [...vals, uid('bo')]);
+          max_discount, min_order, store_id, bank_card_id, promo_code, valid_from, valid_till, source_url, is_active, id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [...vals, id]);
     }
-    res.redirect('/admin/bank-offers');
+    // Queue "sale on your card" alerts for holders of the targeted card
+    let alertCount = 0;
+    if (b.bank_card_id) {
+      const saved = await db.query('SELECT * FROM bank_offers WHERE id = ?', [id]);
+      if (saved[0]) alertCount = await generateCardOfferAlerts(saved[0]);
+    }
+    res.redirect('/admin/bank-offers' + (alertCount ? `?alerts=${alertCount}` : ''));
   } catch (err) { next(err); }
 });
 
@@ -198,19 +224,20 @@ router.get('/stores/:id/edit', async (req, res, next) => {
 router.post('/stores/save', async (req, res, next) => {
   try {
     const b = req.body;
+    const affiliateParams = (b.affiliate_params || '').trim().replace(/^[?&]+/, '') || null;
     const vals = [b.name, b.color || '#4f46e5', b.logo_url || null, b.category || '', b.description || '',
       b.website_url || null, b.affiliate_url || b.website_url || null, b.affiliate_type || 'none',
-      b.cashback_text || null, boolInt(b.is_active)];
+      affiliateParams, b.cashback_text || null, boolInt(b.is_active)];
     if (b.id) {
       await db.query(`
         UPDATE stores SET name=?, color=?, logo_url=?, category=?, description=?, website_url=?,
-          affiliate_url=?, affiliate_type=?, cashback_text=?, is_active=? WHERE id=?
+          affiliate_url=?, affiliate_type=?, affiliate_params=?, cashback_text=?, is_active=? WHERE id=?
       `, [...vals, b.id]);
     } else {
       await db.query(`
         INSERT INTO stores (name, color, logo_url, category, description, website_url,
-          affiliate_url, affiliate_type, cashback_text, is_active, id, slug)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          affiliate_url, affiliate_type, affiliate_params, cashback_text, is_active, id, slug)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [...vals, uid('st'), slugify(b.name)]);
     }
     res.redirect('/admin/stores');
@@ -320,6 +347,170 @@ router.post('/banners/:id/delete', async (req, res, next) => {
   try {
     await db.query('DELETE FROM banners WHERE id = ?', [req.params.id]);
     res.redirect('/admin/banners');
+  } catch (err) { next(err); }
+});
+
+// BANK CARDS (apply-for cards)
+router.get('/cards', async (req, res, next) => {
+  try {
+    const cards = await db.query('SELECT * FROM bank_cards ORDER BY is_featured DESC, sort_order ASC, name ASC');
+    res.render('admin/cards', { title: 'Admin — Bank Cards', admin: req.admin, section: 'cards', cards });
+  } catch (err) { next(err); }
+});
+
+router.get('/cards/new', (req, res) =>
+  res.render('admin/card-form', { title: 'Admin — New Card', admin: req.admin, section: 'cards', card: null }));
+
+router.get('/cards/:id/edit', async (req, res, next) => {
+  try {
+    const rows = await db.query('SELECT * FROM bank_cards WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.redirect('/admin/cards');
+    res.render('admin/card-form', { title: 'Admin — Edit Card', admin: req.admin, section: 'cards', card: rows[0] });
+  } catch (err) { next(err); }
+});
+
+router.post('/cards/save', async (req, res, next) => {
+  try {
+    const b = req.body;
+    const vals = [b.name, b.bank, b.network || null, b.card_type || 'credit', b.image_url || null,
+      b.tagline || null, b.joining_fee || null, b.annual_fee || null, b.best_for || null,
+      linesToJson(b.benefits), linesToJson(b.how_to_apply), b.eligibility || null,
+      b.apply_url || null, b.video_url || null, boolInt(b.is_featured),
+      parseInt(b.sort_order, 10) || 0, boolInt(b.is_active)];
+    if (b.id) {
+      await db.query(`
+        UPDATE bank_cards SET name=?, bank=?, network=?, card_type=?, image_url=?, tagline=?,
+          joining_fee=?, annual_fee=?, best_for=?, benefits=?, how_to_apply=?, eligibility=?,
+          apply_url=?, video_url=?, is_featured=?, sort_order=?, is_active=? WHERE id=?
+      `, [...vals, b.id]);
+    } else {
+      await db.query(`
+        INSERT INTO bank_cards (name, bank, network, card_type, image_url, tagline, joining_fee,
+          annual_fee, best_for, benefits, how_to_apply, eligibility, apply_url, video_url,
+          is_featured, sort_order, is_active, id, slug)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [...vals, uid('bc'), slugify(b.name) + '-' + Math.random().toString(36).slice(2, 5)]);
+    }
+    res.redirect('/admin/cards');
+  } catch (err) { next(err); }
+});
+
+router.post('/cards/:id/delete', async (req, res, next) => {
+  try {
+    await db.query('UPDATE bank_cards SET is_active = 0 WHERE id = ?', [req.params.id]);
+    res.redirect('/admin/cards');
+  } catch (err) { next(err); }
+});
+
+// BUYING GUIDES + items
+router.get('/guides', async (req, res, next) => {
+  try {
+    const guides = await db.query(`
+      SELECT g.*, (SELECT COUNT(*) FROM guide_items gi WHERE gi.guide_id = g.id) AS item_count
+      FROM guides g ORDER BY g.sort_order ASC, g.created_at DESC`);
+    res.render('admin/guides', { title: 'Admin — Buying Guides', admin: req.admin, section: 'guides', guides });
+  } catch (err) { next(err); }
+});
+
+router.get('/guides/new', (req, res) =>
+  res.render('admin/guide-form', { title: 'Admin — New Guide', admin: req.admin, section: 'guides', guide: null, items: [], categories: CATEGORIES }));
+
+router.get('/guides/:id/edit', async (req, res, next) => {
+  try {
+    const rows = await db.query('SELECT * FROM guides WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.redirect('/admin/guides');
+    const items = await db.query('SELECT * FROM guide_items WHERE guide_id = ? ORDER BY rank_no ASC', [req.params.id]);
+    res.render('admin/guide-form', { title: 'Admin — Edit Guide', admin: req.admin, section: 'guides', guide: rows[0], items, categories: CATEGORIES });
+  } catch (err) { next(err); }
+});
+
+router.post('/guides/save', async (req, res, next) => {
+  try {
+    const b = req.body;
+    const vals = [b.title, b.category || null, b.subtitle || null, b.intro || null,
+      b.hero_image || null, b.video_url || null, parseInt(b.sort_order, 10) || 0, boolInt(b.is_active)];
+    if (b.id) {
+      await db.query(`
+        UPDATE guides SET title=?, category=?, subtitle=?, intro=?, hero_image=?, video_url=?,
+          sort_order=?, is_active=?, updated_at=? WHERE id=?
+      `, [...vals, nowSql(), b.id]);
+      res.redirect('/admin/guides/' + b.id + '/edit');
+    } else {
+      const id = uid('gd');
+      await db.query(`
+        INSERT INTO guides (title, category, subtitle, intro, hero_image, video_url, sort_order, is_active, id, slug)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [...vals, id, slugify(b.title) + '-' + Math.random().toString(36).slice(2, 5)]);
+      res.redirect('/admin/guides/' + id + '/edit');
+    }
+  } catch (err) { next(err); }
+});
+
+router.post('/guides/:id/delete', async (req, res, next) => {
+  try {
+    await db.query('DELETE FROM guide_items WHERE guide_id = ?', [req.params.id]);
+    await db.query('DELETE FROM guides WHERE id = ?', [req.params.id]);
+    res.redirect('/admin/guides');
+  } catch (err) { next(err); }
+});
+
+router.post('/guides/:gid/items/save', async (req, res, next) => {
+  try {
+    const b = req.body;
+    const vals = [parseInt(b.rank_no, 10) || 0, b.name, b.image_url || null, numOrNull(b.price),
+      b.award || null, linesToJson(b.features), linesToJson(b.pros), linesToJson(b.cons),
+      b.why_choose || null, b.video_url || null, b.buy_url || null, b.deal_id || null];
+    if (b.item_id) {
+      await db.query(`
+        UPDATE guide_items SET rank_no=?, name=?, image_url=?, price=?, award=?, features=?, pros=?,
+          cons=?, why_choose=?, video_url=?, buy_url=?, deal_id=? WHERE id=?
+      `, [...vals, b.item_id]);
+    } else {
+      await db.query(`
+        INSERT INTO guide_items (rank_no, name, image_url, price, award, features, pros, cons,
+          why_choose, video_url, buy_url, deal_id, id, guide_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [...vals, uid('gi'), req.params.gid]);
+    }
+    res.redirect('/admin/guides/' + req.params.gid + '/edit');
+  } catch (err) { next(err); }
+});
+
+router.post('/guides/:gid/items/:itemId/delete', async (req, res, next) => {
+  try {
+    await db.query('DELETE FROM guide_items WHERE id = ? AND guide_id = ?', [req.params.itemId, req.params.gid]);
+    res.redirect('/admin/guides/' + req.params.gid + '/edit');
+  } catch (err) { next(err); }
+});
+
+// USERS (subscribers) — read-only list
+router.get('/users', async (req, res, next) => {
+  try {
+    const users = await db.query(`
+      SELECT u.*,
+        (SELECT COUNT(*) FROM user_cards uc WHERE uc.user_id = u.id) AS card_count,
+        (SELECT COUNT(*) FROM user_categories ucat WHERE ucat.user_id = u.id) AS cat_count
+      FROM users u ORDER BY u.created_at DESC LIMIT 500`);
+    res.render('admin/users', { title: 'Admin — Users', admin: req.admin, section: 'users', users });
+  } catch (err) { next(err); }
+});
+
+// ALERTS — queued card-sale notifications
+router.get('/alerts', async (req, res, next) => {
+  try {
+    const alerts = await db.query(`
+      SELECT a.*, u.username, u.email, u.mobile, u.whatsapp_optin
+      FROM alerts a JOIN users u ON u.id = a.user_id
+      ORDER BY a.created_at DESC LIMIT 500`);
+    const pending = alerts.filter(a => !a.is_sent).length;
+    res.render('admin/alerts', { title: 'Admin — Alerts', admin: req.admin, section: 'alerts', alerts, pending });
+  } catch (err) { next(err); }
+});
+
+router.post('/alerts/mark-sent', async (req, res, next) => {
+  try {
+    await db.query('UPDATE alerts SET is_sent = 1 WHERE is_sent = 0');
+    res.redirect('/admin/alerts');
   } catch (err) { next(err); }
 });
 

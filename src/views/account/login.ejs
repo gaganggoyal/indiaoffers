@@ -1,0 +1,20 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<section class="wrap auth-wrap">
+  <div class="auth-card">
+    <h1>Welcome back</h1>
+    <p class="auth-sub">Log in to manage your alerts, cards and saved categories.</p>
+    <% if (error) { %><div class="form-err"><%= error %></div><% } %>
+
+    <form method="post" action="/login" class="acc-form">
+      <input type="hidden" name="next" value="<%= next %>">
+      <label>Username or email<input name="identifier" required autofocus placeholder="username or you@example.com"></label>
+      <label>Password<input type="password" name="password" required></label>
+      <button class="btn-primary btn-lg" type="submit">Log in</button>
+    </form>
+    <p class="auth-alt">New here? <a href="/register">Create an account</a></p>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

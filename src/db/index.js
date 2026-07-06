@@ -37,6 +37,13 @@ if (config.db.driver === 'mysql') {
   sqlite.pragma('foreign_keys = ON');
   sqlite.exec(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
 
+  // Forward migrations (idempotent) — add columns missing from older DB files.
+  const addColumn = (table, col, ddl) => {
+    const has = sqlite.prepare(`PRAGMA table_info(${table})`).all().some(c => c.name === col);
+    if (!has) sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+  };
+  addColumn('stores', 'affiliate_params', 'affiliate_params TEXT');
+
   const toSqlite = sql => sql
     .replace(/INSERT\s+IGNORE/gi, 'INSERT OR IGNORE')
     .replace(/\bNOW\(\)/gi, "datetime('now')");

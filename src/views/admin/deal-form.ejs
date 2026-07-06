@@ -10,8 +10,9 @@
   </label>
   <label>Category
     <select name="category">
-      <% ['electronics','fashion','food','beauty','grocery','travel','shopping'].forEach(c => { %>
-        <option value="<%= c %>" <%= deal && deal.category === c ? 'selected' : '' %>><%= c %></option>
+      <option value="">— select —</option>
+      <% categories.forEach(c => { %>
+        <option value="<%= c.slug %>" <%= deal && deal.category === c.slug ? 'selected' : '' %>><%= c.icon %> <%= c.name %></option>
       <% }) %>
     </select>
   </label>

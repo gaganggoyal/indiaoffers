@@ -2,7 +2,7 @@
 <header class="header">
   <div class="header-in">
     <a class="brand" href="/">
-      <img src="/img/logo-icon.svg" alt="IndiaOffers logo" width="34" height="34">
+      <img src="/img/logo-icon.png" alt="IndiaOffers logo" width="34" height="34">
       <span>India<em>Offers</em>.in</span>
     </a>
     <form class="search" action="/search" method="get" role="search">
@@ -12,7 +12,14 @@
     <nav class="nav">
       <a href="/deals" class="<%= path.startsWith('/deals') || path.startsWith('/deal/') ? 'on' : '' %>">Deals</a>
       <a href="/bank-offers" class="<%= path.startsWith('/bank-offers') ? 'on' : '' %>">Card Offers</a>
+      <a href="/cards" class="<%= path.startsWith('/card') ? 'on' : '' %>">Bank Cards</a>
+      <a href="/guides" class="<%= path.startsWith('/guide') ? 'on' : '' %>">Buying Guides</a>
       <a href="/stores" class="<%= path.startsWith('/store') ? 'on' : '' %>">Stores</a>
+      <% if (typeof user !== 'undefined' && user) { %>
+        <a href="/account" class="acct <%= path.startsWith('/account') ? 'on' : '' %>">👤 <%= user.username %></a>
+      <% } else { %>
+        <a href="/login" class="acct <%= path === '/login' || path === '/register' ? 'on' : '' %>">Login</a>
+      <% } %>
     </nav>
   </div>
 </header>

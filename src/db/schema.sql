@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS stores (
   website_url     TEXT,
   affiliate_url   TEXT,
   affiliate_type  TEXT DEFAULT 'none',      -- none | amazon | flipkart
+  affiliate_params TEXT,                    -- admin-managed query params appended on redirect, e.g. "tag=indiaoffers-21&subid={click}"
   cashback_text   TEXT,                     -- informational, e.g. "Upto 5% IO rewards"
   is_active       INTEGER DEFAULT 1,
   created_at      TEXT DEFAULT (datetime('now'))
@@ -54,11 +55,112 @@ CREATE TABLE IF NOT EXISTS bank_offers (
   max_discount    REAL,                     -- cap in ₹ (NULL = uncapped)
   min_order       REAL DEFAULT 0,
   store_id        TEXT,                     -- NULL = valid on all stores
+  bank_card_id    TEXT,                     -- optional link to a specific bank_cards row (drives user alerts)
   promo_code      TEXT,
   valid_from      TEXT,
   valid_till      TEXT,
   source_url      TEXT,
   is_active       INTEGER DEFAULT 1,
+  created_at      TEXT DEFAULT (datetime('now'))
+);
+
+-- Bank credit/debit cards users can APPLY for (affiliate card sign-ups) ─────────
+CREATE TABLE IF NOT EXISTS bank_cards (
+  id              TEXT PRIMARY KEY,
+  slug            TEXT UNIQUE NOT NULL,
+  name            TEXT NOT NULL,            -- "HDFC Millennia Credit Card"
+  bank            TEXT NOT NULL,            -- HDFC Bank
+  network         TEXT,                     -- Visa | Mastercard | RuPay | Amex
+  card_type       TEXT DEFAULT 'credit',    -- credit | debit
+  image_url       TEXT,
+  tagline         TEXT,
+  joining_fee     TEXT,                     -- free-text, e.g. "₹1,000 + GST"
+  annual_fee      TEXT,
+  best_for        TEXT,                     -- "Online shopping & dining"
+  benefits        TEXT,                     -- JSON array of benefit strings
+  how_to_apply    TEXT,                     -- JSON array of steps
+  eligibility     TEXT,
+  apply_url       TEXT,                     -- affiliate apply link
+  video_url       TEXT,                     -- YouTube embed/watch URL
+  is_featured     INTEGER DEFAULT 0,
+  sort_order      INTEGER DEFAULT 0,
+  is_active       INTEGER DEFAULT 1,
+  created_at      TEXT DEFAULT (datetime('now'))
+);
+
+-- Buying guides: "Best AC", "Best 55-inch TV" … ranked pick lists ──────────────
+CREATE TABLE IF NOT EXISTS guides (
+  id              TEXT PRIMARY KEY,
+  slug            TEXT UNIQUE NOT NULL,
+  title           TEXT NOT NULL,            -- "Best Air Conditioners in India (2026)"
+  category        TEXT,                     -- taxonomy slug
+  subtitle        TEXT,
+  intro           TEXT,
+  hero_image      TEXT,
+  video_url       TEXT,                     -- overall buying-guide video
+  is_active       INTEGER DEFAULT 1,
+  sort_order      INTEGER DEFAULT 0,
+  updated_at      TEXT DEFAULT (datetime('now')),
+  created_at      TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS guide_items (
+  id              TEXT PRIMARY KEY,
+  guide_id        TEXT NOT NULL REFERENCES guides(id),
+  rank_no         INTEGER DEFAULT 0,
+  name            TEXT NOT NULL,            -- product name
+  image_url       TEXT,
+  price           REAL,
+  award           TEXT,                     -- "Best Overall", "Best Budget"
+  features        TEXT,                     -- JSON array
+  pros            TEXT,                     -- JSON array
+  cons            TEXT,                     -- JSON array
+  why_choose      TEXT,                     -- prose: why our user should pick this
+  video_url       TEXT,                     -- per-product review video
+  buy_url         TEXT,                     -- merchant/affiliate link
+  deal_id         TEXT,                     -- optional link to a deals row
+  created_at      TEXT DEFAULT (datetime('now'))
+);
+
+-- Registered users (deal & card-sale alert subscribers) ───────────────────────
+CREATE TABLE IF NOT EXISTS users (
+  id              TEXT PRIMARY KEY,
+  username        TEXT UNIQUE NOT NULL,
+  email           TEXT UNIQUE NOT NULL,
+  mobile          TEXT,
+  password_hash   TEXT NOT NULL,
+  whatsapp_optin  INTEGER DEFAULT 0,        -- consent to WhatsApp updates
+  is_bulk_buyer   INTEGER DEFAULT 0,        -- buys for a business/shop
+  is_active       INTEGER DEFAULT 1,
+  last_login      TEXT,
+  created_at      TEXT DEFAULT (datetime('now'))
+);
+
+-- Categories a user wants alerts for (many-to-many, taxonomy slug) ─────────────
+CREATE TABLE IF NOT EXISTS user_categories (
+  user_id         TEXT NOT NULL REFERENCES users(id),
+  category        TEXT NOT NULL,
+  PRIMARY KEY (user_id, category)
+);
+
+-- Bank cards a user holds → drives "sale on your card" alerts ──────────────────
+CREATE TABLE IF NOT EXISTS user_cards (
+  user_id         TEXT NOT NULL REFERENCES users(id),
+  bank_card_id    TEXT NOT NULL REFERENCES bank_cards(id),
+  PRIMARY KEY (user_id, bank_card_id)
+);
+
+-- Alert queue: rows generated when a bank offer targets a card a user holds ────
+CREATE TABLE IF NOT EXISTS alerts (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id         TEXT NOT NULL,
+  kind            TEXT DEFAULT 'card_offer',  -- card_offer | category_deal
+  title           TEXT NOT NULL,
+  body            TEXT,
+  link_url        TEXT,
+  bank_offer_id   TEXT,
+  is_sent         INTEGER DEFAULT 0,
+  is_read         INTEGER DEFAULT 0,
   created_at      TEXT DEFAULT (datetime('now'))
 );
 
@@ -115,3 +217,7 @@ CREATE INDEX IF NOT EXISTS idx_offers_store   ON bank_offers (store_id, is_activ
 CREATE INDEX IF NOT EXISTS idx_offers_bank    ON bank_offers (bank, is_active);
 CREATE INDEX IF NOT EXISTS idx_coupons_store  ON coupons (store_id, is_active);
 CREATE INDEX IF NOT EXISTS idx_clicks_deal    ON clicks (deal_id, clicked_at);
+CREATE INDEX IF NOT EXISTS idx_cards_active    ON bank_cards (is_active, sort_order);
+CREATE INDEX IF NOT EXISTS idx_guides_active   ON guides (is_active, sort_order);
+CREATE INDEX IF NOT EXISTS idx_gitems_guide    ON guide_items (guide_id, rank_no);
+CREATE INDEX IF NOT EXISTS idx_alerts_user     ON alerts (user_id, is_read);

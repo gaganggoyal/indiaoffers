@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS stores (
   website_url     VARCHAR(500),
   affiliate_url   VARCHAR(500),
   affiliate_type  ENUM('none','amazon','flipkart') DEFAULT 'none',
+  affiliate_params VARCHAR(500),            -- admin-managed query params appended on redirect, e.g. "tag=indiaoffers-21&subid={click}"
   cashback_text   VARCHAR(100),
   is_active       TINYINT(1) DEFAULT 1,
   created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -60,6 +61,7 @@ CREATE TABLE IF NOT EXISTS bank_offers (
   max_discount    DECIMAL(10,2),
   min_order       DECIMAL(10,2) DEFAULT 0,
   store_id        VARCHAR(32),
+  bank_card_id    VARCHAR(32),
   promo_code      VARCHAR(50),
   valid_from      DATE,
   valid_till      DATE,
@@ -117,4 +119,105 @@ CREATE TABLE IF NOT EXISTS admins (
   password_hash   VARCHAR(255) NOT NULL,
   last_login      DATETIME,
   created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS bank_cards (
+  id              VARCHAR(32) PRIMARY KEY,
+  slug            VARCHAR(120) UNIQUE NOT NULL,
+  name            VARCHAR(150) NOT NULL,
+  bank            VARCHAR(60) NOT NULL,
+  network         VARCHAR(30),
+  card_type       ENUM('credit','debit') DEFAULT 'credit',
+  image_url       VARCHAR(1000),
+  tagline         VARCHAR(300),
+  joining_fee     VARCHAR(60),
+  annual_fee      VARCHAR(60),
+  best_for        VARCHAR(200),
+  benefits        TEXT,
+  how_to_apply    TEXT,
+  eligibility     TEXT,
+  apply_url       VARCHAR(1000),
+  video_url       VARCHAR(1000),
+  is_featured     TINYINT(1) DEFAULT 0,
+  sort_order      INT DEFAULT 0,
+  is_active       TINYINT(1) DEFAULT 1,
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_active (is_active, sort_order)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS guides (
+  id              VARCHAR(32) PRIMARY KEY,
+  slug            VARCHAR(120) UNIQUE NOT NULL,
+  title           VARCHAR(200) NOT NULL,
+  category        VARCHAR(50),
+  subtitle        VARCHAR(300),
+  intro           TEXT,
+  hero_image      VARCHAR(1000),
+  video_url       VARCHAR(1000),
+  is_active       TINYINT(1) DEFAULT 1,
+  sort_order      INT DEFAULT 0,
+  updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_active (is_active, sort_order)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS guide_items (
+  id              VARCHAR(32) PRIMARY KEY,
+  guide_id        VARCHAR(32) NOT NULL,
+  rank_no         INT DEFAULT 0,
+  name            VARCHAR(200) NOT NULL,
+  image_url       VARCHAR(1000),
+  price           DECIMAL(10,2),
+  award           VARCHAR(60),
+  features        TEXT,
+  pros            TEXT,
+  cons            TEXT,
+  why_choose      TEXT,
+  video_url       VARCHAR(1000),
+  buy_url         VARCHAR(1000),
+  deal_id         VARCHAR(32),
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (guide_id) REFERENCES guides(id),
+  INDEX idx_guide (guide_id, rank_no)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS users (
+  id              VARCHAR(32) PRIMARY KEY,
+  username        VARCHAR(60) UNIQUE NOT NULL,
+  email           VARCHAR(150) UNIQUE NOT NULL,
+  mobile          VARCHAR(20),
+  password_hash   VARCHAR(255) NOT NULL,
+  whatsapp_optin  TINYINT(1) DEFAULT 0,
+  is_bulk_buyer   TINYINT(1) DEFAULT 0,
+  is_active       TINYINT(1) DEFAULT 1,
+  last_login      DATETIME,
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS user_categories (
+  user_id         VARCHAR(32) NOT NULL,
+  category        VARCHAR(50) NOT NULL,
+  PRIMARY KEY (user_id, category),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS user_cards (
+  user_id         VARCHAR(32) NOT NULL,
+  bank_card_id    VARCHAR(32) NOT NULL,
+  PRIMARY KEY (user_id, bank_card_id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS alerts (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  user_id         VARCHAR(32) NOT NULL,
+  kind            VARCHAR(30) DEFAULT 'card_offer',
+  title           VARCHAR(200) NOT NULL,
+  body            TEXT,
+  link_url        VARCHAR(1000),
+  bank_offer_id   VARCHAR(32),
+  is_sent         TINYINT(1) DEFAULT 0,
+  is_read         TINYINT(1) DEFAULT 0,
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_user (user_id, is_read)
 ) ENGINE=InnoDB;

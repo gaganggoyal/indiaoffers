@@ -1,0 +1,51 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<section class="wrap auth-wrap">
+  <div class="auth-card wide">
+    <h1>Create your IndiaOffers account</h1>
+    <p class="auth-sub">Get alerted the moment there's a sale on <b>your</b> bank card, plus deals in the categories you care about.</p>
+    <% if (error) { %><div class="form-err"><%= error %></div><% } %>
+
+    <form method="post" action="/register" class="acc-form">
+      <div class="af-grid">
+        <label>Username *<input name="username" required value="<%= form.username || '' %>" placeholder="e.g. rahul_deals" pattern="[a-zA-Z0-9_.]{3,30}"></label>
+        <label>Email *<input type="email" name="email" required value="<%= form.email || '' %>" placeholder="you@example.com"></label>
+        <label>Mobile number<input name="mobile" value="<%= form.mobile || '' %>" placeholder="10-digit mobile" inputmode="tel"></label>
+        <label>Password *<input type="password" name="password" required minlength="6" placeholder="Min 6 characters"></label>
+      </div>
+
+      <div class="af-checks">
+        <label class="chk"><input type="checkbox" name="whatsapp_optin" <%= form.whatsapp_optin ? 'checked' : '' %>> Send me deal &amp; card alerts on <b>WhatsApp</b></label>
+        <label class="chk"><input type="checkbox" name="is_bulk_buyer" <%= form.is_bulk_buyer ? 'checked' : '' %>> I buy in bulk for a <b>business / shop</b></label>
+      </div>
+
+      <fieldset class="af-fieldset">
+        <legend>Categories you're interested in</legend>
+        <p class="af-hint">Search and add the categories you shop — we'll prioritise these in your alerts.</p>
+        <% const selCats = Array.isArray(form.categories) ? form.categories : (form.categories ? [form.categories] : []); %>
+        <%- include('../partials/msearch', {
+          name: 'categories', placeholder: 'Search categories…', selected: selCats,
+          groups: categoryGroups.map(g => ({ label: g.label, options: g.options.map(o => ({ value: o.slug, label: o.icon + ' ' + o.name })) }))
+        }) %>
+      </fieldset>
+
+      <fieldset class="af-fieldset">
+        <legend>Your bank cards</legend>
+        <p class="af-hint">Just pick your card's <b>bank</b> — we'll ping you whenever a sale drops on their cards.</p>
+        <% const selBanks = Array.isArray(form.banks) ? form.banks : (form.banks ? [form.banks] : []); %>
+        <% if (banks.length === 0) { %><p class="muted">No cards listed yet.</p><% } else { %>
+          <%- include('../partials/msearch', {
+            name: 'banks', placeholder: 'Search your bank…', selected: selBanks,
+            groups: [{ label: 'Banks', options: banks.map(b => ({ value: b, label: '🏦 ' + b })) }]
+          }) %>
+        <% } %>
+      </fieldset>
+
+      <button class="btn-primary btn-lg" type="submit">Create account</button>
+      <p class="auth-alt">Already have an account? <a href="/login">Log in</a></p>
+    </form>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

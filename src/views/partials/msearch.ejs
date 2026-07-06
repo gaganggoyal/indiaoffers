@@ -1,0 +1,28 @@
+<%
+/* Searchable, grouped multi-select. Progressive enhancement: with JS off it
+   degrades to a plain scrollable checkbox list.
+   Locals: name, placeholder, groups:[{label, options:[{value,label}]}], selected:[values] */
+const _sel = Array.isArray(selected) ? selected : (selected ? [selected] : []);
+%>
+<div class="msearch" data-placeholder="<%= placeholder %>">
+  <div class="ms-control">
+    <div class="ms-chips"></div>
+    <input type="text" class="ms-search" placeholder="<%= placeholder %>" autocomplete="off" role="combobox" aria-expanded="false" aria-label="<%= placeholder %>">
+    <span class="ms-caret" aria-hidden="true">▾</span>
+  </div>
+  <div class="ms-menu" hidden>
+    <% groups.forEach(g => { %>
+      <div class="ms-group">
+        <div class="ms-glabel"><%= g.label %></div>
+        <% g.options.forEach(o => { %>
+          <label class="ms-opt" data-text="<%= String(o.label).toLowerCase() %>">
+            <input type="checkbox" name="<%= name %>" value="<%= o.value %>" <%= _sel.includes(o.value) ? 'checked' : '' %>>
+            <span class="ms-tick" aria-hidden="true"></span>
+            <span class="ms-otext"><%= o.label %></span>
+          </label>
+        <% }) %>
+      </div>
+    <% }) %>
+    <div class="ms-empty" hidden>No matches</div>
+  </div>
+</div>

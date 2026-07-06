@@ -1,0 +1,90 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap card-detail">
+  <nav class="crumbs"><a href="/cards">Bank Cards</a> › <span><%= card.name %></span></nav>
+
+  <div class="cd-top">
+    <div class="cd-visual" style="background-image:url('<%= card.image_url || '' %>')">
+      <span class="bc-network"><%= card.network || '' %></span>
+    </div>
+    <div class="cd-head">
+      <div class="bc-bank"><%= card.bank %> · <%= card.card_type === 'debit' ? 'Debit' : 'Credit' %> Card</div>
+      <h1><%= card.name %></h1>
+      <p class="cd-tag"><%= card.tagline || '' %></p>
+      <div class="cd-fees">
+        <div><span>Joining fee</span><b><%= card.joining_fee || '—' %></b></div>
+        <div><span>Annual fee</span><b><%= card.annual_fee || '—' %></b></div>
+        <% if (card.best_for) { %><div><span>Best for</span><b><%= card.best_for %></b></div><% } %>
+      </div>
+      <% if (card.apply_url) { %>
+        <a class="btn-primary btn-lg" href="<%= card.apply_url %>" target="_blank" rel="noopener nofollow sponsored">Apply Now →</a>
+      <% } %>
+      <a class="btn-ghost" href="/register">Save this card to my account for alerts</a>
+    </div>
+  </div>
+
+  <div class="cd-grid">
+    <div class="cd-main">
+      <% if (card.benefitsList && card.benefitsList.length) { %>
+        <div class="panel-block">
+          <h2>Key benefits</h2>
+          <ul class="ticklist">
+            <% card.benefitsList.forEach(b => { %><li><%= b %></li><% }) %>
+          </ul>
+        </div>
+      <% } %>
+
+      <% if (card.stepsList && card.stepsList.length) { %>
+        <div class="panel-block">
+          <h2>How to apply</h2>
+          <ol class="steplist">
+            <% card.stepsList.forEach(s => { %><li><%= s %></li><% }) %>
+          </ol>
+          <% if (card.apply_url) { %><a class="btn-primary" href="<%= card.apply_url %>" target="_blank" rel="noopener nofollow sponsored">Start application →</a><% } %>
+        </div>
+      <% } %>
+
+      <% if (card.video_url) { %>
+        <div class="panel-block">
+          <h2>Video walkthrough</h2>
+          <div class="video-wrap">
+            <% const m = String(card.video_url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{6,})/); %>
+            <% if (m) { %>
+              <iframe src="https://www.youtube.com/embed/<%= m[1] %>" title="How to apply" allowfullscreen loading="lazy"></iframe>
+            <% } else { %>
+              <a href="<%= card.video_url %>" target="_blank" rel="noopener">▶ Watch the application walkthrough</a>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <aside class="cd-side">
+      <% if (card.eligibility) { %>
+        <div class="panel-block">
+          <h3>Eligibility</h3>
+          <p><%= card.eligibility %></p>
+        </div>
+      <% } %>
+      <% if (cardOffers && cardOffers.length) { %>
+        <div class="panel-block">
+          <h3>Live offers on this card</h3>
+          <% cardOffers.forEach(o => { %>
+            <a class="mini-offer" href="/bank-offers?bank=<%= encodeURIComponent(o.bank) %>"><%= o.title %></a>
+          <% }) %>
+        </div>
+      <% } %>
+      <% if (related && related.length) { %>
+        <div class="panel-block">
+          <h3>More <%= card.bank %> cards</h3>
+          <% related.forEach(r => { %>
+            <a class="mini-offer" href="/card/<%= r.slug %>"><%= r.name %></a>
+          <% }) %>
+        </div>
+      <% } %>
+    </aside>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

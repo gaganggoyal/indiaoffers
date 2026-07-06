@@ -1,0 +1,85 @@
+<%- include('_top') %>
+<div class="page-bar"><h1><%= guide ? 'Edit Guide' : 'New Guide' %></h1><a class="lnk" href="/admin/guides">← Back</a></div>
+
+<form class="panel form" method="post" action="/admin/guides/save">
+  <% if (guide) { %><input type="hidden" name="id" value="<%= guide.id %>"><% } %>
+  <label class="full">Title *<input name="title" required value="<%= guide ? guide.title : '' %>" placeholder="Best Air Conditioners in India (2026)"></label>
+  <label>Category
+    <select name="category">
+      <option value="">— select —</option>
+      <% categories.forEach(c => { %><option value="<%= c.slug %>" <%= guide && guide.category === c.slug ? 'selected' : '' %>><%= c.icon %> <%= c.name %></option><% }) %>
+    </select>
+  </label>
+  <label>Sort order<input type="number" name="sort_order" value="<%= guide ? guide.sort_order : 0 %>"></label>
+  <label class="full">Subtitle<input name="subtitle" value="<%= guide ? (guide.subtitle || '') : '' %>" placeholder="Top 1.5-ton inverter split ACs for Indian summers"></label>
+  <label class="full">Intro<textarea name="intro" rows="3"><%= guide ? (guide.intro || '') : '' %></textarea></label>
+  <label class="full">Hero image URL<input name="hero_image" value="<%= guide ? (guide.hero_image || '') : '' %>"></label>
+  <label class="full">Guide video URL (YouTube)<input name="video_url" value="<%= guide ? (guide.video_url || '') : '' %>"></label>
+  <label class="check"><input type="checkbox" name="is_active" <%= !guide || guide.is_active ? 'checked' : '' %>> Live on site</label>
+  <button class="btn" type="submit"><%= guide ? 'Save guide' : 'Create guide (then add products)' %></button>
+</form>
+
+<% if (guide) { %>
+  <div class="panel">
+    <h2>Products in this guide (<%= items.length %>)</h2>
+    <% if (items.length === 0) { %><p class="muted">No products yet — add the first one below.</p><% } else { %>
+      <table>
+        <thead><tr><th>#</th><th>Product</th><th>Award</th><th>Price</th><th></th></tr></thead>
+        <tbody>
+          <% items.forEach(it => { %>
+            <tr>
+              <td><%= it.rank_no %></td>
+              <td><b><%= it.name %></b></td>
+              <td><%= it.award || '—' %></td>
+              <td><%= it.price != null ? '₹' + Number(it.price).toLocaleString('en-IN') : '—' %></td>
+              <td class="row-actions">
+                <a class="lnk" href="#item-<%= it.id %>">Edit</a>
+                <form method="post" action="/admin/guides/<%= guide.id %>/items/<%= it.id %>/delete" onsubmit="return confirm('Delete this product?')"><button class="lnk danger">Delete</button></form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <!-- Edit existing items -->
+  <% items.forEach(it => { %>
+    <form class="panel form" id="item-<%= it.id %>" method="post" action="/admin/guides/<%= guide.id %>/items/save">
+      <input type="hidden" name="item_id" value="<%= it.id %>">
+      <h2 style="grid-column:1/-1">Edit: <%= it.name %></h2>
+      <label>Rank #<input type="number" name="rank_no" value="<%= it.rank_no %>"></label>
+      <label>Award<input name="award" value="<%= it.award || '' %>" placeholder="Best Overall"></label>
+      <label class="full">Product name *<input name="name" required value="<%= it.name %>"></label>
+      <label>Price (₹)<input type="number" step="0.01" name="price" value="<%= it.price != null ? it.price : '' %>"></label>
+      <label>Deal ID (optional)<input name="deal_id" value="<%= it.deal_id || '' %>"></label>
+      <label class="full">Image URL<input name="image_url" value="<%= it.image_url || '' %>"></label>
+      <label class="full">Buy URL (affiliate)<input name="buy_url" value="<%= it.buy_url || '' %>"></label>
+      <label class="full">Review video URL (YouTube)<input name="video_url" value="<%= it.video_url || '' %>"></label>
+      <label class="full">Features (one per line)<textarea name="features" rows="4"><%= JSON.parse(it.features || '[]').join('\n') %></textarea></label>
+      <label>Pros (one per line)<textarea name="pros" rows="4"><%= JSON.parse(it.pros || '[]').join('\n') %></textarea></label>
+      <label>Cons (one per line)<textarea name="cons" rows="4"><%= JSON.parse(it.cons || '[]').join('\n') %></textarea></label>
+      <label class="full">Why choose this<textarea name="why_choose" rows="2"><%= it.why_choose || '' %></textarea></label>
+      <button class="btn" type="submit">Save product</button>
+    </form>
+  <% }) %>
+
+  <!-- Add new item -->
+  <form class="panel form" method="post" action="/admin/guides/<%= guide.id %>/items/save">
+    <h2 style="grid-column:1/-1">+ Add a product</h2>
+    <label>Rank #<input type="number" name="rank_no" value="<%= items.length + 1 %>"></label>
+    <label>Award<input name="award" placeholder="Best Budget"></label>
+    <label class="full">Product name *<input name="name" required placeholder="Daikin 1.5 Ton 5-Star Inverter Split AC"></label>
+    <label>Price (₹)<input type="number" step="0.01" name="price"></label>
+    <label>Deal ID (optional)<input name="deal_id"></label>
+    <label class="full">Image URL<input name="image_url"></label>
+    <label class="full">Buy URL (affiliate)<input name="buy_url"></label>
+    <label class="full">Review video URL (YouTube)<input name="video_url"></label>
+    <label class="full">Features (one per line)<textarea name="features" rows="4"></textarea></label>
+    <label>Pros (one per line)<textarea name="pros" rows="4"></textarea></label>
+    <label>Cons (one per line)<textarea name="cons" rows="4"></textarea></label>
+    <label class="full">Why choose this<textarea name="why_choose" rows="2"></textarea></label>
+    <button class="btn" type="submit">Add product</button>
+  </form>
+<% } %>
+<%- include('_bottom') %>

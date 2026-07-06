@@ -1,0 +1,72 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap guide-detail">
+  <nav class="crumbs"><a href="/guides">Buying Guides</a> › <span><%= guide.title %></span></nav>
+
+  <div class="gd-head">
+    <h1><%= guide.title %></h1>
+    <% if (guide.subtitle) { %><p class="gd-sub"><%= guide.subtitle %></p><% } %>
+    <% if (guide.intro) { %><p class="gd-intro"><%= guide.intro %></p><% } %>
+  </div>
+
+  <% if (guideEmbed) { %>
+    <div class="video-wrap gd-video">
+      <iframe src="<%= guideEmbed %>" title="<%= guide.title %>" allowfullscreen loading="lazy"></iframe>
+    </div>
+  <% } %>
+
+  <ol class="pick-list">
+    <% items.forEach((it, i) => { %>
+      <li class="pick">
+        <div class="pk-rank">#<%= it.rank_no || (i + 1) %></div>
+        <div class="pk-img" style="background-image:url('<%= it.image_url || '' %>')"></div>
+        <div class="pk-body">
+          <div class="pk-top">
+            <% if (it.award) { %><span class="pk-award"><%= it.award %></span><% } %>
+            <h2><%= it.name %></h2>
+            <% if (it.price != null) { %><div class="pk-price"><%= fmt(it.price) %></div><% } %>
+          </div>
+
+          <% if (it.featuresList && it.featuresList.length) { %>
+            <div class="pk-specs">
+              <% it.featuresList.forEach(f => { %><span class="spec"><%= f %></span><% }) %>
+            </div>
+          <% } %>
+
+          <div class="pk-procon">
+            <% if (it.prosList && it.prosList.length) { %>
+              <div class="pros">
+                <h4>👍 Pros</h4>
+                <ul><% it.prosList.forEach(p => { %><li><%= p %></li><% }) %></ul>
+              </div>
+            <% } %>
+            <% if (it.consList && it.consList.length) { %>
+              <div class="cons">
+                <h4>👎 Cons</h4>
+                <ul><% it.consList.forEach(c => { %><li><%= c %></li><% }) %></ul>
+              </div>
+            <% } %>
+          </div>
+
+          <% if (it.why_choose) { %>
+            <div class="pk-why"><b>Why pick this:</b> <%= it.why_choose %></div>
+          <% } %>
+
+          <% if (it.embed) { %>
+            <div class="video-wrap pk-video">
+              <iframe src="<%= it.embed %>" title="<%= it.name %> review" allowfullscreen loading="lazy"></iframe>
+            </div>
+          <% } %>
+
+          <div class="pk-actions">
+            <% if (it.buy_url) { %><a class="btn-primary" href="<%= it.buy_url %>" target="_blank" rel="noopener nofollow sponsored">Check price &amp; buy →</a><% } %>
+            <% if (it.deal_id) { %><a class="btn-ghost" href="/deal/<%= it.deal_id %>">See the deal</a><% } %>
+          </div>
+        </div>
+      </li>
+    <% }) %>
+  </ol>
+</section>
+
+<%- include('partials/footer') %>

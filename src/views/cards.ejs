@@ -1,0 +1,38 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <div class="page-head">
+    <h1>Best Bank Cards to Apply For</h1>
+    <p>Compare India's most rewarding credit cards — benefits, fees and eligibility — then apply online in minutes. Add the cards you hold to your account to get alerted when a sale lands on them.</p>
+  </div>
+
+  <div class="card-grid">
+    <% cards.forEach(c => { %>
+      <div class="bankcard">
+        <a class="bc-visual" href="/card/<%= c.slug %>" style="background-image:url('<%= c.image_url || '' %>')">
+          <% if (c.is_featured) { %><span class="bc-flag">★ Popular</span><% } %>
+          <span class="bc-network"><%= c.network || '' %></span>
+        </a>
+        <div class="bc-body">
+          <div class="bc-bank"><%= c.bank %> · <%= c.card_type === 'debit' ? 'Debit' : 'Credit' %> Card</div>
+          <h3><a href="/card/<%= c.slug %>"><%= c.name %></a></h3>
+          <p class="bc-tag"><%= c.tagline || '' %></p>
+          <ul class="bc-benefits">
+            <% (c.benefitsList || []).slice(0, 3).forEach(b => { %><li><%= b %></li><% }) %>
+          </ul>
+          <div class="bc-fees">
+            <span>Joining <b><%= c.joining_fee || '—' %></b></span>
+            <span>Annual <b><%= c.annual_fee || '—' %></b></span>
+          </div>
+          <div class="bc-actions">
+            <a class="btn-primary" href="/card/<%= c.slug %>">View &amp; Apply</a>
+            <% if (c.best_for) { %><span class="bc-best">Best for <%= c.best_for %></span><% } %>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,27 @@
+<%- include('_top') %>
+<div class="page-bar">
+  <h1>Card-Sale Alerts</h1>
+  <% if (pending) { %>
+    <form method="post" action="/admin/alerts/mark-sent"><button class="btn"><%= pending %> pending — mark all sent</button></form>
+  <% } %>
+</div>
+<p class="muted" style="margin-bottom:14px">Alerts are queued automatically when you publish a bank offer that targets a specific card. A delivery worker (WhatsApp/email) reads the pending rows and sends them.</p>
+<div class="panel">
+  <table>
+    <thead><tr><th>User</th><th>Reach</th><th>Alert</th><th>Sent</th><th>Read</th><th>When</th></tr></thead>
+    <tbody>
+      <% alerts.forEach(a => { %>
+        <tr>
+          <td><b><%= a.username %></b><br><small class="muted"><%= a.email %></small></td>
+          <td><small><%= a.mobile || 'no mobile' %><br><%= a.whatsapp_optin ? '✅ WhatsApp' : '✉️ email' %></small></td>
+          <td><b><%= a.title %></b><br><small class="muted"><%= a.body %></small></td>
+          <td><span class="pill <%= a.is_sent ? 'ok' : 'off' %>"><%= a.is_sent ? 'sent' : 'pending' %></span></td>
+          <td><%= a.is_read ? '👁' : '—' %></td>
+          <td><small class="muted"><%= String(a.created_at).slice(0, 16) %></small></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% if (alerts.length === 0) { %><p class="muted" style="padding:14px">No alerts queued yet. Publish a bank offer with a target card to generate some.</p><% } %>
+</div>
+<%- include('_bottom') %>

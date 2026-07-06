@@ -1,17 +1,24 @@
 <%- include('partials/head') %>
 <%- include('partials/header') %>
 
-<!-- Hero banners -->
+<!-- Hero: 3 top recent deals as banners -->
 <section class="wrap">
-  <div class="banner-row">
-    <% banners.forEach(b => { %>
-      <a class="banner" href="<%= b.link_url || '/deals' %>"
-         style="<%= b.image_url ? `background-image:url('${b.image_url}')` : `background:linear-gradient(120deg, ${b.bg_color}, #111827)` %>">
-        <% if (b.image_url) { %><div class="banner-shade"></div><% } %>
-        <div class="banner-txt">
-          <h2><%= b.title %></h2>
-          <p><%= b.subtitle %></p>
-          <span class="banner-cta">Explore →</span>
+  <div class="hero-row">
+    <% heroDeals.forEach((d, i) => { const st = storeMap[d.store_id] || { name: '', color: '#4f46e5' }; %>
+      <a class="hero-banner" href="/deal/<%= d.slug %>"
+         style="--sc:<%= st.color %>">
+        <div class="hb-img" style="background-image:url('<%= d.image_url || '' %>')"></div>
+        <div class="hb-shade"></div>
+        <div class="hb-txt">
+          <span class="hb-tag"><%= d.badge || 'JUST IN' %> · <%= st.name %></span>
+          <h2><%= d.title %></h2>
+          <div class="hb-price">
+            <% if (d.stack.price != null) { %><b><%= fmt(d.stack.price) %></b><% } %>
+            <% if (d.stack.mrp && d.stack.mrp > d.stack.price) { %><s><%= fmt(d.stack.mrp) %></s><% } %>
+            <% if (d.stack.discountPct) { %><span class="hb-off"><%= d.stack.discountPct %>% OFF</span><% } %>
+          </div>
+          <% if (d.stack.best) { %><span class="hb-true">True price <%= fmt(d.stack.truePrice) %> with <%= d.stack.best.bank %></span><% } %>
+          <span class="hb-cta">Grab this deal →</span>
         </div>
       </a>
     <% }) %>
@@ -28,11 +35,24 @@
   </div>
 </section>
 
-<!-- Categories -->
+<!-- Categories — department → sub-group → leaf tree -->
 <section class="wrap">
-  <div class="cat-row">
-    <% categories.forEach(c => { %>
-      <a class="cat" href="/deals?category=<%= c %>"><span><%= catIcons[c] %></span><%= c.charAt(0).toUpperCase() + c.slice(1) %></a>
+  <div class="sec-head"><h2>🧭 Shop by Category</h2><a href="/deals">All deals →</a></div>
+  <div class="cat-tree">
+    <% categoryTree.forEach(dept => { %>
+      <div class="ct-dept">
+        <a class="ct-dept-head" href="/deals?category=<%= dept.slug %>"><span><%= dept.icon %></span><%= dept.name %></a>
+        <% dept.children.forEach(grp => { %>
+          <div class="ct-grp">
+            <a class="ct-grp-head" href="/deals?category=<%= grp.slug %>"><%= grp.name %></a>
+            <div class="ct-leaves">
+              <% grp.children.forEach(leaf => { %>
+                <a class="ct-leaf" href="/deals?category=<%= leaf.slug %>"><%= leaf.icon %> <%= leaf.name %></a>
+              <% }) %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
     <% }) %>
   </div>
 </section>
@@ -61,5 +81,21 @@
     <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
   </div>
 </section>
+
+<!-- Apply for bank cards -->
+<% if (featuredCards && featuredCards.length) { %>
+<section class="wrap">
+  <div class="sec-head"><h2>🏦 Best Cards to Apply For</h2><a href="/cards">Compare all cards →</a></div>
+  <div class="offer-row">
+    <% featuredCards.forEach(c => { %>
+      <a class="offer-card" href="/card/<%= c.slug %>">
+        <div class="oc-bank"><%= c.bank %> <span><%= c.card_type.toUpperCase() %></span></div>
+        <div class="oc-title"><%= c.name %></div>
+        <div class="oc-meta"><%= c.tagline || c.best_for || '' %></div>
+      </a>
+    <% }) %>
+  </div>
+</section>
+<% } %>
 
 <%- include('partials/footer') %>

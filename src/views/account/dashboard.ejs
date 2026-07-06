@@ -1,0 +1,82 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<section class="wrap account-page">
+  <div class="page-head acc-head">
+    <div>
+      <h1>Hi, <%= account.username %> 👋</h1>
+      <p>Manage your alert preferences and see what's new on your cards.</p>
+    </div>
+    <form method="post" action="/logout"><button class="btn-ghost">Log out</button></form>
+  </div>
+
+  <% if (saved) { %><div class="form-ok">✓ Preferences saved.</div><% } %>
+
+  <div class="acc-grid">
+    <!-- Alerts -->
+    <div class="acc-col">
+      <div class="panel-block">
+        <div class="pb-head">
+          <h2>🔔 Your alerts</h2>
+          <% const unread = alerts.filter(a => !a.is_read).length; %>
+          <% if (unread) { %>
+            <form method="post" action="/account/alerts/read"><button class="lnk">Mark all read</button></form>
+          <% } %>
+        </div>
+        <% if (alerts.length === 0) { %>
+          <p class="muted">No alerts yet. When we put a sale on one of your cards, you'll see it here — add your cards below to start.</p>
+        <% } else { %>
+          <ul class="alert-list">
+            <% alerts.forEach(a => { %>
+              <li class="alert-item <%= a.is_read ? '' : 'unread' %>">
+                <div class="al-body">
+                  <b><%= a.title %></b>
+                  <p><%= a.body %></p>
+                  <% if (a.link_url) { %><a href="<%= a.link_url %>">View offer →</a><% } %>
+                </div>
+                <span class="al-date"><%= String(a.created_at).slice(0, 10) %></span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Preferences -->
+    <div class="acc-col">
+      <form class="panel-block" method="post" action="/account/preferences">
+        <h2>⚙️ Preferences</h2>
+        <div class="af-grid two">
+          <label class="ro">Username<input value="<%= account.username %>" disabled></label>
+          <label class="ro">Email<input value="<%= account.email %>" disabled></label>
+        </div>
+        <label>Mobile number<input name="mobile" value="<%= account.mobile || '' %>" placeholder="10-digit mobile"></label>
+        <div class="af-checks">
+          <label class="chk"><input type="checkbox" name="whatsapp_optin" <%= account.whatsapp_optin ? 'checked' : '' %>> WhatsApp alerts</label>
+          <label class="chk"><input type="checkbox" name="is_bulk_buyer" <%= account.is_bulk_buyer ? 'checked' : '' %>> Bulk / business buyer</label>
+        </div>
+
+        <fieldset class="af-fieldset">
+          <legend>Interested categories</legend>
+          <%- include('../partials/msearch', {
+            name: 'categories', placeholder: 'Search categories…', selected: myCats,
+            groups: categoryGroups.map(g => ({ label: g.label, options: g.options.map(o => ({ value: o.slug, label: o.icon + ' ' + o.name })) }))
+          }) %>
+        </fieldset>
+
+        <fieldset class="af-fieldset">
+          <legend>Your bank cards</legend>
+          <p class="af-hint">Pick your card's <b>bank</b> — we alert you when a sale drops on their cards.</p>
+          <%- include('../partials/msearch', {
+            name: 'banks', placeholder: 'Search your bank…', selected: myBanks,
+            groups: [{ label: 'Banks', options: banks.map(b => ({ value: b, label: '🏦 ' + b })) }]
+          }) %>
+        </fieldset>
+
+        <button class="btn-primary" type="submit">Save preferences</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

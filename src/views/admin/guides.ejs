@@ -1,0 +1,23 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>Buying Guides</h1><a class="btn" href="/admin/guides/new">+ New Guide</a></div>
+<div class="panel">
+  <table>
+    <thead><tr><th>Guide</th><th>Category</th><th>Products</th><th>Sort</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% guides.forEach(g => { %>
+        <tr>
+          <td><b><%= g.title %></b><br><small class="muted">/guide/<%= g.slug %></small></td>
+          <td><%= g.category || '—' %></td>
+          <td><%= g.item_count %></td>
+          <td><%= g.sort_order %></td>
+          <td><span class="pill <%= g.is_active ? 'ok' : 'off' %>"><%= g.is_active ? 'live' : 'hidden' %></span></td>
+          <td class="row-actions">
+            <a class="lnk" href="/admin/guides/<%= g.id %>/edit">Edit</a>
+            <form method="post" action="/admin/guides/<%= g.id %>/delete" onsubmit="return confirm('Delete this guide and all its products?')"><button class="lnk danger">Delete</button></form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('_bottom') %>

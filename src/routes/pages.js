@@ -6,24 +6,26 @@ const router = require('express').Router();
 const db = require('../db');
 const config = require('../config');
 const { savingsStack, activeBankOffers, decorateDeals } = require('../services/savings');
-
-const CATEGORIES = ['electronics', 'fashion', 'food', 'beauty', 'grocery', 'travel', 'shopping'];
-const CAT_ICONS = { electronics: '📱', fashion: '👗', food: '🍔', beauty: '💄', grocery: '🥦', travel: '✈️', shopping: '🛍️' };
+const { CATEGORIES, CATEGORY_TREE, CAT_ICONS, categoryName, descendantSlugs } = require('../data/taxonomy');
 
 async function storesById() {
   const rows = await db.query('SELECT * FROM stores WHERE is_active = 1');
   return Object.fromEntries(rows.map(s => [s.id, s]));
 }
 
+const parseJson = v => { try { return JSON.parse(v || '[]'); } catch { return []; } };
+
 // ── Home ──────────────────────────────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
   try {
-    const [banners, dealsRaw, offers, storeMap] = await Promise.all([
-      db.query('SELECT * FROM banners WHERE is_active = 1 ORDER BY sort_order ASC LIMIT 6'),
+    const [heroRaw, dealsRaw, offers, storeMap, featuredCards] = await Promise.all([
+      db.query(`SELECT * FROM deals WHERE is_active = 1 ORDER BY posted_at DESC LIMIT 3`),
       db.query(`SELECT * FROM deals WHERE is_active = 1 ORDER BY is_trending DESC, posted_at DESC LIMIT 12`),
       activeBankOffers(),
-      storesById()
+      storesById(),
+      db.query(`SELECT * FROM bank_cards WHERE is_active = 1 ORDER BY is_featured DESC, sort_order ASC LIMIT 4`)
     ]);
+    const heroDeals = decorateDeals(heroRaw, offers);
     const deals = decorateDeals(dealsRaw, offers);
     const topOffers = offers
       .slice()
@@ -35,8 +37,8 @@ router.get('/', async (req, res, next) => {
       meta: {
         description: 'Every deal on IndiaOffers shows the real price after stacking the product discount, your bank card offer and coupon codes. Stop overpaying — see the true price.'
       },
-      banners, deals, topOffers, storeMap,
-      categories: CATEGORIES, catIcons: CAT_ICONS
+      heroDeals, deals, topOffers, storeMap, featuredCards,
+      categories: CATEGORIES, categoryTree: CATEGORY_TREE, catIcons: CAT_ICONS
     });
   } catch (err) { next(err); }
 });
@@ -47,7 +49,13 @@ router.get('/deals', async (req, res, next) => {
     const { category, store, sort, q } = req.query;
     let where = 'WHERE d.is_active = 1';
     const params = [];
-    if (category && CATEGORIES.includes(category)) { where += ' AND d.category = ?'; params.push(category); }
+    // Accept a leaf slug or any branch (department / sub-group) and expand it to
+    // the leaf categories beneath it.
+    const catLeaves = category ? descendantSlugs(category) : [];
+    if (catLeaves.length) {
+      where += ` AND d.category IN (${catLeaves.map(() => '?').join(',')})`;
+      params.push(...catLeaves);
+    }
     if (store) { where += ' AND d.store_id = ?'; params.push(store); }
     if (q) { where += ' AND (d.title LIKE ? OR d.description LIKE ?)'; params.push(`%${q}%`, `%${q}%`); }
     const order = sort === 'price' ? 'd.price ASC'
@@ -63,7 +71,7 @@ router.get('/deals', async (req, res, next) => {
 
     res.render('deals', {
       title: q ? `Deals matching “${q}” — IndiaOffers.in`
-             : category ? `Best ${category.charAt(0).toUpperCase() + category.slice(1)} Deals Today — IndiaOffers.in`
+             : category ? `Best ${categoryName(category)} Deals Today — IndiaOffers.in`
              : 'Today\'s Best Deals in India — True Prices — IndiaOffers.in',
       meta: { description: 'Live deals with the full savings stack: product discount + bank offer + coupon.' },
       deals: decorateDeals(rows, offers), storeMap,
@@ -88,8 +96,7 @@ router.get('/deal/:slug', async (req, res, next) => {
     ]);
     const store = stores[0];
     const stack = savingsStack(deal, offers);
-    let howTo = [];
-    try { howTo = JSON.parse(deal.how_to || '[]'); } catch { howTo = []; }
+    const howTo = parseJson(deal.how_to);
 
     // JSON-LD Offer schema
     const jsonld = {
@@ -135,12 +142,85 @@ router.get('/bank-offers', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── Bank cards — apply for cards ──────────────────────────────────────────────
+router.get('/cards', async (req, res, next) => {
+  try {
+    const cards = await db.query('SELECT * FROM bank_cards WHERE is_active = 1 ORDER BY is_featured DESC, sort_order ASC');
+    res.render('cards', {
+      title: 'Best Credit Cards in India — Compare & Apply Online — IndiaOffers.in',
+      meta: { description: 'Compare the best credit cards for shopping, cashback, travel and dining. See benefits, fees, eligibility and apply online in minutes.' },
+      cards: cards.map(c => ({ ...c, benefitsList: parseJson(c.benefits) }))
+    });
+  } catch (err) { next(err); }
+});
+
+router.get('/card/:slug', async (req, res, next) => {
+  try {
+    const rows = await db.query('SELECT * FROM bank_cards WHERE slug = ? AND is_active = 1', [req.params.slug]);
+    if (rows.length === 0) return res.status(404).render('404', { title: 'Card not found', meta: {} });
+    const card = rows[0];
+    const [related, cardOffers] = await Promise.all([
+      db.query('SELECT * FROM bank_cards WHERE bank = ? AND id != ? AND is_active = 1 LIMIT 3', [card.bank, card.id]),
+      db.query('SELECT * FROM bank_offers WHERE bank_card_id = ? AND is_active = 1', [card.id])
+    ]);
+    res.render('card', {
+      title: `${card.name} — Benefits, Fees & How to Apply — IndiaOffers.in`,
+      meta: { description: `${card.name}: ${card.tagline || ''} Joining fee ${card.joining_fee || '—'}. See full benefits, eligibility and step-by-step how to apply.` },
+      card: { ...card, benefitsList: parseJson(card.benefits), stepsList: parseJson(card.how_to_apply) },
+      related, cardOffers
+    });
+  } catch (err) { next(err); }
+});
+
+// ── Buying guides — "Best AC", "Best TV" … ────────────────────────────────────
+router.get('/guides', async (req, res, next) => {
+  try {
+    const guides = await db.query('SELECT * FROM guides WHERE is_active = 1 ORDER BY sort_order ASC, updated_at DESC');
+    res.render('guides', {
+      title: 'Buying Guides — Best AC, TV, Phone & More — IndiaOffers.in',
+      meta: { description: 'Expert-picked best products in every category, with features, pros & cons, video reviews and exactly who each pick is for.' },
+      guides, catIcons: CAT_ICONS
+    });
+  } catch (err) { next(err); }
+});
+
+router.get('/guide/:slug', async (req, res, next) => {
+  try {
+    const rows = await db.query('SELECT * FROM guides WHERE slug = ? AND is_active = 1', [req.params.slug]);
+    if (rows.length === 0) return res.status(404).render('404', { title: 'Guide not found', meta: {} });
+    const guide = rows[0];
+    const items = await db.query('SELECT * FROM guide_items WHERE guide_id = ? ORDER BY rank_no ASC', [guide.id]);
+
+    const jsonld = {
+      '@context': 'https://schema.org', '@type': 'ItemList',
+      name: guide.title,
+      itemListElement: items.map((it, i) => ({
+        '@type': 'ListItem', position: i + 1, name: it.name
+      }))
+    };
+
+    res.render('guide', {
+      title: `${guide.title} — IndiaOffers.in`,
+      meta: { description: guide.subtitle || guide.intro || guide.title, image: guide.hero_image, jsonld },
+      guide,
+      items: items.map(it => ({
+        ...it,
+        featuresList: parseJson(it.features),
+        prosList: parseJson(it.pros),
+        consList: parseJson(it.cons),
+        embed: youtubeEmbed(it.video_url)
+      })),
+      guideEmbed: youtubeEmbed(guide.video_url)
+    });
+  } catch (err) { next(err); }
+});
+
 // ── Stores ────────────────────────────────────────────────────────────────────
 router.get('/stores', async (req, res, next) => {
   try {
     const stores = await db.query(`
       SELECT s.*, (SELECT COUNT(*) FROM deals d WHERE d.store_id = s.id AND d.is_active = 1) AS deal_count
-      FROM stores s WHERE s.is_active = 1 ORDER BY deal_count DESC`);
+      FROM stores s WHERE s.is_active = 1 ORDER BY deal_count DESC, s.name ASC`);
     res.render('stores', {
       title: 'All Stores — Deals, Coupons & Card Offers — IndiaOffers.in',
       meta: { description: 'Browse every store on IndiaOffers with live deals, coupons and applicable bank offers.' },
@@ -181,19 +261,24 @@ router.get('/search', (req, res) => {
 
 // ── SEO plumbing ──────────────────────────────────────────────────────────────
 router.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /go/\nSitemap: ${config.siteUrl}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /go/\nDisallow: /account\nSitemap: ${config.siteUrl}/sitemap.xml\n`);
 });
 
 router.get('/sitemap.xml', async (req, res, next) => {
   try {
-    const [deals, stores] = await Promise.all([
+    const [deals, stores, cards, guides] = await Promise.all([
       db.query('SELECT slug, updated_at FROM deals WHERE is_active = 1'),
-      db.query('SELECT slug, created_at FROM stores WHERE is_active = 1')
+      db.query('SELECT slug, created_at FROM stores WHERE is_active = 1'),
+      db.query('SELECT slug FROM bank_cards WHERE is_active = 1'),
+      db.query('SELECT slug, updated_at FROM guides WHERE is_active = 1')
     ]);
     const urls = [
       { loc: '/', pri: '1.0' }, { loc: '/deals', pri: '0.9' },
-      { loc: '/bank-offers', pri: '0.9' }, { loc: '/stores', pri: '0.7' },
+      { loc: '/bank-offers', pri: '0.9' }, { loc: '/cards', pri: '0.8' },
+      { loc: '/guides', pri: '0.8' }, { loc: '/stores', pri: '0.7' },
       ...deals.map(d => ({ loc: `/deal/${d.slug}`, pri: '0.8', mod: d.updated_at })),
+      ...cards.map(c => ({ loc: `/card/${c.slug}`, pri: '0.7' })),
+      ...guides.map(g => ({ loc: `/guide/${g.slug}`, pri: '0.7', mod: g.updated_at })),
       ...stores.map(s => ({ loc: `/store/${s.slug}`, pri: '0.6', mod: s.created_at }))
     ];
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
@@ -202,5 +287,12 @@ router.get('/sitemap.xml', async (req, res, next) => {
     res.type('application/xml').send(xml);
   } catch (err) { next(err); }
 });
+
+// Turn a YouTube watch/short URL into an embeddable URL (null if not YouTube).
+function youtubeEmbed(url) {
+  if (!url) return null;
+  const m = String(url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{6,})/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}
 
 module.exports = router;
