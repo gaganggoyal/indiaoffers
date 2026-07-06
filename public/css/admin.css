@@ -94,3 +94,24 @@ tr.hl { background: #ecfdf5; }
 .srows .sr-del:hover { background: #fecaca; }
 .btn-sec { border: 1px dashed #cbd5e1; background: #f8fafc; color: #0c2b55; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .btn-sec:hover { border-color: #0c2b55; }
+
+/* ── CSV Import ────────────────────────────────────────────────────────────── */
+.imp-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+.imp-tab { padding: 8px 14px; border: 1px solid var(--line, #e5e7eb); border-radius: 999px; font-size: 13px; font-weight: 600; color: #334155; background: #fff; }
+.imp-tab:hover { border-color: #0c2b55; }
+.imp-tab.on { background: #0c2b55; color: #fff; border-color: #0c2b55; }
+.imp-msg.err { border-left: 4px solid #dc2626; color: #b91c1c; }
+.imp-result h2 { margin-top: 0; }
+.imp-stats { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+.imp-stats .stat { background: #f1f5f9; border-radius: 8px; padding: 8px 14px; font-size: 13px; color: #475569; }
+.imp-stats .stat b { font-size: 18px; color: #0c2b55; margin-right: 4px; }
+.imp-stats .stat.ok b { color: #15803d; }
+.imp-stats .stat.bad b { color: #b91c1c; }
+.imp-errs { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+.imp-errs th, .imp-errs td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #f1f5f9; }
+.imp-errs td:first-child { white-space: nowrap; color: #64748b; }
+.imp-form { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 12px 0; }
+.imp-cols { margin-top: 8px; }
+.imp-cols summary { cursor: pointer; font-weight: 600; color: #0c2b55; font-size: 14px; }
+.imp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.imp-chips .chip, code.chip { background: #eef2ff; color: #3730a3; border-radius: 6px; padding: 3px 8px; font-size: 12px; font-family: ui-monospace, Menlo, monospace; }

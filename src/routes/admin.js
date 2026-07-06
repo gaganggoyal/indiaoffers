@@ -14,6 +14,7 @@ const db = require('../db');
 const { adminAuth, signAdmin } = require('../middleware/auth');
 const { savingsStack, activeBankOffers } = require('../services/savings');
 const { generateCardOfferAlerts } = require('../services/alerts');
+const { entityList, templateCsv, importCsv } = require('../services/importer');
 const { CATEGORIES } = require('../data/taxonomy');
 
 const { uid, slugify, nowSql } = db;
@@ -63,6 +64,41 @@ router.post('/upload', (req, res) => {
     if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'Image too large (max 5 MB)' : 'Upload failed' });
     if (!req.file) return res.status(400).json({ error: 'Please choose an image file' });
     res.json({ url: '/uploads/' + req.file.filename });
+  });
+});
+
+// ── CSV bulk import ─────────────────────────────────────────────────────────
+// Admin uploads a spreadsheet to create/update stores, deals, bank offers,
+// coupons or bank cards in one go. See src/services/importer.js for the rules.
+const uploadCsv = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },          // 8 MB
+  fileFilter: (req, file, cb) => cb(null, /csv|excel|spreadsheet|text\/plain|octet-stream/.test(file.mimetype) || /\.csv$/i.test(file.originalname))
+}).single('file');
+
+router.get('/import', (req, res) => {
+  res.render('admin/import', { title: 'Admin — CSV Import', admin: req.admin, section: 'import', entities: entityList(), result: null, error: null, chosen: req.query.type || 'deals' });
+});
+
+router.get('/import/:entity/template.csv', (req, res) => {
+  try {
+    const csv = templateCsv(req.params.entity);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${req.params.entity}-template.csv"`);
+    res.send(csv);
+  } catch (e) { res.status(404).send('Unknown template'); }
+});
+
+router.post('/import/:entity', (req, res) => {
+  uploadCsv(req, res, async err => {
+    const view = (extra) => res.render('admin/import', Object.assign({ title: 'Admin — CSV Import', admin: req.admin, section: 'import', entities: entityList(), result: null, error: null, chosen: req.params.entity }, extra));
+    try {
+      if (err) return view({ error: err.code === 'LIMIT_FILE_SIZE' ? 'File too large (max 8 MB)' : 'Upload failed' });
+      if (!req.file) return view({ error: 'Please choose a .csv file to upload' });
+      const text = req.file.buffer.toString('utf8');
+      const result = await importCsv(req.params.entity, text);
+      view({ result });
+    } catch (e) { view({ error: e.message }); }
   });
 });
 

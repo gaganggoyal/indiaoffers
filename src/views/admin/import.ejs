@@ -1,0 +1,68 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>📥 CSV Import</h1></div>
+
+<% var current = entities.find(function(e){ return e.key === chosen; }) || entities[0]; %>
+
+<div class="imp-tabs">
+  <% entities.forEach(function(e){ %>
+    <a class="imp-tab <%= e.key === current.key ? 'on' : '' %>" href="/admin/import?type=<%= e.key %>"><%= e.label %></a>
+  <% }); %>
+</div>
+
+<% if (error) { %>
+  <div class="panel imp-msg err">⚠ <%= error %></div>
+<% } %>
+
+<% if (result) { %>
+  <div class="panel imp-result">
+    <h2>Import finished — <%= result.label %></h2>
+    <div class="imp-stats">
+      <span class="stat ok"><b><%= result.inserted %></b> created</span>
+      <span class="stat ok"><b><%= result.updated %></b> updated</span>
+      <span class="stat <%= result.errors.length ? 'bad' : '' %>"><b><%= result.errors.length %></b> skipped</span>
+      <span class="stat"><b><%= result.total %></b> rows read</span>
+    </div>
+    <% if (result.errors.length) { %>
+      <table class="imp-errs">
+        <thead><tr><th>Row (line)</th><th>Why it was skipped</th></tr></thead>
+        <tbody>
+          <% result.errors.forEach(function(er){ %>
+            <tr><td>line <%= er.line %></td><td><%= er.error %></td></tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p class="muted">All rows imported cleanly.</p>
+    <% } %>
+    <p><a class="lnk" href="/admin/<%= current.key === 'bank_offers' ? 'bank-offers' : (current.key === 'bank_cards' ? 'cards' : current.key) %>">View <%= current.label %> →</a></p>
+  </div>
+<% } %>
+
+<div class="panel">
+  <h2>Upload <%= current.label %> CSV</h2>
+  <p class="muted">
+    Match an existing row by <b>id</b> (if the sheet has an <code>id</code> column) or by its natural key
+    (<% if (current.key === 'coupons') { %>store&nbsp;+&nbsp;code<% } else if (current.key === 'bank_offers') { %>id only — otherwise a new offer is created<% } else { %>slug (auto-derived from name/title)<% } %>).
+    Matching rows are <b>updated</b>, new ones are <b>created</b>. Only the columns present in your sheet are written, so you can upload a partial sheet (e.g. just <code>slug,price</code>) to update those fields.
+  </p>
+
+  <form class="imp-form" method="post" action="/admin/import/<%= current.key %>" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".csv,text/csv" required>
+    <button class="btn" type="submit">Import <%= current.label %></button>
+    <a class="btn-sec" href="/admin/import/<%= current.key %>/template.csv" download>⬇ Download template</a>
+  </form>
+
+  <details class="imp-cols">
+    <summary>Columns for <%= current.label %> (<%= current.columns.length %>)</summary>
+    <div class="imp-chips">
+      <% current.columns.forEach(function(c){ %><code class="chip"><%= c %></code><% }); %>
+    </div>
+    <p class="muted">
+      Multi-step fields (<code>how_to</code>, <code>benefits</code>, <code>how_to_apply</code>) take several items separated by <code>|</code>.
+      Yes/No fields (<code>is_active</code>, <code>is_trending</code>…) accept 1/0, true/false, yes/no.
+      For deals/offers/coupons the <code>store</code> column accepts the store's exact name, slug or id.
+    </p>
+  </details>
+</div>
+
+<%- include('_bottom') %>
