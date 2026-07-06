@@ -75,3 +75,22 @@ tr.hl { background: #ecfdf5; }
   .side { position: static; height: auto; }
   .form { grid-template-columns: 1fr; }
 }
+
+/* ── Image uploader widget ────────────────────────────────────────────────── */
+.uploader { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.uploader .up-preview { width: 56px; height: 56px; flex: 0 0 auto; border: 1px solid var(--line, #e5e7eb); border-radius: 8px; background: #f8fafc center/cover no-repeat; }
+.uploader .up-preview:not(.has) { display: none; }
+.uploader input[type=file] { font-size: 12px; max-width: 220px; }
+.uploader .up-status { font-size: 12px; color: #64748b; }
+
+/* ── "Best way to pay" custom-rows editor ─────────────────────────────────── */
+.srows-field { margin: 6px 0; }
+.srows { width: 100%; border-collapse: collapse; margin: 8px 0; }
+.srows th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; color: #64748b; padding: 4px 6px; font-weight: 700; }
+.srows td { padding: 3px 6px; vertical-align: middle; }
+.srows td input { width: 100%; }
+.srows td:nth-child(3) input { width: 90px; }
+.srows .sr-del { border: none; background: #fee2e2; color: #b91c1c; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-size: 13px; line-height: 1; }
+.srows .sr-del:hover { background: #fecaca; }
+.btn-sec { border: 1px dashed #cbd5e1; background: #f8fafc; color: #0c2b55; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-sec:hover { border-color: #0c2b55; }

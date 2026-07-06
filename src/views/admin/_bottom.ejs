@@ -1,4 +1,43 @@
   </main>
 </div>
+
+<script>
+// Image upload widget: a file input with [data-upload] uploads to /admin/upload
+// and writes the returned URL into the text field named by its wrapper's
+// data-target, then shows a thumbnail preview. Progressive: the URL field still
+// works if JS is off or the user prefers pasting a link.
+document.querySelectorAll('.uploader[data-target]').forEach(function (box) {
+  var file    = box.querySelector('input[type=file][data-upload]');
+  var status  = box.querySelector('.up-status');
+  var preview = box.querySelector('.up-preview');
+  var target  = document.getElementById(box.getAttribute('data-target'));
+  if (!file || !target) return;
+
+  function showPreview(url) {
+    if (!preview) return;
+    if (url) { preview.style.backgroundImage = "url('" + url + "')"; preview.classList.add('has'); }
+    else { preview.style.backgroundImage = ''; preview.classList.remove('has'); }
+  }
+  showPreview(target.value);
+  target.addEventListener('input', function () { showPreview(target.value); });
+
+  file.addEventListener('change', function () {
+    var f = file.files && file.files[0];
+    if (!f) return;
+    status.textContent = 'Uploading…';
+    var fd = new FormData(); fd.append('file', f);
+    fetch('/admin/upload', { method: 'POST', body: fd })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.j.error || 'Upload failed');
+        target.value = res.j.url;
+        showPreview(res.j.url);
+        status.textContent = '✓ Uploaded';
+      })
+      .catch(function (e) { status.textContent = '⚠ ' + e.message; })
+      .finally(function () { file.value = ''; });
+  });
+});
+</script>
 </body>
 </html>

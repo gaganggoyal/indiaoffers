@@ -347,6 +347,7 @@ main { min-height: 60vh; padding-bottom: 50px; }
   .store-hero .btn-go { margin-left: 0; }
   .af-grid { grid-template-columns: 1fr; }
   .cat-tree { grid-template-columns: 1fr; }
+  .cat-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── Category tree (homepage) ─────────────────────────────────────────────── */
@@ -362,6 +363,13 @@ main { min-height: 60vh; padding-bottom: 50px; }
 .ct-leaves { display: flex; flex-direction: column; gap: 3px; }
 .ct-leaf { font-size: 13px; color: var(--body); padding: 3px 0; }
 .ct-leaf:hover { color: var(--primary); }
+
+/* ── Category tiles (homepage — parent departments only) ──────────────────── */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 10px 0 22px; }
+.cat-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 20px 14px; transition: border-color .15s, transform .15s, box-shadow .15s; }
+.cat-tile:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.06); }
+.cat-tile .cat-ico { font-size: 30px; line-height: 1; }
+.cat-tile .cat-name { font-size: 14px; font-weight: 700; color: var(--ink); }
 
 /* ── Searchable grouped multi-select ──────────────────────────────────────── */
 .msearch { position: relative; }

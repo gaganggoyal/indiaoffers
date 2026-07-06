@@ -33,8 +33,19 @@
       <!-- ═══ THE SAVINGS STACK ═══ -->
       <div class="stack">
         <div class="stack-head">💡 Best way to pay</div>
+        <% if (stack.isOverride) { %>
+          <div class="stack-row best">
+            <div class="sr-left"><b>True price</b> <small>best price after all offers</small></div>
+            <div class="sr-right"><b class="sr-eff"><%= fmt(stack.truePrice) %></b><span class="sr-tag">BEST</span></div>
+          </div>
+        <% } %>
+        <% if (stack.savingsNote) { %>
+          <div class="stack-row"><span><%= stack.savingsNote %></span></div>
+        <% } %>
         <% if (stack.payOptions.length === 0) { %>
-          <div class="stack-row"><span>No extra card offers apply to this deal right now — the deal price is the true price.</span></div>
+          <% if (!stack.isOverride && !stack.savingsNote) { %>
+            <div class="stack-row"><span>No extra card offers apply to this deal right now — the deal price is the true price.</span></div>
+          <% } %>
         <% } else { %>
           <% stack.payOptions.forEach((o, i) => { %>
             <div class="stack-row <%= i === 0 ? 'best' : '' %>">

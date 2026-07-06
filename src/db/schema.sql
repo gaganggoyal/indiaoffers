@@ -30,6 +30,9 @@ CREATE TABLE IF NOT EXISTS deals (
   image_url       TEXT,
   mrp             REAL,                     -- original price
   price           REAL,                     -- deal price
+  true_price      REAL,                     -- admin override of computed "true price" (blank = auto-stack)
+  savings_note    TEXT,                     -- admin note shown in the savings stack (blank = auto)
+  savings_rows    TEXT,                     -- JSON array of manual pay-option rows; when set, replaces auto-matched bank offers
   coupon_code     TEXT,
   deal_url        TEXT,                     -- merchant product/offer page
   how_to          TEXT,                     -- JSON array of steps

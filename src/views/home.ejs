@@ -35,40 +35,14 @@
   </div>
 </section>
 
-<!-- Categories — department → sub-group → leaf tree -->
+<!-- Categories — top-level departments only -->
 <section class="wrap">
   <div class="sec-head"><h2>🧭 Shop by Category</h2><a href="/deals">All deals →</a></div>
-  <div class="cat-tree">
+  <div class="cat-grid">
     <% categoryTree.forEach(dept => { %>
-      <div class="ct-dept">
-        <a class="ct-dept-head" href="/deals?category=<%= dept.slug %>"><span><%= dept.icon %></span><%= dept.name %></a>
-        <% dept.children.forEach(grp => { %>
-          <div class="ct-grp">
-            <a class="ct-grp-head" href="/deals?category=<%= grp.slug %>"><%= grp.name %></a>
-            <div class="ct-leaves">
-              <% grp.children.forEach(leaf => { %>
-                <a class="ct-leaf" href="/deals?category=<%= leaf.slug %>"><%= leaf.icon %> <%= leaf.name %></a>
-              <% }) %>
-            </div>
-          </div>
-        <% }) %>
-      </div>
-    <% }) %>
-  </div>
-</section>
-
-<!-- Card offers strip -->
-<section class="wrap">
-  <div class="sec-head"><h2>💳 This Week's Card Offers</h2><a href="/bank-offers">All bank offers →</a></div>
-  <div class="offer-row">
-    <% topOffers.forEach(o => { const st = o.store_id ? storeMap[o.store_id] : null; %>
-      <a class="offer-card" href="/bank-offers?bank=<%= encodeURIComponent(o.bank) %>">
-        <div class="oc-bank"><%= o.bank %> <span><%= o.instrument.toUpperCase() %></span></div>
-        <div class="oc-title"><%= o.title %></div>
-        <div class="oc-meta">
-          <%= st ? 'On ' + st.name : 'On all stores' %>
-          <% if (o.max_discount) { %> · save up to <%= fmt(o.max_discount) %><% } %>
-        </div>
+      <a class="cat-tile" href="/deals?category=<%= dept.slug %>">
+        <span class="cat-ico"><%= dept.icon %></span>
+        <span class="cat-name"><%= dept.name %></span>
       </a>
     <% }) %>
   </div>

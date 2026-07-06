@@ -32,6 +32,22 @@ function offerApplies(offer, dealPrice, storeId, todayStr) {
   return true;
 }
 
+/** Parse the deal's manual savings rows (JSON) into clean {bank,label,saving,promo} rows. */
+function parseManualRows(raw) {
+  if (!raw) return [];
+  let arr;
+  try { arr = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return []; }
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map(r => ({
+      bank: String(r.bank || '').trim(),
+      label: String(r.label || '').trim(),
+      saving: Math.max(0, Math.round(+r.saving || 0)),
+      promo: String(r.promo || '').trim() || null
+    }))
+    .filter(r => r.bank || r.label || r.saving > 0);
+}
+
 function computeDiscount(offer, price) {
   if (price == null) return 0;
   let d = offer.discount_type === 'flat'
@@ -55,35 +71,65 @@ function savingsStack(deal, bankOffers) {
   const productDiscount = (mrp != null && price != null && mrp > price) ? mrp - price : 0;
   const discountPct = productDiscount > 0 ? Math.round((productDiscount / mrp) * 100) : null;
 
-  const payOptions = bankOffers
-    .filter(o => offerApplies(o, price, deal.store_id, todayStr))
-    .map(o => {
-      const saving = computeDiscount(o, price);
-      return {
-        id: o.id,
-        bank: o.bank,
-        instrument: o.instrument,
-        instrumentLabel: INSTRUMENT_LABELS[o.instrument] || o.instrument,
-        title: o.title,
-        promoCode: o.promo_code || null,
-        saving,
-        effectivePrice: price != null ? price - saving : null,
-        label: o.discount_type === 'flat'
-          ? `Flat ₹${(+o.discount_value).toLocaleString('en-IN')} off`
-          : `${+o.discount_value}% off${o.max_discount != null ? ` (max ₹${(+o.max_discount).toLocaleString('en-IN')})` : ''}`,
-        minOrder: +o.min_order || 0,
-        validTill: o.valid_till ? String(o.valid_till).slice(0, 10) : null
-      };
-    })
+  // Manual pay-option rows typed by the admin on the deal itself. When present,
+  // they fully replace the auto-matched bank offers for this deal.
+  const manualRows = parseManualRows(deal.savings_rows);
+
+  const payOptions = (manualRows.length
+    ? manualRows.map((r, i) => ({
+        id: 'm' + i,
+        bank: r.bank,
+        instrument: null,
+        instrumentLabel: '',
+        title: r.label,
+        promoCode: r.promo || null,
+        saving: r.saving,
+        effectivePrice: price != null ? Math.max(0, price - r.saving) : null,
+        label: r.label,
+        minOrder: 0,
+        validTill: null
+      }))
+    : bankOffers
+        .filter(o => offerApplies(o, price, deal.store_id, todayStr))
+        .map(o => {
+          const saving = computeDiscount(o, price);
+          return {
+            id: o.id,
+            bank: o.bank,
+            instrument: o.instrument,
+            instrumentLabel: INSTRUMENT_LABELS[o.instrument] || o.instrument,
+            title: o.title,
+            promoCode: o.promo_code || null,
+            saving,
+            effectivePrice: price != null ? price - saving : null,
+            label: o.discount_type === 'flat'
+              ? `Flat ₹${(+o.discount_value).toLocaleString('en-IN')} off`
+              : `${+o.discount_value}% off${o.max_discount != null ? ` (max ₹${(+o.max_discount).toLocaleString('en-IN')})` : ''}`,
+            minOrder: +o.min_order || 0,
+            validTill: o.valid_till ? String(o.valid_till).slice(0, 10) : null
+          };
+        }))
     .filter(o => o.saving > 0)
     .sort((a, b) => b.saving - a.saving);
 
   const best = payOptions[0] || null;
+
+  // Admin overrides (per deal). A manual true_price wins over the computed one;
+  // savings_note replaces the auto explanation. Blank/null → fully auto.
+  const override = deal.true_price != null && deal.true_price !== '' ? +deal.true_price : null;
+  const truePrice = override != null ? override
+                  : (best && price != null ? best.effectivePrice : price);
+  const autoMaxSaving = productDiscount + (best ? best.saving : 0);
+  const maxSaving = override != null && mrp != null ? Math.max(0, mrp - override) : autoMaxSaving;
+
   return {
     price, mrp, productDiscount, discountPct,
     payOptions, best,
-    truePrice: best && price != null ? best.effectivePrice : price,
-    maxSaving: productDiscount + (best ? best.saving : 0)
+    truePrice,
+    maxSaving,
+    isOverride: override != null,
+    isManual: manualRows.length > 0,
+    savingsNote: deal.savings_note || null
   };
 }
 

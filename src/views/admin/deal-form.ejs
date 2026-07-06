@@ -18,11 +18,39 @@
   </label>
   <label>MRP (₹)<input type="number" step="0.01" name="mrp" value="<%= deal && deal.mrp != null ? deal.mrp : '' %>"></label>
   <label>Deal price (₹)<input type="number" step="0.01" name="price" value="<%= deal && deal.price != null ? deal.price : '' %>"></label>
+  <label>True price override (₹) <small>— blank = auto-stacked from bank offers</small><input type="number" step="0.01" name="true_price" value="<%= deal && deal.true_price != null ? deal.true_price : '' %>" placeholder="leave blank to auto-calculate"></label>
+  <label class="full">Savings note <small>— optional line shown in the “Best way to pay” box (blank = auto)</small><input name="savings_note" value="<%= deal ? (deal.savings_note || '') : '' %>" placeholder="e.g. Extra ₹500 off with SBI cards on orders above ₹3,000"></label>
+  <% var srows = []; try { srows = deal && deal.savings_rows ? JSON.parse(deal.savings_rows) : []; } catch (e) { srows = []; } %>
+  <div class="full srows-field">
+    <label>“Best way to pay” rows <small>— type your own pay options. When you add rows here they <b>replace</b> the auto-matched bank offers for this deal. Leave empty to auto-stack from the Bank Offers section.</small></label>
+    <table class="srows" id="srows">
+      <thead><tr><th>Pay with</th><th>Offer text</th><th>Saves (₹)</th><th>Promo code</th><th></th></tr></thead>
+      <tbody>
+        <% srows.forEach(r => { %>
+          <tr>
+            <td><input name="sr_bank[]"   value="<%= r.bank || '' %>"   placeholder="ICICI Amazon Pay CC"></td>
+            <td><input name="sr_label[]"  value="<%= r.label || '' %>"  placeholder="10% instant discount, up to ₹500"></td>
+            <td><input name="sr_saving[]" value="<%= r.saving || '' %>" type="number" step="1" min="0" placeholder="500"></td>
+            <td><input name="sr_promo[]"  value="<%= r.promo || '' %>"  placeholder="optional"></td>
+            <td><button type="button" class="sr-del" title="Remove row">✕</button></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <button type="button" class="btn-sec" id="sr-add">+ Add pay option</button>
+  </div>
   <label>Coupon code<input name="coupon_code" value="<%= deal ? (deal.coupon_code || '') : '' %>"></label>
   <label>Badge<input name="badge" value="<%= deal ? (deal.badge || '') : '' %>" placeholder="HOT / LOOT / SALE"></label>
   <label>Expiry date<input type="date" name="expiry_date" value="<%= deal && deal.expiry_date ? String(deal.expiry_date).slice(0,10) : '' %>"></label>
   <label>Cashback note<input name="cashback_text" value="<%= deal ? (deal.cashback_text || '') : '' %>" placeholder="Upto 4% IO rewards"></label>
-  <label class="full">Image URL<input name="image_url" value="<%= deal ? (deal.image_url || '') : '' %>" placeholder="https://…/product.jpg"></label>
+  <label class="full">Product image
+    <input name="image_url" id="f_deal_image" value="<%= deal ? (deal.image_url || '') : '' %>" placeholder="Paste an image URL, or upload a file below">
+    <span class="uploader" data-target="f_deal_image">
+      <span class="up-preview"></span>
+      <input type="file" accept="image/*" data-upload>
+      <span class="up-status"></span>
+    </span>
+  </label>
   <label class="full">Deal URL (merchant page) *<input name="deal_url" required value="<%= deal ? (deal.deal_url || '') : '' %>" placeholder="https://www.amazon.in/dp/…"></label>
   <label class="full">Description<textarea name="description" rows="3"><%= deal ? (deal.description || '') : '' %></textarea></label>
   <label class="full">How to get it (one step per line)<textarea name="how_to" rows="5"><%= deal ? (JSON.parse(deal.how_to || '[]').join('\n')) : '' %></textarea></label>
@@ -33,7 +61,11 @@
 
 <% if (deal && typeof stack !== 'undefined' && stack) { %>
   <div class="panel">
-    <h2>Savings stack preview (as visitors see it)</h2>
+    <h2>Savings stack preview (as visitors see it)<% if (stack.isManual) { %> <small style="font-weight:600;color:#0c2b55">— manual rows</small><% } else { %> <small style="font-weight:600;color:#64748b">— auto from Bank Offers</small><% } %></h2>
+    <% if (stack.isOverride) { %>
+      <p><b>True price (manual override):</b> ₹<%= (+stack.truePrice).toLocaleString('en-IN') %><% if (stack.mrp) { %> · saves ₹<%= (+stack.maxSaving).toLocaleString('en-IN') %> vs MRP<% } %></p>
+    <% } %>
+    <% if (stack.savingsNote) { %><p class="muted">Note shown to visitors: “<%= stack.savingsNote %>”</p><% } %>
     <% if (stack.payOptions.length === 0) { %>
       <p class="muted">No bank offers currently apply to this deal (check store, min-order and validity).</p>
     <% } else { %>
@@ -53,4 +85,30 @@
     <% } %>
   </div>
 <% } %>
+
+<script>
+// "Best way to pay" custom-rows editor: add / remove rows. Each row's inputs use
+// [] array names so Express parses them into parallel arrays on submit.
+(function () {
+  var tbody = document.querySelector('#srows tbody');
+  var add   = document.getElementById('sr-add');
+  if (!tbody || !add) return;
+  function rowHTML() {
+    return '<tr>' +
+      '<td><input name="sr_bank[]"   placeholder="ICICI Amazon Pay CC"></td>' +
+      '<td><input name="sr_label[]"  placeholder="10% instant discount, up to ₹500"></td>' +
+      '<td><input name="sr_saving[]" type="number" step="1" min="0" placeholder="500"></td>' +
+      '<td><input name="sr_promo[]"  placeholder="optional"></td>' +
+      '<td><button type="button" class="sr-del" title="Remove row">✕</button></td>' +
+    '</tr>';
+  }
+  add.addEventListener('click', function () {
+    tbody.insertAdjacentHTML('beforeend', rowHTML());
+    tbody.lastElementChild.querySelector('input').focus();
+  });
+  tbody.addEventListener('click', function (e) {
+    if (e.target.classList.contains('sr-del')) e.target.closest('tr').remove();
+  });
+})();
+</script>
 <%- include('_bottom') %>

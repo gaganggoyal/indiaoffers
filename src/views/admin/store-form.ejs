@@ -23,7 +23,14 @@
   <label class="full">Affiliate params <small>— query string appended to every outbound link for commission. Overrides the affiliate-type default. Use <code>{click}</code> for the click id.</small>
     <input name="affiliate_params" value="<%= store ? (store.affiliate_params || '') : '' %>" placeholder="tag=indiaoffers0c-21&amp;subid={click}">
   </label>
-  <label class="full">Logo URL<input name="logo_url" value="<%= store ? (store.logo_url || '') : '' %>"></label>
+  <label class="full">Logo
+    <input name="logo_url" id="f_store_logo" value="<%= store ? (store.logo_url || '') : '' %>" placeholder="Paste a logo URL, or upload a file below">
+    <span class="uploader" data-target="f_store_logo">
+      <span class="up-preview"></span>
+      <input type="file" accept="image/*" data-upload>
+      <span class="up-status"></span>
+    </span>
+  </label>
   <label>Cashback note<input name="cashback_text" value="<%= store ? (store.cashback_text || '') : '' %>" placeholder="Upto 5% IO rewards"></label>
   <label class="full">Description<textarea name="description" rows="2"><%= store ? (store.description || '') : '' %></textarea></label>
   <label class="check"><input type="checkbox" name="is_active" <%= !store || store.is_active ? 'checked' : '' %>> Live</label>

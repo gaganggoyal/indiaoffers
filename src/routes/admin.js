@@ -6,6 +6,9 @@
  */
 
 const router = require('express').Router();
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { adminAuth, signAdmin } = require('../middleware/auth');
@@ -35,6 +38,33 @@ router.post('/login', async (req, res) => {
 router.post('/logout', (req, res) => { res.clearCookie('io_admin'); res.redirect('/admin/login'); });
 
 router.use(adminAuth);
+
+// ── Image uploads ───────────────────────────────────────────────────────────────
+// Admin can upload an image file instead of pasting a URL. Files land in
+// public/uploads/ and are served at /uploads/<name>; the JSON { url } response
+// is dropped into the matching URL field by the form's upload widget.
+const UPLOAD_DIR = path.join(__dirname, '..', '..', 'public', 'uploads');
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+const ALLOWED_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'image/svg+xml': '.svg', 'image/avif': '.avif' };
+const uploadImage = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+    filename: (req, file, cb) => {
+      const ext = ALLOWED_EXT[file.mimetype] || (path.extname(file.originalname).toLowerCase().match(/^\.[a-z0-9]{1,5}$/) || ['.jpg'])[0];
+      cb(null, `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}${ext}`);
+    }
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },        // 5 MB
+  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
+}).single('file');
+
+router.post('/upload', (req, res) => {
+  uploadImage(req, res, err => {
+    if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'Image too large (max 5 MB)' : 'Upload failed' });
+    if (!req.file) return res.status(400).json({ error: 'Please choose an image file' });
+    res.json({ url: '/uploads/' + req.file.filename });
+  });
+});
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
@@ -97,23 +127,36 @@ router.post('/deals/save', async (req, res, next) => {
   try {
     const b = req.body;
     const howTo = JSON.stringify(String(b.how_to || '').split('\n').map(s => s.trim()).filter(Boolean));
+    // Manual "Best way to pay" rows: zip the parallel sr_* arrays into objects.
+    const toArr = v => v == null ? [] : (Array.isArray(v) ? v : [v]);
+    const srBank = toArr(b['sr_bank']), srLabel = toArr(b['sr_label']),
+          srSave = toArr(b['sr_saving']), srPromo = toArr(b['sr_promo']);
+    const rows = srBank.map((_, i) => ({
+      bank:  String(srBank[i]  || '').trim(),
+      label: String(srLabel[i] || '').trim(),
+      saving: Math.max(0, Math.round(+srSave[i] || 0)),
+      promo: String(srPromo[i] || '').trim() || undefined
+    })).filter(r => r.bank || r.label || r.saving > 0);
+    const savingsRows = rows.length ? JSON.stringify(rows) : null;
     if (b.id) {
       await db.query(`
         UPDATE deals SET store_id=?, title=?, description=?, category=?, image_url=?, mrp=?, price=?,
-          coupon_code=?, deal_url=?, how_to=?, badge=?, cashback_text=?, is_trending=?, is_active=?,
-          expiry_date=?, updated_at=?
+          true_price=?, savings_note=?, savings_rows=?, coupon_code=?, deal_url=?, how_to=?, badge=?, cashback_text=?,
+          is_trending=?, is_active=?, expiry_date=?, updated_at=?
         WHERE id=?
       `, [b.store_id, b.title, b.description || '', b.category || '', b.image_url || null,
-          numOrNull(b.mrp), numOrNull(b.price), b.coupon_code || null, b.deal_url || null, howTo,
+          numOrNull(b.mrp), numOrNull(b.price), numOrNull(b.true_price), (b.savings_note || '').trim() || null, savingsRows,
+          b.coupon_code || null, b.deal_url || null, howTo,
           b.badge || null, b.cashback_text || null, boolInt(b.is_trending), boolInt(b.is_active),
           b.expiry_date || null, nowSql(), b.id]);
     } else {
       await db.query(`
         INSERT INTO deals (id, slug, store_id, title, description, category, image_url, mrp, price,
-          coupon_code, deal_url, how_to, badge, cashback_text, is_trending, is_active, expiry_date, posted_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+          true_price, savings_note, savings_rows, coupon_code, deal_url, how_to, badge, cashback_text, is_trending, is_active, expiry_date, posted_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `, [uid('dl'), slugify(b.title) + '-' + Math.random().toString(36).slice(2, 5), b.store_id, b.title,
           b.description || '', b.category || '', b.image_url || null, numOrNull(b.mrp), numOrNull(b.price),
+          numOrNull(b.true_price), (b.savings_note || '').trim() || null, savingsRows,
           b.coupon_code || null, b.deal_url || null, howTo, b.badge || null, b.cashback_text || null,
           boolInt(b.is_trending), boolInt(b.is_active), b.expiry_date || null]);
     }

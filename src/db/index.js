@@ -43,6 +43,9 @@ if (config.db.driver === 'mysql') {
     if (!has) sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
   };
   addColumn('stores', 'affiliate_params', 'affiliate_params TEXT');
+  addColumn('deals', 'true_price', 'true_price REAL');
+  addColumn('deals', 'savings_note', 'savings_note TEXT');
+  addColumn('deals', 'savings_rows', 'savings_rows TEXT');
 
   const toSqlite = sql => sql
     .replace(/INSERT\s+IGNORE/gi, 'INSERT OR IGNORE')

@@ -15,7 +15,14 @@
   <label>Joining fee<input name="joining_fee" value="<%= card ? (card.joining_fee || '') : '' %>" placeholder="₹1,000 + GST"></label>
   <label>Annual fee<input name="annual_fee" value="<%= card ? (card.annual_fee || '') : '' %>" placeholder="₹1,000 (waived on ₹1L spend)"></label>
   <label class="full">Tagline<input name="tagline" value="<%= card ? (card.tagline || '') : '' %>" placeholder="5% cashback on Amazon, Flipkart, Swiggy & more"></label>
-  <label class="full">Image URL (card art)<input name="image_url" value="<%= card ? (card.image_url || '') : '' %>"></label>
+  <label class="full">Card art
+    <input name="image_url" id="f_card_image" value="<%= card ? (card.image_url || '') : '' %>" placeholder="Paste an image URL, or upload a file below">
+    <span class="uploader" data-target="f_card_image">
+      <span class="up-preview"></span>
+      <input type="file" accept="image/*" data-upload>
+      <span class="up-status"></span>
+    </span>
+  </label>
   <label class="full">Apply URL (affiliate)<input name="apply_url" value="<%= card ? (card.apply_url || '') : '' %>" placeholder="https://…"></label>
   <label class="full">Video URL (YouTube — how to apply)<input name="video_url" value="<%= card ? (card.video_url || '') : '' %>" placeholder="https://www.youtube.com/watch?v=…"></label>
   <label class="full">Benefits (one per line)<textarea name="benefits" rows="5"><%= card ? JSON.parse(card.benefits || '[]').join('\n') : '' %></textarea></label>
