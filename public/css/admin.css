@@ -72,8 +72,20 @@ tr.hl { background: #ecfdf5; }
 
 @media (max-width: 800px) {
   .shell { grid-template-columns: 1fr; }
-  .side { position: static; height: auto; }
+  /* sidebar → sticky, horizontally scrollable top bar */
+  .side { position: sticky; top: 0; z-index: 50; height: auto; flex-direction: row; align-items: center;
+          gap: 6px; padding: 9px 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .side-brand { padding: 4px 6px; white-space: nowrap; }
+  .side nav { flex-direction: row; gap: 4px; }
+  .side nav a { white-space: nowrap; padding: 8px 11px; }
+  .side-out { margin: 0 0 0 auto; }
+  .side-out button { white-space: nowrap; padding: 8px 11px; width: auto; }
+  .body { padding: 16px 14px; }
+  .page-bar { flex-wrap: wrap; gap: 10px; }
   .form { grid-template-columns: 1fr; }
+  /* wide admin tables scroll inside their panel instead of breaking layout */
+  .panel { overflow-x: auto; }
+  table { min-width: 520px; }
 }
 
 /* ── Image uploader widget ────────────────────────────────────────────────── */

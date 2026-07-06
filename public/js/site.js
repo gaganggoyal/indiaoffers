@@ -1,6 +1,49 @@
 /* IndiaOffers v2 — tiny progressive enhancements (site works fully without JS). */
 'use strict';
 
+// ── Mobile nav: hamburger toggle ──────────────────────────────────────────────
+// Without JS the nav simply shows stacked; adding `js-nav` lets CSS collapse it
+// behind the hamburger button, which we then wire up here.
+(function () {
+  const header = document.querySelector('.header');
+  const toggle = document.querySelector('.nav-toggle');
+  const nav = document.getElementById('site-nav');
+  if (!header || !toggle || !nav) return;
+  header.classList.add('js-nav');
+  const setOpen = open => {
+    nav.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  };
+  toggle.addEventListener('click', () => setOpen(!nav.classList.contains('open')));
+  nav.addEventListener('click', e => { if (e.target.closest('a')) setOpen(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+})();
+
+// ── PWA: register the service worker (enables "Add to Home Screen" + offline) ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+
+// ── PWA: show our own "Install app" button only when the browser offers install ──
+(function () {
+  let deferred = null;
+  const btn = document.getElementById('pwa-install');
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();                 // suppress the mini-infobar; use our button
+    deferred = e;
+    if (btn) btn.hidden = false;
+  });
+  if (btn) btn.addEventListener('click', async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice;
+    deferred = null;
+    btn.hidden = true;
+  });
+  window.addEventListener('appinstalled', () => { if (btn) btn.hidden = true; });
+})();
+
 // Copy-to-clipboard for coupon codes
 document.addEventListener('click', e => {
   const btn = e.target.closest('.btn-copy');

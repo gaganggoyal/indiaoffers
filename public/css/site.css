@@ -30,6 +30,13 @@ img { max-width: 100%; }
 .nav a:hover { background: var(--bg); color: var(--primary); }
 .nav a.on { background: var(--primary-soft); color: var(--primary); }
 
+/* hamburger — hidden on desktop, shown on mobile only when JS is active */
+.nav-toggle { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 42px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); cursor: pointer; padding: 0 11px; }
+.nav-toggle span { display: block; height: 2px; background: var(--ink); border-radius: 2px; transition: transform .2s, opacity .2s; }
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
 main { min-height: 60vh; padding-bottom: 50px; }
 
 /* hero banners */
@@ -182,6 +189,8 @@ main { min-height: 60vh; padding-bottom: 50px; }
 .footer a:not(.brand) { display: block; font-size: 13px; padding: 3px 0; }
 .footer a:hover { color: #fff; }
 .footer-note { border-top: 1px solid #1e293b; text-align: center; font-size: 12px; padding: 16px; }
+.pwa-install { margin-top: 14px; background: var(--primary); color: #fff; border: 0; font-weight: 700; font-size: 13px; padding: 10px 16px; border-radius: 10px; cursor: pointer; }
+.pwa-install:hover { background: var(--primary-dark); }
 
 /* ═══ shared buttons ═══ */
 .btn-primary { display: inline-block; text-align: center; background: var(--primary); color: #fff; font-weight: 800; font-size: 14px; padding: 11px 20px; border-radius: 11px; border: 0; cursor: pointer; transition: all .15s; }
@@ -340,14 +349,69 @@ main { min-height: 60vh; padding-bottom: 50px; }
   .acc-grid { grid-template-columns: 1fr; }
   .pick { grid-template-columns: 1fr; }
   .pk-procon { grid-template-columns: 1fr; }
-  .header-in { flex-wrap: wrap; }
+  /* header → hamburger nav */
+  .header-in { flex-wrap: wrap; gap: 12px; }
+  .brand { order: 1; }
+  .nav-toggle { order: 2; margin-left: auto; }
+  .js-nav .nav-toggle { display: flex; }
   .search { order: 3; min-width: 100%; }
-  .nav { flex-wrap: wrap; }
+  .nav { order: 4; width: 100%; flex-direction: column; gap: 2px; margin-left: 0; }
+  .nav a { padding: 12px 14px; border-radius: 10px; }
+  .nav a.acct { background: var(--bg); }
+  .js-nav .nav { display: none; }
+  .js-nav .nav.open { display: flex; }
   .footer-in { grid-template-columns: 1fr 1fr; }
   .store-hero .btn-go { margin-left: 0; }
-  .af-grid { grid-template-columns: 1fr; }
+  .af-grid, .af-grid.two { grid-template-columns: 1fr; }
   .cat-tree { grid-template-columns: 1fr; }
   .cat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ═══ phones (≤600px) — typography, spacing, compact grids ═══ */
+@media (max-width: 600px) {
+  .wrap { padding: 0 14px; }
+  .topbar { font-size: 11.5px; padding: 6px 12px; }
+  .header-in { padding: 10px 14px; }
+  main { padding-bottom: 34px; }
+
+  /* headings scale down */
+  .page-head h1 { font-size: 22px; }
+  .page-head p { font-size: 13px; }
+  .sec-head { margin: 22px 0 12px; }
+  .sec-head h2 { font-size: 18px; }
+  .gd-head h1 { font-size: 22px; }
+  .cd-head h1 { font-size: 21px; }
+  .dd-main h1 { font-size: 20px; }
+  .dd-price { font-size: 26px; }
+
+  /* grids → phone layout */
+  .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .store-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .offer-row, .offer-grid, .card-grid, .guide-grid { grid-template-columns: 1fr; }
+  .footer-in { grid-template-columns: 1fr 1fr; gap: 22px 18px; padding: 28px 16px 20px; }
+
+  /* deal cards compact */
+  .card-img { height: 132px; }
+  .card-body { padding: 11px 12px 13px; }
+  .card-title { font-size: 13px; min-height: 34px; }
+  .card-prices b { font-size: 15px; }
+
+  /* deal detail */
+  .dd { padding: 14px; gap: 18px; }
+  .dd-media img { aspect-ratio: 16/10; }
+  .dd-prices { flex-wrap: wrap; gap: 8px; }
+  .codebox { width: 100%; justify-content: space-between; }
+
+  /* misc */
+  .store-hero { padding: 18px; }
+  .store-hero h1 { font-size: 20px; }
+  .pick { padding: 16px; }
+  .pk-top h2 { font-size: 17px; }
+  .pk-price { margin-left: 0; }
+  .cat-tile { padding: 16px 10px; }
+  .cat-tile .cat-ico { font-size: 26px; }
+  .cat-tile .cat-name { font-size: 13px; }
+  .auth-card { padding: 24px 20px; }
 }
 
 /* ── Category tree (homepage) ─────────────────────────────────────────────── */

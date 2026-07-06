@@ -5,11 +5,14 @@
       <img src="/img/logo-icon.png" alt="IndiaOffers logo" width="34" height="34">
       <span>India<em>Offers</em>.in</span>
     </a>
+    <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
+      <span></span><span></span><span></span>
+    </button>
     <form class="search" action="/search" method="get" role="search">
       <input type="search" name="q" placeholder="Search deals, products, stores…" autocomplete="off">
       <button type="submit" aria-label="Search">🔍</button>
     </form>
-    <nav class="nav">
+    <nav class="nav" id="site-nav">
       <a href="/deals" class="<%= path.startsWith('/deals') || path.startsWith('/deal/') ? 'on' : '' %>">Deals</a>
       <a href="/bank-offers" class="<%= path.startsWith('/bank-offers') ? 'on' : '' %>">Card Offers</a>
       <a href="/cards" class="<%= path.startsWith('/card') ? 'on' : '' %>">Bank Cards</a>
