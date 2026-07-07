@@ -11,7 +11,7 @@ const fs = require('fs');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
-const { adminAuth, signAdmin } = require('../middleware/auth');
+const { adminAuth, signAdmin, sessionCookie, clearOpts } = require('../middleware/auth');
 const { savingsStack, activeBankOffers } = require('../services/savings');
 const { generateCardOfferAlerts } = require('../services/alerts');
 const { deliverPendingAlerts } = require('../services/alertSender');
@@ -35,11 +35,11 @@ router.post('/login', async (req, res) => {
     return res.status(401).render('admin/login', { title: 'Admin Login', error: 'Invalid credentials' });
   }
   await db.query('UPDATE admins SET last_login = ? WHERE id = ?', [nowSql(), rows[0].id]);
-  res.cookie('io_admin', signAdmin(rows[0]), { httpOnly: true, sameSite: 'lax', maxAge: 7 * 864e5 });
+  res.cookie('io_admin', signAdmin(rows[0]), sessionCookie(7 * 864e5));
   res.redirect('/admin');
 });
 
-router.post('/logout', (req, res) => { res.clearCookie('io_admin'); res.redirect('/admin/login'); });
+router.post('/logout', (req, res) => { res.clearCookie('io_admin', clearOpts()); res.redirect('/admin/login'); });
 
 router.use(adminAuth);
 

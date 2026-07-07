@@ -10,7 +10,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const db = require('../db');
-const { userAuth, signUser } = require('../middleware/auth');
+const { userAuth, signUser, sessionCookie, clearOpts } = require('../middleware/auth');
 const { CATEGORIES, CATEGORY_GROUPS } = require('../data/taxonomy');
 
 const { uid, nowSql } = db;
@@ -82,7 +82,7 @@ router.post('/register', async (req, res, next) => {
       await db.query('INSERT IGNORE INTO user_cards (user_id, bank_card_id) VALUES (?, ?)', [id, cid]);
     }
 
-    res.cookie('io_user', signUser({ id, username, email }), { httpOnly: true, sameSite: 'lax', maxAge: 30 * 864e5 });
+    res.cookie('io_user', signUser({ id, username, email }), sessionCookie(30 * 864e5));
     res.redirect('/account');
   } catch (err) { next(err); }
 });
@@ -107,13 +107,13 @@ router.post('/login', async (req, res, next) => {
       });
     }
     await db.query('UPDATE users SET last_login = ? WHERE id = ?', [nowSql(), rows[0].id]);
-    res.cookie('io_user', signUser(rows[0]), { httpOnly: true, sameSite: 'lax', maxAge: 30 * 864e5 });
+    res.cookie('io_user', signUser(rows[0]), sessionCookie(30 * 864e5));
     const dest = req.body.next && req.body.next.startsWith('/') ? req.body.next : '/account';
     res.redirect(dest);
   } catch (err) { next(err); }
 });
 
-router.post('/logout', (req, res) => { res.clearCookie('io_user'); res.redirect('/'); });
+router.post('/logout', (req, res) => { res.clearCookie('io_user', clearOpts()); res.redirect('/'); });
 
 // ── Account dashboard (requires login) ────────────────────────────────────────
 router.get('/account', userAuth, async (req, res, next) => {
@@ -125,7 +125,7 @@ router.get('/account', userAuth, async (req, res, next) => {
       activeBanks(),
       db.query('SELECT * FROM alerts WHERE user_id = ? ORDER BY created_at DESC LIMIT 20', [req.user.id])
     ]);
-    if (rows.length === 0) { res.clearCookie('io_user'); return res.redirect('/login'); }
+    if (rows.length === 0) { res.clearCookie('io_user', clearOpts()); return res.redirect('/login'); }
 
     res.render('account/dashboard', {
       title: 'My Account — IndiaOffers.in', meta: {},

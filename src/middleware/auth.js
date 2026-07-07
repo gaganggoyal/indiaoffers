@@ -3,6 +3,14 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 
+// Session-cookie options. httpOnly + lax always; `secure` only in production,
+// where the site is served over HTTPS (so the cookie is never sent over plain
+// http and can't be sniffed). clearCookie must use the same flags to reliably
+// delete a secure cookie.
+const cookieOpts = extra => ({ httpOnly: true, sameSite: 'lax', secure: config.isProd, ...extra });
+const sessionCookie = maxAge => cookieOpts({ maxAge });
+const clearOpts = () => cookieOpts();
+
 /** Admin session lives in an httpOnly cookie (SSR-friendly). */
 function adminAuth(req, res, next) {
   const token = req.cookies && req.cookies.io_admin;
@@ -11,7 +19,7 @@ function adminAuth(req, res, next) {
     req.admin = jwt.verify(token, config.jwtSecret);
     next();
   } catch {
-    res.clearCookie('io_admin');
+    res.clearCookie('io_admin', clearOpts());
     res.redirect('/admin/login');
   }
 }
@@ -26,7 +34,7 @@ function attachUser(req, res, next) {
   res.locals.user = null;
   if (token) {
     try { res.locals.user = req.user = jwt.verify(token, config.jwtSecret); }
-    catch { res.clearCookie('io_user'); }
+    catch { res.clearCookie('io_user', clearOpts()); }
   }
   next();
 }
@@ -40,7 +48,7 @@ function userAuth(req, res, next) {
     res.locals.user = req.user;
     next();
   } catch {
-    res.clearCookie('io_user');
+    res.clearCookie('io_user', clearOpts());
     res.redirect('/login');
   }
 }
@@ -49,4 +57,4 @@ function signUser(user) {
   return jwt.sign({ id: user.id, username: user.username, email: user.email }, config.jwtSecret, { expiresIn: '30d' });
 }
 
-module.exports = { adminAuth, signAdmin, attachUser, userAuth, signUser };
+module.exports = { adminAuth, signAdmin, attachUser, userAuth, signUser, sessionCookie, clearOpts };

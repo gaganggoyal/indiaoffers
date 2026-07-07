@@ -40,3 +40,25 @@ module.exports = {
     intervalMin: Math.max(1, parseInt(process.env.ALERTS_SEND_INTERVAL_MIN || '5', 10))
   }
 };
+
+// ── Production safety: fail fast instead of booting with insecure defaults ──────
+// The JWT secret signs admin/user session cookies. If it's left at the public
+// default, anyone can forge an admin login — so in production we refuse to start.
+if (module.exports.isProd) {
+  const fatal = [];
+  const warn = [];
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev_only_change_in_production') {
+    fatal.push('JWT_SECRET must be set to a long random string (e.g. `openssl rand -hex 32`).');
+  }
+  if (module.exports.db.driver === 'mysql' && !process.env.DB_PASSWORD) {
+    warn.push('DB_PASSWORD is empty while DB_DRIVER=mysql — is that intentional?');
+  }
+  if (!process.env.SITE_URL) {
+    warn.push('SITE_URL is unset — canonical URLs, OpenGraph tags and alert emails will use the default domain.');
+  }
+  if (warn.length) console.warn('\n[config] Warnings:\n  - ' + warn.join('\n  - ') + '\n');
+  if (fatal.length) {
+    console.error('\n[config] Refusing to start in production:\n  - ' + fatal.join('\n  - ') + '\n');
+    process.exit(1);
+  }
+}
