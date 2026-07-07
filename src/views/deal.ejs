@@ -30,60 +30,42 @@
         </div>
       <% } %>
 
-      <!-- ═══ THE SAVINGS STACK ═══ -->
-      <div class="stack">
-        <div class="stack-head">💡 Best way to pay</div>
-        <% if (stack.isOverride) { %>
-          <div class="stack-row best">
-            <div class="sr-left"><b>True price</b> <small>best price after all offers</small></div>
-            <div class="sr-right"><b class="sr-eff"><%= fmt(stack.truePrice) %></b><span class="sr-tag">BEST</span></div>
+      <!-- Grab button just below the price, then a single "How to get this deal"
+           card. Extra savings (when the admin added them) live INSIDE this card
+           rather than in a separate box. -->
+      <div class="dd-action">
+        <div class="dd-grab">
+          <a class="btn-go" href="/go/d/<%= deal.id %>" target="_blank" rel="noopener nofollow">Grab this deal at <%= store.name %> →</a>
+          <div class="dd-meta">
+            ⏰ Expires <%= deal.expiry_date ? String(deal.expiry_date).slice(0,10) : 'soon' %>
+            · 👆 <%= (deal.clicks || 0).toLocaleString('en-IN') %> clicks
+            <% if (deal.cashback_text) { %> · 💰 <%= deal.cashback_text %><% } %>
           </div>
-        <% } %>
-        <% if (stack.savingsNote) { %>
-          <div class="stack-row"><span><%= stack.savingsNote %></span></div>
-        <% } %>
-        <% if (stack.payOptions.length === 0) { %>
-          <% if (!stack.isOverride && !stack.savingsNote) { %>
-            <div class="stack-row"><span>No extra card offers apply to this deal right now — the deal price is the true price.</span></div>
-          <% } %>
-        <% } else { %>
-          <% stack.payOptions.forEach((o, i) => { %>
-            <div class="stack-row <%= i === 0 ? 'best' : '' %>">
-              <div class="sr-left">
-                <b><%= o.bank %></b> <span class="sr-inst"><%= o.instrumentLabel %></span>
-                <small><%= o.label %><%= o.promoCode ? ` · code ${o.promoCode}` : '' %></small>
-              </div>
-              <div class="sr-right">
-                <span class="sr-save">−<%= fmt(o.saving) %></span>
-                <b class="sr-eff"><%= fmt(o.effectivePrice) %></b>
-                <% if (i === 0) { %><span class="sr-tag">BEST</span><% } %>
-              </div>
-            </div>
-          <% }) %>
-          <div class="stack-total">
-            Total saved vs MRP: <b><%= fmt(stack.maxSaving) %></b>
-            <% if (stack.mrp) { %> (<%= Math.round(stack.maxSaving / stack.mrp * 100) %>%)<% } %>
-          </div>
-        <% } %>
+        </div>
+
+        <div class="dd-howto">
+          <div class="dd-howto-h">📋 How to get this deal</div>
+          <ol class="steps">
+            <% if (howTo.length) { %>
+              <% howTo.forEach(s => { %><li><%= s %></li><% }) %>
+            <% } else { %>
+              <li>Click the <b>“Grab this deal”</b> button above to open the offer at <%= store.name %>.</li>
+              <% if (deal.coupon_code) { %><li>Apply coupon code <b><%= deal.coupon_code %></b> at checkout.</li><% } %>
+            <% } %>
+            <%# Extra savings are woven in as the next steps (2nd/3rd point) rather than a separate box %>
+            <% if (stack.savingsNote) { %><li><%= stack.savingsNote %></li><% } %>
+            <% stack.payOptions.forEach(o => { %>
+              <li>Pay with <b><%= o.bank %></b> to get <%= o.label %><%= o.promoCode ? ` (use code ${o.promoCode})` : '' %> — effective price <b class="hi-price"><%= fmt(o.effectivePrice) %></b>.</li>
+            <% }) %>
+            <% if (stack.isOverride && stack.payOptions.length === 0) { %>
+              <li>With the current offers, your effective price comes to about <b class="hi-price"><%= fmt(stack.truePrice) %></b>.</li>
+            <% } %>
+          </ol>
+        </div>
       </div>
 
-      <a class="btn-go" href="/go/d/<%= deal.id %>" target="_blank" rel="noopener nofollow">Grab this deal at <%= store.name %> →</a>
-      <div class="dd-meta">
-        ⏰ Expires <%= deal.expiry_date ? String(deal.expiry_date).slice(0,10) : 'soon' %>
-        · 👆 <%= (deal.clicks || 0).toLocaleString('en-IN') %> clicks
-        <% if (deal.cashback_text) { %> · 💰 <%= deal.cashback_text %><% } %>
-      </div>
     </div>
   </div>
-
-  <% if (howTo.length) { %>
-    <div class="panel">
-      <h2>📋 How to get this deal</h2>
-      <ol class="steps">
-        <% howTo.forEach(s => { %><li><%= s %></li><% }) %>
-      </ol>
-    </div>
-  <% } %>
 
   <% if (deal.description) { %>
     <div class="panel"><h2>ℹ️ About this deal</h2><p><%= deal.description %></p></div>
