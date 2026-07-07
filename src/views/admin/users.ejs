@@ -1,5 +1,9 @@
 <%- include('_top') %>
 <div class="page-bar"><h1>Registered Users</h1><span class="muted"><%= users.length %> users</span></div>
+<%- include('_filters', { action: '/admin/users', q: active.q, ph: 'Search by name, email or mobile…', selects: [
+  { name: 'whatsapp', value: active.whatsapp, all: 'Any WhatsApp', options: [{ v: 'yes', l: 'WhatsApp opt-in' }, { v: 'no', l: 'No WhatsApp' }] },
+  { name: 'bulk',     value: active.bulk,     all: 'All buyers',   options: [{ v: 'yes', l: 'Bulk buyers' }, { v: 'no', l: 'Regular' }] }
+] }) %>
 <div class="panel">
   <table>
     <thead><tr><th>Username</th><th>Email</th><th>Mobile</th><th>WhatsApp</th><th>Bulk</th><th>Cards</th><th>Categories</th><th>Joined</th></tr></thead>

@@ -1,5 +1,10 @@
 <%- include('_top') %>
 <div class="page-bar"><h1>Bank Cards</h1><a class="btn" href="/admin/cards/new">+ New Card</a></div>
+<%- include('_filters', { action: '/admin/cards', q: active.q, ph: 'Search by card or bank…', selects: [
+  { name: 'type',     value: active.type,     all: 'All types',  options: [{ v: 'credit', l: 'Credit' }, { v: 'debit', l: 'Debit' }] },
+  { name: 'featured', value: active.featured, all: 'Any',        options: [{ v: 'yes', l: 'Featured' }, { v: 'no', l: 'Not featured' }] },
+  { name: 'status',   value: active.status,   all: 'Any status', options: [{ v: 'live', l: 'Live' }, { v: 'hidden', l: 'Hidden' }] }
+] }) %>
 <div class="panel">
   <table>
     <thead><tr><th>Card</th><th>Bank</th><th>Type</th><th>Fees</th><th>Featured</th><th>Status</th><th></th></tr></thead>

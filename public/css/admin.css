@@ -35,8 +35,20 @@ h1 { font-size: 21px; color: var(--ink); }
 .page-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .btn { background: var(--primary); color: #fff; border: 0; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; display: inline-block; }
 .btn:hover { filter: brightness(.94); }
+.pb-actions { display: flex; align-items: center; gap: 14px; }
+.btn-ghost { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); }
+.btn-ghost:hover { background: var(--primary); color: #fff; filter: none; }
 .lnk { color: var(--primary); font-weight: 700; font-size: 13px; background: none; border: 0; cursor: pointer; }
 .lnk.danger { color: var(--danger); }
+
+/* Admin list search + filter bar */
+.filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+.filter-bar .fb-search { flex: 1 1 260px; min-width: 180px; padding: 9px 13px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 13.5px; font-family: inherit; outline: none; background: #fff; }
+.filter-bar .fb-select { padding: 9px 11px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 13px; font-family: inherit; background: #fff; outline: none; cursor: pointer; }
+.filter-bar .fb-search:focus, .filter-bar .fb-select:focus { border-color: var(--primary); }
+.filter-bar .fb-go { padding: 9px 18px; }
+.filter-bar .fb-reset { white-space: nowrap; }
+@media (max-width: 640px) { .filter-bar .fb-search { flex-basis: 100%; } }
 
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin: 18px 0; }
 .tile { background: var(--card); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--line); }

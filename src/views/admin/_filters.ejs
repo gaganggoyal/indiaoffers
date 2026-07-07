@@ -1,0 +1,21 @@
+<%
+  // Reusable admin search + filter bar (GET form).
+  // expects: action, and optionally q, ph, selects[{ name, value, all, options:[{v,l}] }]
+  const _selects = (typeof selects !== 'undefined' && selects) ? selects : [];
+  const _q  = (typeof q  !== 'undefined' && q)  ? q  : '';
+  const _ph = (typeof ph !== 'undefined' && ph) ? ph : 'Search…';
+  const _dirty = !!_q || _selects.some(s => String(s.value || '') !== '');
+%>
+<form class="filter-bar" method="get" action="<%= action %>">
+  <input class="fb-search" type="search" name="q" value="<%= _q %>" placeholder="<%= _ph %>" autocomplete="off">
+  <% _selects.forEach(s => { %>
+    <select class="fb-select" name="<%= s.name %>">
+      <option value=""><%= s.all %></option>
+      <% s.options.forEach(o => { %>
+        <option value="<%= o.v %>" <%= String(s.value || '') === String(o.v) ? 'selected' : '' %>><%= o.l %></option>
+      <% }) %>
+    </select>
+  <% }) %>
+  <button class="btn fb-go" type="submit">Search</button>
+  <% if (_dirty) { %><a class="lnk fb-reset" href="<%= action %>">Reset</a><% } %>
+</form>

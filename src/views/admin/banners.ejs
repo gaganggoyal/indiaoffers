@@ -1,5 +1,8 @@
 <%- include('_top') %>
 <div class="page-bar"><h1>Homepage Banners</h1><a class="btn" href="/admin/banners/new">+ New Banner</a></div>
+<%- include('_filters', { action: '/admin/banners', q: active.q, ph: 'Search banners by title…', selects: [
+  { name: 'status', value: active.status, all: 'Any status', options: [{ v: 'live', l: 'Live' }, { v: 'hidden', l: 'Off' }] }
+] }) %>
 <div class="panel">
   <table>
     <thead><tr><th>Preview</th><th>Title</th><th>Link</th><th>Sort</th><th>Status</th><th></th></tr></thead>

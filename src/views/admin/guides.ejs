@@ -1,5 +1,9 @@
 <%- include('_top') %>
 <div class="page-bar"><h1>Buying Guides</h1><a class="btn" href="/admin/guides/new">+ New Guide</a></div>
+<%- include('_filters', { action: '/admin/guides', q: active.q, ph: 'Search guides by title…', selects: [
+  { name: 'category', value: active.category, all: 'All categories', options: categories.map(c => ({ v: c.slug, l: c.name })) },
+  { name: 'status',   value: active.status,   all: 'Any status',     options: [{ v: 'live', l: 'Live' }, { v: 'hidden', l: 'Hidden' }] }
+] }) %>
 <div class="panel">
   <table>
     <thead><tr><th>Guide</th><th>Category</th><th>Products</th><th>Sort</th><th>Status</th><th></th></tr></thead>

@@ -1,5 +1,15 @@
 <%- include('_top') %>
 <div class="page-bar"><h1>Deals</h1><a class="btn" href="/admin/deals/new">+ New Deal</a></div>
+<%
+  const STATUS_OPTS = [{ v: 'live', l: 'Live' }, { v: 'hidden', l: 'Hidden' }];
+  const EXPIRY_OPTS = [{ v: 'active', l: 'Active (not expired)' }, { v: 'soon', l: 'Expiring ≤ 7 days' }, { v: 'expired', l: 'Expired' }, { v: 'none', l: 'No expiry date' }];
+%>
+<%- include('_filters', { action: '/admin/deals', q: active.q, ph: 'Search deals by title…', selects: [
+  { name: 'store',    value: active.store,    all: 'All stores',     options: stores.map(s => ({ v: s.id, l: s.name })) },
+  { name: 'category', value: active.category, all: 'All categories', options: categories.map(c => ({ v: c.slug, l: c.name })) },
+  { name: 'status',   value: active.status,   all: 'Any status',     options: STATUS_OPTS },
+  { name: 'expiry',   value: active.expiry,   all: 'Any expiry',     options: EXPIRY_OPTS }
+] }) %>
 <div class="panel">
   <table>
     <thead><tr><th>Deal</th><th>Store</th><th>Price</th><th>Badge</th><th>Clicks</th><th>Status</th><th></th></tr></thead>

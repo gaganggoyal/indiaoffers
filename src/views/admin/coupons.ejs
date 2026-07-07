@@ -1,5 +1,12 @@
 <%- include('_top') %>
 <div class="page-bar"><h1>Coupons</h1><a class="btn" href="/admin/coupons/new">+ New Coupon</a></div>
+<% const EXPIRY_OPTS = [{ v: 'active', l: 'Active (not expired)' }, { v: 'soon', l: 'Expiring ≤ 7 days' }, { v: 'expired', l: 'Expired' }, { v: 'none', l: 'No expiry date' }]; %>
+<%- include('_filters', { action: '/admin/coupons', q: active.q, ph: 'Search by code or title…', selects: [
+  { name: 'store',    value: active.store,    all: 'All stores', options: stores.map(s => ({ v: s.id, l: s.name })) },
+  { name: 'verified', value: active.verified, all: 'Any',        options: [{ v: 'yes', l: 'Verified' }, { v: 'no', l: 'Unverified' }] },
+  { name: 'status',   value: active.status,   all: 'Any status', options: [{ v: 'live', l: 'Live' }, { v: 'hidden', l: 'Off' }] },
+  { name: 'expiry',   value: active.expiry,   all: 'Any expiry', options: EXPIRY_OPTS }
+] }) %>
 <div class="panel">
   <table>
     <thead><tr><th>Code</th><th>Title</th><th>Store</th><th>Expiry</th><th>Verified</th><th>Status</th><th></th></tr></thead>

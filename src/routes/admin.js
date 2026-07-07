@@ -132,6 +132,57 @@ router.get('/', async (req, res, next) => {
 const boolInt = v => (v === 'on' || v === '1' || v === 1 || v === true) ? 1 : 0;
 const numOrNull = v => (v === undefined || v === null || v === '') ? null : parseFloat(v);
 
+/**
+ * Build a portable WHERE clause + params for an admin list page from query
+ * params, plus an `active` map echoing the chosen values back to the view.
+ * spec: { search:['col',…], eq:{ param:'col' }, bool:{ param:'col' } }
+ *   - search: case-insensitive LIKE across the given columns (q param)
+ *   - eq:     exact match when the param is non-empty
+ *   - bool:   'live'/'1' → col=1, 'hidden'/'off'/'0' → col=0
+ */
+function listFilter(query, spec) {
+  const where = [], params = [], active = {};
+  const q = String(query.q || '').trim();
+  active.q = q;
+  if (q && spec.search && spec.search.length) {
+    where.push('(' + spec.search.map(c => `${c} LIKE ?`).join(' OR ') + ')');
+    spec.search.forEach(() => params.push('%' + q + '%'));
+  }
+  for (const [p, col] of Object.entries(spec.eq || {})) {
+    const v = query[p] == null ? '' : String(query[p]);
+    active[p] = v;
+    if (v !== '') { where.push(`${col} = ?`); params.push(v); }
+  }
+  for (const [p, col] of Object.entries(spec.bool || {})) {
+    const v = query[p] == null ? '' : String(query[p]);
+    active[p] = v;
+    if (v === 'live' || v === '1' || v === 'yes') where.push(`${col} = 1`);
+    else if (v === 'hidden' || v === 'off' || v === '0' || v === 'no') where.push(`${col} = 0`);
+  }
+  // Expiry-date filter (col holds a DATE/DATETIME string). Thresholds are computed
+  // here and bound as params so the comparison stays portable (sqlite + mysql).
+  if (spec.expiry) {
+    const col = spec.expiry;
+    const v = query.expiry == null ? '' : String(query.expiry);
+    active.expiry = v;
+    const iso = ms => new Date(ms).toISOString().slice(0, 10);
+    const today = iso(Date.now());
+    const soonEnd = iso(Date.now() + 8 * 864e5);           // today + 7 days, inclusive
+    if (v === 'expired')      { where.push(`(${col} IS NOT NULL AND ${col} <> '' AND ${col} < ?)`); params.push(today); }
+    else if (v === 'soon')    { where.push(`(${col} >= ? AND ${col} < ?)`); params.push(today, soonEnd); }
+    else if (v === 'active')  { where.push(`(${col} IS NULL OR ${col} = '' OR ${col} >= ?)`); params.push(today); }
+    else if (v === 'none')    { where.push(`(${col} IS NULL OR ${col} = '')`); }
+  }
+  return { clause: where.length ? ' WHERE ' + where.join(' AND ') : '', params, active };
+}
+const STATUS_OPTS = [{ v: 'live', l: 'Live' }, { v: 'hidden', l: 'Hidden' }];
+const EXPIRY_OPTS = [
+  { v: 'active',  l: 'Active (not expired)' },
+  { v: 'soon',    l: 'Expiring ≤ 7 days' },
+  { v: 'expired', l: 'Expired' },
+  { v: 'none',    l: 'No expiry date' }
+];
+
 // ── Quick add (Amazon link → live deal) ──────────────────────────────────────
 // Admin pastes an Amazon link + MRP + deal price. We fetch the product title,
 // tidy it with Gemini, prefix "[LOOT]" and publish the deal live in one step.
@@ -180,10 +231,20 @@ router.post('/quick-add', async (req, res, next) => {
 // DEALS
 router.get('/deals', async (req, res, next) => {
   try {
-    const deals = await db.query(`
-      SELECT d.*, s.name AS store_name FROM deals d LEFT JOIN stores s ON s.id = d.store_id
-      ORDER BY d.posted_at DESC LIMIT 200`);
-    res.render('admin/deals', { title: 'Admin — Deals', admin: req.admin, section: 'deals', deals });
+    const f = listFilter(req.query, {
+      search: ['d.title', 'd.slug'],
+      eq: { store: 'd.store_id', category: 'd.category' },
+      bool: { status: 'd.is_active' },
+      expiry: 'd.expiry_date'
+    });
+    const [deals, stores] = await Promise.all([
+      db.query(`
+        SELECT d.*, s.name AS store_name FROM deals d LEFT JOIN stores s ON s.id = d.store_id
+        ${f.clause} ORDER BY d.posted_at DESC LIMIT 200`, f.params),
+      db.query('SELECT id, name FROM stores ORDER BY name')
+    ]);
+    res.render('admin/deals', { title: 'Admin — Deals', admin: req.admin, section: 'deals',
+      deals, stores, categories: CATEGORIES, active: f.active });
   } catch (err) { next(err); }
 });
 
@@ -258,10 +319,20 @@ router.post('/deals/:id/delete', async (req, res, next) => {
 // BANK OFFERS
 router.get('/bank-offers', async (req, res, next) => {
   try {
-    const offers = await db.query(`
-      SELECT o.*, s.name AS store_name FROM bank_offers o LEFT JOIN stores s ON s.id = o.store_id
-      ORDER BY o.created_at DESC`);
-    res.render('admin/bank-offers', { title: 'Admin — Bank Offers', admin: req.admin, section: 'bank-offers', offers });
+    const f = listFilter(req.query, {
+      search: ['o.title', 'o.bank'],
+      eq: { store: 'o.store_id' },
+      bool: { status: 'o.is_active' },
+      expiry: 'o.valid_till'
+    });
+    const [offers, stores] = await Promise.all([
+      db.query(`
+        SELECT o.*, s.name AS store_name FROM bank_offers o LEFT JOIN stores s ON s.id = o.store_id
+        ${f.clause} ORDER BY o.created_at DESC`, f.params),
+      db.query('SELECT id, name FROM stores ORDER BY name')
+    ]);
+    res.render('admin/bank-offers', { title: 'Admin — Bank Offers', admin: req.admin, section: 'bank-offers',
+      offers, stores, active: f.active });
   } catch (err) { next(err); }
 });
 
@@ -330,10 +401,11 @@ router.post('/bank-offers/:id/delete', async (req, res, next) => {
 // STORES
 router.get('/stores', async (req, res, next) => {
   try {
+    const f = listFilter(req.query, { search: ['s.name', 's.slug'], eq: { category: 's.category' }, bool: { status: 's.is_active' } });
     const stores = await db.query(`
       SELECT s.*, (SELECT COUNT(*) FROM deals d WHERE d.store_id = s.id AND d.is_active = 1) AS deal_count
-      FROM stores s ORDER BY s.name`);
-    res.render('admin/stores', { title: 'Admin — Stores', admin: req.admin, section: 'stores', stores });
+      FROM stores s${f.clause} ORDER BY s.name`, f.params);
+    res.render('admin/stores', { title: 'Admin — Stores', admin: req.admin, section: 'stores', stores, active: f.active });
   } catch (err) { next(err); }
 });
 
@@ -382,10 +454,20 @@ router.post('/stores/:id/delete', async (req, res, next) => {
 // COUPONS
 router.get('/coupons', async (req, res, next) => {
   try {
-    const coupons = await db.query(`
-      SELECT c.*, s.name AS store_name FROM coupons c LEFT JOIN stores s ON s.id = c.store_id
-      ORDER BY c.created_at DESC`);
-    res.render('admin/coupons', { title: 'Admin — Coupons', admin: req.admin, section: 'coupons', coupons });
+    const f = listFilter(req.query, {
+      search: ['c.code', 'c.title'],
+      eq: { store: 'c.store_id' },
+      bool: { status: 'c.is_active', verified: 'c.is_verified' },
+      expiry: 'c.expiry_date'
+    });
+    const [coupons, stores] = await Promise.all([
+      db.query(`
+        SELECT c.*, s.name AS store_name FROM coupons c LEFT JOIN stores s ON s.id = c.store_id
+        ${f.clause} ORDER BY c.created_at DESC`, f.params),
+      db.query('SELECT id, name FROM stores ORDER BY name')
+    ]);
+    res.render('admin/coupons', { title: 'Admin — Coupons', admin: req.admin, section: 'coupons',
+      coupons, stores, active: f.active });
   } catch (err) { next(err); }
 });
 
@@ -435,8 +517,9 @@ router.post('/coupons/:id/delete', async (req, res, next) => {
 // BANNERS
 router.get('/banners', async (req, res, next) => {
   try {
-    const banners = await db.query('SELECT * FROM banners ORDER BY sort_order ASC');
-    res.render('admin/banners', { title: 'Admin — Banners', admin: req.admin, section: 'banners', banners });
+    const f = listFilter(req.query, { search: ['title', 'subtitle'], bool: { status: 'is_active' } });
+    const banners = await db.query(`SELECT * FROM banners${f.clause} ORDER BY sort_order ASC`, f.params);
+    res.render('admin/banners', { title: 'Admin — Banners', admin: req.admin, section: 'banners', banners, active: f.active });
   } catch (err) { next(err); }
 });
 
@@ -480,8 +563,9 @@ router.post('/banners/:id/delete', async (req, res, next) => {
 // BANK CARDS (apply-for cards)
 router.get('/cards', async (req, res, next) => {
   try {
-    const cards = await db.query('SELECT * FROM bank_cards ORDER BY is_featured DESC, sort_order ASC, name ASC');
-    res.render('admin/cards', { title: 'Admin — Bank Cards', admin: req.admin, section: 'cards', cards });
+    const f = listFilter(req.query, { search: ['name', 'bank'], eq: { type: 'card_type' }, bool: { status: 'is_active', featured: 'is_featured' } });
+    const cards = await db.query(`SELECT * FROM bank_cards${f.clause} ORDER BY is_featured DESC, sort_order ASC, name ASC`, f.params);
+    res.render('admin/cards', { title: 'Admin — Bank Cards', admin: req.admin, section: 'cards', cards, active: f.active });
   } catch (err) { next(err); }
 });
 
@@ -532,10 +616,12 @@ router.post('/cards/:id/delete', async (req, res, next) => {
 // BUYING GUIDES + items
 router.get('/guides', async (req, res, next) => {
   try {
+    const f = listFilter(req.query, { search: ['g.title', 'g.slug'], eq: { category: 'g.category' }, bool: { status: 'g.is_active' } });
     const guides = await db.query(`
       SELECT g.*, (SELECT COUNT(*) FROM guide_items gi WHERE gi.guide_id = g.id) AS item_count
-      FROM guides g ORDER BY g.sort_order ASC, g.created_at DESC`);
-    res.render('admin/guides', { title: 'Admin — Buying Guides', admin: req.admin, section: 'guides', guides });
+      FROM guides g${f.clause} ORDER BY g.sort_order ASC, g.created_at DESC`, f.params);
+    res.render('admin/guides', { title: 'Admin — Buying Guides', admin: req.admin, section: 'guides',
+      guides, categories: CATEGORIES, active: f.active });
   } catch (err) { next(err); }
 });
 
@@ -613,12 +699,16 @@ router.post('/guides/:gid/items/:itemId/delete', async (req, res, next) => {
 // USERS (subscribers) — read-only list
 router.get('/users', async (req, res, next) => {
   try {
+    const f = listFilter(req.query, {
+      search: ['u.username', 'u.email', 'u.mobile'],
+      bool: { whatsapp: 'u.whatsapp_optin', bulk: 'u.is_bulk_buyer' }
+    });
     const users = await db.query(`
       SELECT u.*,
         (SELECT COUNT(*) FROM user_cards uc WHERE uc.user_id = u.id) AS card_count,
         (SELECT COUNT(*) FROM user_categories ucat WHERE ucat.user_id = u.id) AS cat_count
-      FROM users u ORDER BY u.created_at DESC LIMIT 500`);
-    res.render('admin/users', { title: 'Admin — Users', admin: req.admin, section: 'users', users });
+      FROM users u${f.clause} ORDER BY u.created_at DESC LIMIT 500`, f.params);
+    res.render('admin/users', { title: 'Admin — Users', admin: req.admin, section: 'users', users, active: f.active });
   } catch (err) { next(err); }
 });
 
