@@ -61,9 +61,9 @@ router.get('/', async (req, res, next) => {
       .slice(0, 6);
 
     res.render('home', {
-      title: "IndiaOffers.in — India's True-Price Deals: product discounts + card offers + coupons, stacked",
+      title: "IndiaOffers.in — Today's Best Deals & Discounts in India",
       meta: {
-        description: 'Every deal on IndiaOffers shows the real price after stacking the product discount, your bank card offer and coupon codes. Stop overpaying — see the true price.',
+        description: "Handpicked deals with real discounts on Amazon, Flipkart and more — plus working coupons and card offers, all in one place.",
         jsonld: [WEBSITE_LD, ORGANIZATION_LD]
       },
       heroDeals, deals, topOffers, storeMap, featuredCards,
@@ -101,8 +101,8 @@ router.get('/deals', async (req, res, next) => {
     res.render('deals', {
       title: q ? `Deals matching “${q}” — IndiaOffers.in`
              : category ? `Best ${categoryName(category)} Deals Today — IndiaOffers.in`
-             : 'Today\'s Best Deals in India — True Prices — IndiaOffers.in',
-      meta: { description: 'Live deals with the full savings stack: product discount + bank offer + coupon.' },
+             : 'Today\'s Best Deals & Discounts in India — IndiaOffers.in',
+      meta: { description: 'Live deals with real discounts, working coupons and card offers across top Indian stores.' },
       deals: decorateDeals(rows, offers), storeMap,
       categories: CATEGORIES, catIcons: CAT_ICONS,
       active: { category: category || '', store: store || '', sort: sort || 'latest', q: q || '' }
@@ -150,9 +150,9 @@ router.get('/deal/:slug', async (req, res, next) => {
     ])];
 
     res.render('deal', {
-      title: `${deal.title} — ${stack.truePrice != null ? '₹' + stack.truePrice.toLocaleString('en-IN') + ' true price' : 'Deal'} | IndiaOffers.in`,
+      title: `${deal.title}${stack.price != null ? ' — ₹' + stack.price.toLocaleString('en-IN') : ''} | IndiaOffers.in`,
       meta: {
-        description: `${deal.title}: deal price ${stack.price != null ? '₹' + stack.price.toLocaleString('en-IN') : ''}${stack.best ? `, drops to ₹${stack.truePrice.toLocaleString('en-IN')} with ${stack.best.bank} ${stack.best.instrumentLabel}` : ''}. Full savings stack on IndiaOffers.`,
+        description: `${deal.title}${stack.price != null ? ` at ₹${stack.price.toLocaleString('en-IN')}` : ''}${stack.discountPct ? ` (${stack.discountPct}% off)` : ''}${store ? ` on ${store.name}` : ''}. Check the latest price, coupons and offers on IndiaOffers.`,
         image: deal.image_url,
         jsonld
       },
@@ -295,7 +295,7 @@ router.get('/store/:slug', async (req, res, next) => {
     res.render('store', {
       title: `${store.name} Deals, Coupons & Card Offers — IndiaOffers.in`,
       meta: {
-        description: `Live ${store.name} deals with the full savings stack, working coupons and this week's bank offers.`,
+        description: `Live ${store.name} deals with real discounts, working coupons and card offers.`,
         jsonld: breadcrumb([
           { name: 'Home', path: '/' },
           { name: 'Stores', path: '/stores' },

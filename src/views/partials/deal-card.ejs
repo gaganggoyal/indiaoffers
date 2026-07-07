@@ -17,14 +17,12 @@
         <% if (stack.mrp != null && stack.mrp > stack.price) { %><s><%= fmt(stack.mrp) %></s><% } %>
       </div>
     <% } %>
-    <% if (stack.best) { %>
+    <% if (stack.hasSavings && stack.truePrice != null && stack.truePrice < stack.price) { %>
       <div class="card-true">
-        <span class="tp-label">true price</span>
+        <span class="tp-label">best price</span>
         <b><%= fmt(stack.truePrice) %></b>
-        <span class="tp-with">with <%= stack.best.bank %> <%= stack.best.instrumentLabel %></span>
+        <% if (stack.best && stack.best.bank) { %><span class="tp-with">with <%= stack.best.bank %></span><% } %>
       </div>
-    <% } else { %>
-      <div class="card-true muted">No card offer applies — this is the best price</div>
     <% } %>
   </div>
 </a>

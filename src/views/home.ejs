@@ -17,21 +17,11 @@
             <% if (d.stack.mrp && d.stack.mrp > d.stack.price) { %><s><%= fmt(d.stack.mrp) %></s><% } %>
             <% if (d.stack.discountPct) { %><span class="hb-off"><%= d.stack.discountPct %>% OFF</span><% } %>
           </div>
-          <% if (d.stack.best) { %><span class="hb-true">True price <%= fmt(d.stack.truePrice) %> with <%= d.stack.best.bank %></span><% } %>
+          <% if (d.stack.hasSavings && d.stack.truePrice != null && d.stack.truePrice < d.stack.price) { %><span class="hb-true">Best price <%= fmt(d.stack.truePrice) %><% if (d.stack.best && d.stack.best.bank) { %> with <%= d.stack.best.bank %><% } %></span><% } %>
           <span class="hb-cta">Grab this deal →</span>
         </div>
       </a>
     <% }) %>
-  </div>
-</section>
-
-<!-- How the stack works -->
-<section class="wrap">
-  <div class="stackline">
-    <span class="sl-item">🏷️ Product discount</span><span class="sl-plus">+</span>
-    <span class="sl-item">💳 Your card's offer</span><span class="sl-plus">+</span>
-    <span class="sl-item">🎟️ Coupon code</span><span class="sl-eq">=</span>
-    <span class="sl-item sl-final">✅ The true price</span>
   </div>
 </section>
 
