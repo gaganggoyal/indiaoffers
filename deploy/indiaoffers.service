@@ -1,0 +1,43 @@
+[Unit]
+Description=IndiaOffers.in — savings intelligence platform (Node/Express)
+Documentation=https://github.com/gaganggoyal/indiaoffers
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# --- App location & user ---------------------------------------------------
+# Deploy the repo here and run as an unprivileged user (create it once with:
+#   sudo useradd --system --home /var/www/indiaoffers --shell /usr/sbin/nologin indiaoffers)
+User=indiaoffers
+Group=indiaoffers
+WorkingDirectory=/var/www/indiaoffers
+
+# Secrets live in .env (loaded by dotenv). NODE_ENV here also switches on
+# secure cookies + the JWT_SECRET fail-fast guard in src/config.js.
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node src/server.js
+
+# --- Reliability -----------------------------------------------------------
+Restart=on-failure
+RestartSec=3
+# Give the app a moment to close the DB pool on stop/restart.
+TimeoutStopSec=15
+
+# --- Logging (view with: journalctl -u indiaoffers -f) ---------------------
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=indiaoffers
+
+# --- Hardening (safe defaults for a Node web app) --------------------------
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+# SQLite writes to ./data; harmless to keep even on MySQL. Add extra writable
+# paths here if you later store uploads on disk (public/uploads is already in-repo).
+ReadWritePaths=/var/www/indiaoffers/data /var/www/indiaoffers/public/uploads
+
+[Install]
+WantedBy=multi-user.target
