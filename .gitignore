@@ -4,8 +4,8 @@ node_modules/
 # local secrets — never commit
 .env
 
-# local dev database
-data/
+# local dev database (repo-root only — unanchored "data/" also hid src/data/)
+/data/
 
 # admin-uploaded images (keep the folder, ignore its contents)
 public/uploads/*
