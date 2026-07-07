@@ -25,6 +25,16 @@
   </div>
 </section>
 
+<!-- Hot zones — high-intent SEO landing pages -->
+<section class="wrap">
+  <div class="sec-head"><h2>⚡ Hot Zones</h2></div>
+  <div class="zone-chips">
+    <% collections.forEach(c => { %>
+      <a class="zc" href="/<%= c.slug %>"><%= c.emoji %> <%= c.nav %></a>
+    <% }) %>
+  </div>
+</section>
+
 <!-- Categories — top-level departments only -->
 <section class="wrap">
   <div class="sec-head"><h2>🧭 Shop by Category</h2><a href="/deals">All deals →</a></div>

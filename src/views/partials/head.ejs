@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><%= title %></title>
 <% if (meta && meta.description) { %><meta name="description" content="<%= meta.description %>"><% } %>
+<% if (meta && meta.keywords) { %><meta name="keywords" content="<%= meta.keywords %>"><% } %>
 <link rel="canonical" href="<%= siteUrl %><%= path %>">
 <meta property="og:site_name" content="<%= siteName %>">
 <meta property="og:type" content="<%= (meta && meta.type) || 'website' %>">

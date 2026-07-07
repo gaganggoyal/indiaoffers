@@ -14,6 +14,8 @@
     </form>
     <nav class="nav" id="site-nav">
       <a href="/deals" class="<%= path.startsWith('/deals') || path.startsWith('/deal/') ? 'on' : '' %>">Deals</a>
+      <a href="/loot-deals" class="<%= path === '/loot-deals' ? 'on' : '' %>">🔥 Loot</a>
+      <a href="/coupons" class="<%= path === '/coupons' ? 'on' : '' %>">Coupons</a>
       <a href="/bank-offers" class="<%= path.startsWith('/bank-offers') ? 'on' : '' %>">Card Offers</a>
       <a href="/cards" class="<%= path.startsWith('/card') ? 'on' : '' %>">Bank Cards</a>
       <a href="/guides" class="<%= path.startsWith('/guide') ? 'on' : '' %>">Buying Guides</a>

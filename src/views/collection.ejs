@@ -1,0 +1,64 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a> <span>›</span> <a href="/deals">Deals</a> <span>›</span> <b><%= col.nav %></b>
+  </nav>
+
+  <div class="page-head">
+    <h1><%= col.emoji %> <%= col.h1 %></h1>
+    <p class="lead"><%- col.intro %></p>
+  </div>
+
+  <!-- Internal linking: sibling hot-zones -->
+  <div class="zone-chips">
+    <% collections.forEach(c => { %>
+      <a class="zc <%= c.slug === col.slug ? 'on' : '' %>" href="/<%= c.slug %>"><%= c.emoji %> <%= c.nav %></a>
+    <% }) %>
+  </div>
+
+  <% if (col.type === 'coupons') { %>
+    <% if (!coupons.length) { %>
+      <div class="empty">No live coupons right now — check <a href="/deals">today's deals</a> instead.</div>
+    <% } else { %>
+      <div class="coupon-list coupon-grid">
+        <% coupons.forEach(c => { const st = storeMap[c.store_id] || { name: '', slug: '' }; %>
+          <div class="coupon">
+            <div>
+              <b><%= c.title %></b>
+              <small>
+                <% if (st.slug) { %><a href="/store/<%= st.slug %>"><%= st.name %></a> · <% } %>
+                <%= c.discount_text %><%= c.min_order ? ` · min order ${fmt(c.min_order)}` : '' %><%= c.is_verified ? ' · ✅ verified' : '' %>
+              </small>
+            </div>
+            <button class="btn-copy" data-code="<%= c.code %>"><%= c.code %></button>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  <% } else { %>
+    <% if (!deals.length) { %>
+      <div class="empty">No <%= col.nav.toLowerCase() %> live at this moment — new ones drop through the day. Meanwhile, see <a href="/deals">all deals</a> or set an <a href="/account">alert</a>.</div>
+    <% } else { %>
+      <div class="grid">
+        <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+      </div>
+    <% } %>
+  <% } %>
+
+  <!-- FAQ — also emitted as FAQPage structured data in <head> -->
+  <% if (col.faqs && col.faqs.length) { %>
+    <section class="faq">
+      <h2>Frequently asked questions</h2>
+      <% col.faqs.forEach(f => { %>
+        <details class="faq-item">
+          <summary><%= f.q %></summary>
+          <p><%= f.a %></p>
+        </details>
+      <% }) %>
+    </section>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>

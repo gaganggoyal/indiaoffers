@@ -7,6 +7,7 @@ const db = require('../db');
 const config = require('../config');
 const { savingsStack, activeBankOffers, decorateDeals } = require('../services/savings');
 const { CATEGORIES, CATEGORY_TREE, CAT_ICONS, categoryName, descendantSlugs } = require('../data/taxonomy');
+const { COLLECTIONS, collectionBySlug } = require('../data/collections');
 
 async function storesById() {
   const rows = await db.query('SELECT * FROM stores WHERE is_active = 1');
@@ -61,12 +62,13 @@ router.get('/', async (req, res, next) => {
       .slice(0, 6);
 
     res.render('home', {
-      title: "IndiaOffers.in — Today's Best Deals & Discounts in India",
+      title: "IndiaOffers.in — India's No.1 Loot Deals, ₹1 Deals, Offers & Coupons",
       meta: {
-        description: "Handpicked deals with real discounts on Amazon, Flipkart and more — plus working coupons and card offers, all in one place.",
+        description: "India's No.1 site for loot deals, Re.1 deals, offers and coupon codes. Handpicked deals with real discounts on Amazon, Flipkart, Myntra & more — plus working coupons and bank card offers, all in one place.",
+        keywords: 'loot deals, re.1 deals, rupee 1 deals, offers, coupons, coupon codes, deals today, online shopping deals, cashback offers, bank offers, discount coupons India',
         jsonld: [WEBSITE_LD, ORGANIZATION_LD]
       },
-      heroDeals, deals, topOffers, storeMap, featuredCards,
+      heroDeals, deals, topOffers, storeMap, featuredCards, collections: COLLECTIONS,
       categories: CATEGORIES, categoryTree: CATEGORY_TREE, catIcons: CAT_ICONS
     });
   } catch (err) { next(err); }
@@ -316,9 +318,67 @@ router.get('/search', (req, res) => {
   res.redirect(q ? `/deals?q=${encodeURIComponent(q)}` : '/deals');
 });
 
+// ── SEO landing pages — loot deals, ₹1 deals, coupons, … ───────────────────────
+// Keyword-targeted collection pages, driven by src/data/collections.js. Aliases
+// 301-redirect to the canonical slug so link equity never splits.
+const FAQ_LD = faqs => faqs && faqs.length ? {
+  '@context': 'https://schema.org', '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({
+    '@type': 'Question', name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a }
+  }))
+} : null;
+
+function renderCollection(col) {
+  return async (req, res, next) => {
+    try {
+      const crumb = breadcrumb([
+        { name: 'Home', path: '/' }, { name: 'Deals', path: '/deals' }, { name: col.nav }
+      ]);
+      const base = { collections: COLLECTIONS, col };
+
+      if (col.type === 'coupons') {
+        const [coupons, storeMap] = await Promise.all([
+          db.query('SELECT * FROM coupons WHERE is_active = 1 ORDER BY is_verified DESC, created_at DESC LIMIT 120'),
+          storesById()
+        ]);
+        return res.render('collection', {
+          ...base, coupons, storeMap, deals: [],
+          title: col.title,
+          meta: { description: col.description, keywords: col.keywords, jsonld: [crumb, FAQ_LD(col.faqs)].filter(Boolean) }
+        });
+      }
+
+      const [rows, offers, storeMap] = await Promise.all([
+        db.query(`SELECT d.* FROM deals d WHERE d.is_active = 1 AND ${col.where} ORDER BY ${col.order} LIMIT 60`),
+        activeBankOffers(),
+        storesById()
+      ]);
+      const deals = decorateDeals(rows, offers);
+      const itemList = {
+        '@context': 'https://schema.org', '@type': 'ItemList',
+        name: col.h1,
+        itemListElement: deals.slice(0, 30).map((d, i) => ({
+          '@type': 'ListItem', position: i + 1, url: abs(`/deal/${d.slug}`), name: d.title
+        }))
+      };
+      res.render('collection', {
+        ...base, deals, storeMap, coupons: [],
+        title: col.title,
+        meta: { description: col.description, keywords: col.keywords, jsonld: [itemList, crumb, FAQ_LD(col.faqs)].filter(Boolean) }
+      });
+    } catch (err) { next(err); }
+  };
+}
+
+COLLECTIONS.forEach(col => {
+  router.get('/' + col.slug, renderCollection(col));
+  (col.aliases || []).forEach(a => router.get('/' + a, (req, res) => res.redirect(301, '/' + col.slug)));
+});
+
 // ── SEO plumbing ──────────────────────────────────────────────────────────────
 router.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /go/\nDisallow: /account\nSitemap: ${config.siteUrl}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /go/\nDisallow: /account\nDisallow: /login\nDisallow: /register\nDisallow: /api/\nSitemap: ${config.siteUrl}/sitemap.xml\n`);
 });
 
 router.get('/sitemap.xml', async (req, res, next) => {
@@ -333,6 +393,7 @@ router.get('/sitemap.xml', async (req, res, next) => {
       { loc: '/', pri: '1.0' }, { loc: '/deals', pri: '0.9' },
       { loc: '/bank-offers', pri: '0.9' }, { loc: '/cards', pri: '0.8' },
       { loc: '/guides', pri: '0.8' }, { loc: '/stores', pri: '0.7' },
+      ...COLLECTIONS.map(c => ({ loc: `/${c.slug}`, pri: '0.9' })),
       ...deals.map(d => ({ loc: `/deal/${d.slug}`, pri: '0.8', mod: d.updated_at })),
       ...cards.map(c => ({ loc: `/card/${c.slug}`, pri: '0.7' })),
       ...guides.map(g => ({ loc: `/guide/${g.slug}`, pri: '0.7', mod: g.updated_at })),
