@@ -5,7 +5,11 @@
   <nav class="crumbs"><a href="/">Home</a> / <a href="/stores">Stores</a> / <span><%= store.name %></span></nav>
 
   <div class="store-hero">
-    <span class="sc-logo lg" style="background:<%= store.color %>"><%= store.name.charAt(0) %></span>
+    <% if (store.logo_url) { %>
+      <span class="sc-logo lg has-logo"><img src="<%= store.logo_url %>" alt="<%= store.name %> logo"></span>
+    <% } else { %>
+      <span class="sc-logo lg" style="background:<%= store.color %>"><%= store.name.charAt(0) %></span>
+    <% } %>
     <div>
       <h1><%= store.name %> Deals & Offers</h1>
       <p><%= store.description || '' %></p>

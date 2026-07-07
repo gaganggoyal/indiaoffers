@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS stores (
   affiliate_url   VARCHAR(500),
   affiliate_type  ENUM('none','amazon','flipkart') DEFAULT 'none',
   affiliate_params VARCHAR(500),            -- admin-managed query params appended on redirect, e.g. "tag=indiaoffers-21&subid={click}"
+  affiliate_prefix VARCHAR(1000),           -- network tracking link the outbound URL is appended to, e.g. "https://track.vcommission.com/click?campaign_id=..&p1={click}&url="
   cashback_text   VARCHAR(100),
   is_active       TINYINT(1) DEFAULT 1,
   created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,

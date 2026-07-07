@@ -424,19 +424,20 @@ router.post('/stores/save', async (req, res, next) => {
   try {
     const b = req.body;
     const affiliateParams = (b.affiliate_params || '').trim().replace(/^[?&]+/, '') || null;
+    const affiliatePrefix = (b.affiliate_prefix || '').trim() || null;
     const vals = [b.name, b.color || '#4f46e5', b.logo_url || null, b.category || '', b.description || '',
       b.website_url || null, b.affiliate_url || b.website_url || null, b.affiliate_type || 'none',
-      affiliateParams, b.cashback_text || null, boolInt(b.is_active)];
+      affiliateParams, affiliatePrefix, b.cashback_text || null, boolInt(b.is_active)];
     if (b.id) {
       await db.query(`
         UPDATE stores SET name=?, color=?, logo_url=?, category=?, description=?, website_url=?,
-          affiliate_url=?, affiliate_type=?, affiliate_params=?, cashback_text=?, is_active=? WHERE id=?
+          affiliate_url=?, affiliate_type=?, affiliate_params=?, affiliate_prefix=?, cashback_text=?, is_active=? WHERE id=?
       `, [...vals, b.id]);
     } else {
       await db.query(`
         INSERT INTO stores (name, color, logo_url, category, description, website_url,
-          affiliate_url, affiliate_type, affiliate_params, cashback_text, is_active, id, slug)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          affiliate_url, affiliate_type, affiliate_params, affiliate_prefix, cashback_text, is_active, id, slug)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [...vals, uid('st'), slugify(b.name)]);
     }
     res.redirect('/admin/stores');

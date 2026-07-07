@@ -27,16 +27,35 @@ function applyParams(url, paramStr, clickId) {
 }
 
 /**
+ * Build a network tracking link: the store's `affiliate_prefix` with the
+ * outbound merchant URL attached. Many affiliate networks (vCommission,
+ * Cuelinks, INRDeals…) hand you a link like
+ *   https://track.vcommission.com/click?campaign_id=13410&pub_id=100668&p1={click}&url=
+ * where the destination is appended at the end. `{click}`/`{clickid}` tokens are
+ * replaced with the click id; if the prefix contains a `{url}` token the encoded
+ * destination is substituted there instead of being appended raw.
+ */
+function buildPrefixedUrl(prefix, dest, clickId) {
+  const p = String(prefix).trim().replace(/\{click(?:id)?\}/gi, clickId || '');
+  if (/\{url\}/i.test(p)) return p.replace(/\{url\}/gi, encodeURIComponent(dest || ''));
+  return p + (dest || '');
+}
+
+/**
  * Tag an outbound URL for affiliate commission.
  * @param rawUrl  merchant/deal URL
- * @param store   store row (uses .affiliate_type + .affiliate_params); a bare
- *                affiliate_type string is still accepted for backward compat.
+ * @param store   store row (uses .affiliate_prefix, else .affiliate_type +
+ *                .affiliate_params); a bare affiliate_type string is still
+ *                accepted for backward compat.
  * @param clickId internal click id, exposed to admin params via {click}
  */
 function tagAffiliateUrl(rawUrl, store, clickId) {
   const isObj = store && typeof store === 'object';
   const affiliateType = isObj ? store.affiliate_type   : store;
   const params        = isObj ? store.affiliate_params : null;
+  const prefix        = isObj ? store.affiliate_prefix : null;
+  // A network tracking prefix takes precedence — the network owns the tagging.
+  if (prefix && String(prefix).trim()) return buildPrefixedUrl(prefix, rawUrl, clickId);
   try {
     const url = new URL(rawUrl);
     if (params && params.trim()) {

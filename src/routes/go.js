@@ -9,7 +9,7 @@ const { tagAffiliateUrl, recordClick } = require('../services/tracking');
 router.get('/d/:id', async (req, res) => {
   try {
     const rows = await db.query(`
-      SELECT d.id, d.store_id, d.deal_url, s.affiliate_type, s.affiliate_url, s.affiliate_params
+      SELECT d.id, d.store_id, d.deal_url, s.affiliate_type, s.affiliate_url, s.affiliate_params, s.affiliate_prefix
       FROM deals d JOIN stores s ON s.id = d.store_id
       WHERE d.id = ? AND d.is_active = 1
     `, [req.params.id]);

@@ -10,7 +10,11 @@
   <div class="store-grid">
     <% stores.forEach(s => { %>
       <a class="store-card" href="/store/<%= s.slug %>">
-        <span class="sc-logo" style="background:<%= s.color %>"><%= s.name.charAt(0) %></span>
+        <% if (s.logo_url) { %>
+          <span class="sc-logo has-logo"><img src="<%= s.logo_url %>" alt="<%= s.name %> logo" loading="lazy"></span>
+        <% } else { %>
+          <span class="sc-logo" style="background:<%= s.color %>"><%= s.name.charAt(0) %></span>
+        <% } %>
         <b><%= s.name %></b>
         <small><%= s.deal_count %> live deal<%= s.deal_count == 1 ? '' : 's' %></small>
         <% if (s.cashback_text) { %><span class="sc-cb"><%= s.cashback_text %></span><% } %>

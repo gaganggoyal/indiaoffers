@@ -23,6 +23,9 @@
   <label class="full">Affiliate params <small>— query string appended to every outbound link for commission. Overrides the affiliate-type default. Use <code>{click}</code> for the click id.</small>
     <input name="affiliate_params" value="<%= store ? (store.affiliate_params || '') : '' %>" placeholder="tag=indiaoffers0c-21&amp;subid={click}">
   </label>
+  <label class="full">Affiliate tracking prefix <small>— network link that the product/deal URL gets <b>attached to the end of</b>. When set, this takes priority over the fields above. Use <code>{click}</code> for the click id; optionally <code>{url}</code> where the encoded link should go (otherwise it's appended raw).</small>
+    <input name="affiliate_prefix" value="<%= store ? (store.affiliate_prefix || '') : '' %>" placeholder="https://track.vcommission.com/click?campaign_id=13410&amp;pub_id=100668&amp;p1={click}&amp;url=">
+  </label>
   <label class="full">Logo
     <input name="logo_url" id="f_store_logo" value="<%= store ? (store.logo_url || '') : '' %>" placeholder="Paste a logo URL, or upload a file below">
     <span class="uploader" data-target="f_store_logo">
