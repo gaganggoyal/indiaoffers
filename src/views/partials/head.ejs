@@ -7,6 +7,7 @@
 <% if (meta && meta.description) { %><meta name="description" content="<%= meta.description %>"><% } %>
 <link rel="canonical" href="<%= siteUrl %><%= path %>">
 <meta property="og:site_name" content="<%= siteName %>">
+<meta property="og:type" content="<%= (meta && meta.type) || 'website' %>">
 <meta property="og:title" content="<%= title %>">
 <% if (meta && meta.description) { %><meta property="og:description" content="<%= meta.description %>"><% } %>
 <meta property="og:url" content="<%= siteUrl %><%= path %>">

@@ -15,6 +15,34 @@ async function storesById() {
 
 const parseJson = v => { try { return JSON.parse(v || '[]'); } catch { return []; } };
 
+// ── SEO: structured-data helpers ───────────────────────────────────────────────
+const abs = p => `${config.siteUrl}${p}`;
+
+// BreadcrumbList from [{ name, path }] — omit `path` on the final (current) crumb.
+const breadcrumb = items => ({
+  '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+  itemListElement: items.filter(Boolean).map((it, i) => ({
+    '@type': 'ListItem', position: i + 1, name: it.name,
+    ...(it.path ? { item: abs(it.path) } : {})
+  }))
+});
+
+// Site-level entities — emitted once, on the homepage.
+const WEBSITE_LD = {
+  '@context': 'https://schema.org', '@type': 'WebSite',
+  name: config.siteName, url: config.siteUrl,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: { '@type': 'EntryPoint', urlTemplate: `${config.siteUrl}/deals?q={search_term_string}` },
+    'query-input': 'required name=search_term_string'
+  }
+};
+const ORGANIZATION_LD = {
+  '@context': 'https://schema.org', '@type': 'Organization',
+  name: config.siteName, url: config.siteUrl,
+  logo: abs('/img/logo-icon.png')
+};
+
 // ── Home ──────────────────────────────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
   try {
@@ -35,7 +63,8 @@ router.get('/', async (req, res, next) => {
     res.render('home', {
       title: "IndiaOffers.in — India's True-Price Deals: product discounts + card offers + coupons, stacked",
       meta: {
-        description: 'Every deal on IndiaOffers shows the real price after stacking the product discount, your bank card offer and coupon codes. Stop overpaying — see the true price.'
+        description: 'Every deal on IndiaOffers shows the real price after stacking the product discount, your bank card offer and coupon codes. Stop overpaying — see the true price.',
+        jsonld: [WEBSITE_LD, ORGANIZATION_LD]
       },
       heroDeals, deals, topOffers, storeMap, featuredCards,
       categories: CATEGORIES, categoryTree: CATEGORY_TREE, catIcons: CAT_ICONS
@@ -98,17 +127,27 @@ router.get('/deal/:slug', async (req, res, next) => {
     const stack = savingsStack(deal, offers);
     const howTo = parseJson(deal.how_to);
 
-    // JSON-LD Offer schema
-    const jsonld = {
+    // JSON-LD: Product + Offer (rich results) and a breadcrumb trail.
+    const productLd = {
       '@context': 'https://schema.org', '@type': 'Product',
-      name: deal.title, image: deal.image_url, description: deal.description,
+      name: deal.title,
+      ...(deal.image_url ? { image: [deal.image_url] } : {}),
+      ...(deal.description ? { description: deal.description } : {}),
+      sku: deal.id,
       offers: {
         '@type': 'Offer', priceCurrency: 'INR', price: deal.price,
         availability: 'https://schema.org/InStock',
-        url: `${config.siteUrl}/deal/${deal.slug}`,
+        url: abs(`/deal/${deal.slug}`),
+        ...(deal.expiry_date ? { priceValidUntil: String(deal.expiry_date).slice(0, 10) } : {}),
         seller: { '@type': 'Organization', name: store ? store.name : '' }
       }
     };
+    const jsonld = [productLd, breadcrumb([
+      { name: 'Home', path: '/' },
+      { name: 'Deals', path: '/deals' },
+      deal.category ? { name: categoryName(deal.category), path: `/deals?category=${deal.category}` } : null,
+      { name: deal.title }
+    ])];
 
     res.render('deal', {
       title: `${deal.title} — ${stack.truePrice != null ? '₹' + stack.truePrice.toLocaleString('en-IN') + ' true price' : 'Deal'} | IndiaOffers.in`,
@@ -165,7 +204,14 @@ router.get('/card/:slug', async (req, res, next) => {
     ]);
     res.render('card', {
       title: `${card.name} — Benefits, Fees & How to Apply — IndiaOffers.in`,
-      meta: { description: `${card.name}: ${card.tagline || ''} Joining fee ${card.joining_fee || '—'}. See full benefits, eligibility and step-by-step how to apply.` },
+      meta: {
+        description: `${card.name}: ${card.tagline || ''} Joining fee ${card.joining_fee || '—'}. See full benefits, eligibility and step-by-step how to apply.`,
+        jsonld: breadcrumb([
+          { name: 'Home', path: '/' },
+          { name: 'Bank Cards', path: '/cards' },
+          { name: card.name }
+        ])
+      },
       card: { ...card, benefitsList: parseJson(card.benefits), stepsList: parseJson(card.how_to_apply) },
       related, cardOffers
     });
@@ -191,17 +237,21 @@ router.get('/guide/:slug', async (req, res, next) => {
     const guide = rows[0];
     const items = await db.query('SELECT * FROM guide_items WHERE guide_id = ? ORDER BY rank_no ASC', [guide.id]);
 
-    const jsonld = {
+    const jsonld = [{
       '@context': 'https://schema.org', '@type': 'ItemList',
       name: guide.title,
       itemListElement: items.map((it, i) => ({
         '@type': 'ListItem', position: i + 1, name: it.name
       }))
-    };
+    }, breadcrumb([
+      { name: 'Home', path: '/' },
+      { name: 'Buying Guides', path: '/guides' },
+      { name: guide.title }
+    ])];
 
     res.render('guide', {
       title: `${guide.title} — IndiaOffers.in`,
-      meta: { description: guide.subtitle || guide.intro || guide.title, image: guide.hero_image, jsonld },
+      meta: { description: guide.subtitle || guide.intro || guide.title, image: guide.hero_image, type: 'article', jsonld },
       guide,
       items: items.map(it => ({
         ...it,
@@ -244,7 +294,14 @@ router.get('/store/:slug', async (req, res, next) => {
 
     res.render('store', {
       title: `${store.name} Deals, Coupons & Card Offers — IndiaOffers.in`,
-      meta: { description: `Live ${store.name} deals with the full savings stack, working coupons and this week's bank offers.` },
+      meta: {
+        description: `Live ${store.name} deals with the full savings stack, working coupons and this week's bank offers.`,
+        jsonld: breadcrumb([
+          { name: 'Home', path: '/' },
+          { name: 'Stores', path: '/stores' },
+          { name: store.name }
+        ])
+      },
       store,
       deals: decorateDeals(dealsRaw, offers),
       coupons, storeOffers,
