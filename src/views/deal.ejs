@@ -46,12 +46,9 @@
         <div class="dd-howto">
           <div class="dd-howto-h">📋 How to get this deal</div>
           <ol class="steps">
-            <% if (howTo.length) { %>
-              <% howTo.forEach(s => { %><li><%= s %></li><% }) %>
-            <% } else { %>
-              <li>Click the <b>“Grab this deal”</b> button above to open the offer at <%= store.name %>.</li>
-              <% if (deal.coupon_code) { %><li>Apply coupon code <b><%= deal.coupon_code %></b> at checkout.</li><% } %>
-            <% } %>
+            <%# First step is always the same; any admin-entered steps follow it. %>
+            <li>Click on <b>Grab this Deal at <%= store.name %></b>.</li>
+            <% howTo.forEach(s => { %><li><%= s %></li><% }) %>
             <%# Extra savings are woven in as the next steps (2nd/3rd point) rather than a separate box %>
             <% if (stack.savingsNote) { %><li><%= stack.savingsNote %></li><% } %>
             <% stack.payOptions.forEach(o => { %>
@@ -68,7 +65,7 @@
   </div>
 
   <% if (deal.description) { %>
-    <div class="panel"><h2>ℹ️ About this deal</h2><p><%= deal.description %></p></div>
+    <div class="panel"><h2>ℹ️ About this deal</h2><p class="deal-desc"><%= deal.description %></p></div>
   <% } %>
 
   <% if (coupons.length) { %>
