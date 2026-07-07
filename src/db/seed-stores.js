@@ -24,9 +24,11 @@ const fs = require('fs');
 const db = require('./index');
 const { query, uid, slugify } = db;
 
-// vCommission example the user provided for Jivisa (click-id token wired to {click}).
+// vCommission link for Jivisa. source=indiaoffers labels the traffic source;
+// p1={click} carries our internal click id, p2={username} the user (for per-user
+// conversion attribution). The destination is appended (encoded) after url=.
 const JIVISA_PREFIX =
-  'https://track.vcommission.com/click?campaign_id=13410&pub_id=100668&p1={click}&source={your-sub-aff-id}&url=';
+  'https://track.vcommission.com/click?campaign_id=13410&pub_id=100668&p1={click}&p2={username}&source=indiaoffers&url=';
 
 const PALETTE = ['#4f46e5', '#0ea5e9', '#059669', '#d946ef', '#f59e0b', '#ef4444',
   '#8b5cf6', '#14b8a6', '#ec4899', '#f97316', '#0891b2', '#65a30d'];

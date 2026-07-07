@@ -8,15 +8,33 @@
 const db = require('../db');
 const config = require('../config');
 
+// Any brace token containing "click" is a click-id placeholder, so all of
+// {click}, {clickid} and the network's own {your-click-id} resolve to the id.
+// Put this on the param you use to correlate back to your own clicks log (p1).
+const CLICK_TOKEN = /\{[^}]*click[^}]*\}/gi;
+// {user}/{username} (and legacy {your-sub-aff-id}) resolve to the logged-in
+// user's username, for per-user conversion attribution (e.g. p2={username}).
+const USER_TOKEN = /\{(?:user(?:name)?)\}|\{[^}]*sub[^}]*aff[^}]*\}/gi;
+
+// Replace the placeholder tokens a network hands us with our real values.
+// username falls back to the click id for logged-out visitors, so the value is
+// still uniquely traceable. `source=indiaoffers` etc. are typed literally.
+function resolveTokens(str, clickId, username) {
+  return String(str)
+    .replace(CLICK_TOKEN, clickId || '')
+    .replace(USER_TOKEN, username || clickId || '');
+}
+
 /**
  * Merge an admin-managed query-string fragment onto a URL. The fragment lives
  * on the store (`affiliate_params`), e.g. "tag=indiaoffers-21&subid={click}".
- * `{click}` / `{clickid}` tokens are replaced with the current click id, so
- * admins can wire per-click sub-tracking without code changes. Params here are
- * authoritative — they overwrite any same-named param already on the URL.
+ * Click-id tokens (`{click}`, `{clickid}`, `{your-click-id}`) are replaced with
+ * the current click id, so admins can wire per-click sub-tracking without code
+ * changes. Params here are authoritative — they overwrite any same-named param
+ * already on the URL.
  */
-function applyParams(url, paramStr, clickId) {
-  const resolved = String(paramStr).replace(/\{click(?:id)?\}/gi, clickId || '');
+function applyParams(url, paramStr, clickId, username) {
+  const resolved = resolveTokens(paramStr, clickId, username);
   for (const pair of resolved.replace(/^[?&]+/, '').split('&')) {
     if (!pair) continue;
     const eq  = pair.indexOf('=');
@@ -30,15 +48,18 @@ function applyParams(url, paramStr, clickId) {
  * Build a network tracking link: the store's `affiliate_prefix` with the
  * outbound merchant URL attached. Many affiliate networks (vCommission,
  * Cuelinks, INRDeals…) hand you a link like
- *   https://track.vcommission.com/click?campaign_id=13410&pub_id=100668&p1={click}&url=
- * where the destination is appended at the end. `{click}`/`{clickid}` tokens are
- * replaced with the click id; if the prefix contains a `{url}` token the encoded
- * destination is substituted there instead of being appended raw.
+ *   https://track.vcommission.com/click?campaign_id=13410&pub_id=100668&p1={your-click-id}&url=
+ * where the destination is appended at the end. Click-id tokens (e.g.
+ * `p1={your-click-id}`) are replaced with the click id. The destination URL is
+ * always percent-encoded before being attached — as a `{url}` token if present,
+ * otherwise appended to the end — so e.g. https://www.ajio.com/ becomes
+ * https%3A%2F%2Fwww.ajio.com%2F on the query string.
  */
-function buildPrefixedUrl(prefix, dest, clickId) {
-  const p = String(prefix).trim().replace(/\{click(?:id)?\}/gi, clickId || '');
-  if (/\{url\}/i.test(p)) return p.replace(/\{url\}/gi, encodeURIComponent(dest || ''));
-  return p + (dest || '');
+function buildPrefixedUrl(prefix, dest, clickId, username) {
+  const p = resolveTokens(String(prefix).trim(), clickId, username);
+  const encoded = encodeURIComponent(dest || '');
+  if (/\{url\}/i.test(p)) return p.replace(/\{url\}/gi, encoded);
+  return p + encoded;
 }
 
 /**
@@ -47,20 +68,23 @@ function buildPrefixedUrl(prefix, dest, clickId) {
  * @param store   store row (uses .affiliate_prefix, else .affiliate_type +
  *                .affiliate_params); a bare affiliate_type string is still
  *                accepted for backward compat.
- * @param clickId internal click id, exposed to admin params via {click}
+ * @param clickId  internal click id, exposed to admin params via {click}
+ * @param username logged-in user's username, filled into {username}/{user} (e.g.
+ *                 p2={username}) for per-user conversion attribution; falls back
+ *                 to the click id for logged-out visitors
  */
-function tagAffiliateUrl(rawUrl, store, clickId) {
+function tagAffiliateUrl(rawUrl, store, clickId, username) {
   const isObj = store && typeof store === 'object';
   const affiliateType = isObj ? store.affiliate_type   : store;
   const params        = isObj ? store.affiliate_params : null;
   const prefix        = isObj ? store.affiliate_prefix : null;
   // A network tracking prefix takes precedence — the network owns the tagging.
-  if (prefix && String(prefix).trim()) return buildPrefixedUrl(prefix, rawUrl, clickId);
+  if (prefix && String(prefix).trim()) return buildPrefixedUrl(prefix, rawUrl, clickId, username);
   try {
     const url = new URL(rawUrl);
     if (params && params.trim()) {
       // Admin-managed params take full control of tagging for this store.
-      applyParams(url, params, clickId);
+      applyParams(url, params, clickId, username);
     } else if (affiliateType === 'amazon' && /amazon\.in|amzn\.to/.test(url.hostname)) {
       url.searchParams.set('tag', config.affiliate.amazonTag);
       if (clickId) url.searchParams.set('io_click', clickId);

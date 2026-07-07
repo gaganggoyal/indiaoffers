@@ -17,7 +17,8 @@ router.get('/d/:id', async (req, res) => {
 
     const deal = rows[0];
     const clickId = `c${Date.now().toString(36)}`;
-    const target = tagAffiliateUrl(deal.deal_url || deal.affiliate_url, deal, clickId);
+    const username = req.user && req.user.username;   // attribute the sale to the user
+    const target = tagAffiliateUrl(deal.deal_url || deal.affiliate_url, deal, clickId, username);
     await recordClick({ dealId: deal.id, storeId: deal.store_id, targetUrl: target, req });
     res.redirect(302, target);
   } catch (err) {
@@ -33,7 +34,8 @@ router.get('/s/:id', async (req, res) => {
 
     const store = rows[0];
     const clickId = `c${Date.now().toString(36)}`;
-    const target = tagAffiliateUrl(store.affiliate_url || store.website_url, store, clickId);
+    const username = req.user && req.user.username;   // attribute the sale to the user
+    const target = tagAffiliateUrl(store.affiliate_url || store.website_url, store, clickId, username);
     await recordClick({ storeId: store.id, targetUrl: target, req });
     res.redirect(302, target);
   } catch (err) {
