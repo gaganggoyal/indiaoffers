@@ -10,8 +10,11 @@
     <% } else { %>
       <span class="sc-logo lg" style="background:<%= store.color %>"><%= store.name.charAt(0) %></span>
     <% } %>
-    <div>
+    <div class="store-hero-txt">
       <h1><%= store.name %> Deals & Offers</h1>
+      <p class="store-sub">
+        <%= store.category ? store.category.charAt(0).toUpperCase() + store.category.slice(1) : 'Store' %><% if (deals.length) { %> · <%= deals.length %> live deal<%= deals.length > 1 ? 's' : '' %><% } %><% if (coupons.length) { %> · <%= coupons.length %> coupon<%= coupons.length > 1 ? 's' : '' %><% } %><% if (storeOffers.length) { %> · <%= storeOffers.length %> card offer<%= storeOffers.length > 1 ? 's' : '' %><% } %>
+      </p>
       <% if (store.cashback_text) { %><span class="chip chip-badge"><%= store.cashback_text %></span><% } %>
     </div>
     <a class="btn-go sm" href="/go/s/<%= store.id %>" target="_blank" rel="noopener nofollow">Visit <%= store.name %> →</a>
