@@ -65,7 +65,7 @@
   </div>
 
   <% if (deal.description) { %>
-    <div class="panel"><h2>ℹ️ About this deal</h2><p class="deal-desc"><%= deal.description %></p></div>
+    <div class="panel"><h2>ℹ️ About this deal</h2><div class="deal-desc"><%- richText(deal.description) %></div></div>
   <% } %>
 
   <% if (coupons.length) { %>

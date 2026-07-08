@@ -61,7 +61,7 @@
   <% if (store.description && store.description.trim()) { %>
     <section class="store-about">
       <h2>About <%= store.name %></h2>
-      <div class="store-desc"><%= store.description %></div>
+      <div class="store-desc"><%- richText(store.description) %></div>
     </section>
   <% } %>
 </section>

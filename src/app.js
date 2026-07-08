@@ -28,6 +28,12 @@ app.use((req, res, next) => {
   res.locals.siteUrl = config.siteUrl;
   res.locals.path = req.path;
   res.locals.fmt = n => n == null ? '' : '₹' + Number(n).toLocaleString('en-IN');
+  // Render admin-pasted text keeping its format: escape HTML, blank line => paragraph, single newline => <br>
+  res.locals.richText = s => {
+    if (!s) return '';
+    const esc = String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return esc.trim().split(/\r?\n\s*\r?\n/).map(b => '<p>' + b.replace(/\r?\n/g, '<br>') + '</p>').join('');
+  };
   next();
 });
 
