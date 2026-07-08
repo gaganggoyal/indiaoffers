@@ -12,7 +12,6 @@
     <% } %>
     <div>
       <h1><%= store.name %> Deals & Offers</h1>
-      <p><%= store.description || '' %></p>
       <% if (store.cashback_text) { %><span class="chip chip-badge"><%= store.cashback_text %></span><% } %>
     </div>
     <a class="btn-go sm" href="/go/s/<%= store.id %>" target="_blank" rel="noopener nofollow">Visit <%= store.name %> →</a>
@@ -54,6 +53,13 @@
     <div class="grid">
       <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
     </div>
+  <% } %>
+
+  <% if (store.description && store.description.trim()) { %>
+    <section class="store-about">
+      <h2>About <%= store.name %></h2>
+      <div class="store-desc"><%= store.description %></div>
+    </section>
   <% } %>
 </section>
 

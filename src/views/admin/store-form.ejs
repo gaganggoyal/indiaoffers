@@ -35,7 +35,7 @@
     </span>
   </label>
   <label>Cashback note<input name="cashback_text" value="<%= store ? (store.cashback_text || '') : '' %>" placeholder="Upto 5% IO rewards"></label>
-  <label class="full">Description<textarea name="description" rows="2"><%= store ? (store.description || '') : '' %></textarea></label>
+  <label class="full">Description <small>— shown as an SEO content block below the live deals on the store page. Line breaks &amp; paragraphs are kept exactly as you paste them.</small><textarea name="description" rows="12" style="white-space:pre-wrap"><%= store ? (store.description || '') : '' %></textarea></label>
   <label class="check"><input type="checkbox" name="is_active" <%= !store || store.is_active ? 'checked' : '' %>> Live</label>
   <button class="btn" type="submit"><%= store ? 'Save changes' : 'Create store' %></button>
 </form>
