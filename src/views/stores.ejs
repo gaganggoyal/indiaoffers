@@ -11,7 +11,7 @@
     <% stores.forEach(s => { %>
       <a class="store-card" href="/store/<%= s.slug %>">
         <% if (s.logo_url) { %>
-          <span class="sc-logo has-logo"><img src="<%= s.logo_url %>" alt="<%= s.name %> logo" loading="lazy"></span>
+          <span class="sc-logo has-logo"><img src="<%= ver(s.logo_url) %>" alt="<%= s.name %> logo" loading="lazy"></span>
         <% } else { %>
           <span class="sc-logo" style="background:<%= s.color %>"><%= s.name.charAt(0) %></span>
         <% } %>
