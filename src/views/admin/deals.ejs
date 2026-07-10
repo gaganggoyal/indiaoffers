@@ -1,5 +1,11 @@
 <%- include('_top') %>
-<div class="page-bar"><h1>Deals</h1><a class="btn" href="/admin/deals/new">+ New Deal</a></div>
+<div class="page-bar"><h1>Deals</h1>
+  <div class="pb-actions">
+    <a class="btn-sec" href="/admin/export/deals.csv">📤 Export CSV</a>
+    <a class="btn-sec" href="/admin/import?type=deals">📥 Import CSV</a>
+    <a class="btn" href="/admin/deals/new">+ New Deal</a>
+  </div>
+</div>
 <%
   const STATUS_OPTS = [{ v: 'live', l: 'Live' }, { v: 'hidden', l: 'Hidden' }];
   const EXPIRY_OPTS = [{ v: 'active', l: 'Active (not expired)' }, { v: 'soon', l: 'Expiring ≤ 7 days' }, { v: 'expired', l: 'Expired' }, { v: 'none', l: 'No expiry date' }];
@@ -16,7 +22,10 @@
     <tbody>
       <% deals.forEach(d => { %>
         <tr>
-          <td><b><%= d.title %></b><br><small class="muted">/deal/<%= d.slug %></small></td>
+          <td><b><%= d.title %></b>
+              <% if (d.is_trending) { %><span title="Shown in home page banners">🏠</span><% } %>
+              <% if (d.hotness > 0) { %><span title="Hotness — pinned to top of homepage">🔥<%= d.hotness %></span><% } %>
+              <br><small class="muted">/deal/<%= d.slug %></small></td>
           <td><%= d.store_name %></td>
           <td><%= d.price != null ? '₹' + Number(d.price).toLocaleString('en-IN') : '—' %>
               <% if (d.mrp) { %><small class="muted"><s>₹<%= Number(d.mrp).toLocaleString('en-IN') %></s></small><% } %></td>

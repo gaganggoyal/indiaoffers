@@ -50,7 +50,13 @@
     <input type="file" name="file" accept=".csv,text/csv" required>
     <button class="btn" type="submit">Import <%= current.label %></button>
     <a class="btn-sec" href="/admin/import/<%= current.key %>/template.csv" download>⬇ Download template</a>
+    <% if (current.exportable) { %>
+      <a class="btn-sec" href="/admin/export/<%= current.key %>.csv">📤 Export all <%= current.label %> (CSV)</a>
+    <% } %>
   </form>
+  <% if (current.exportable) { %>
+    <p class="muted">💡 <b>Bulk edit workflow:</b> export the current <%= current.label.toLowerCase() %>, open the file in Excel / Google Sheets, change anything (prices, slugs, hotness, descriptions…), then re-upload it here — every row carries its <code>id</code> and <code>slug</code>, so your edits update the existing records in place instead of creating duplicates.</p>
+  <% } %>
 
   <details class="imp-cols">
     <summary>Columns for <%= current.label %> (<%= current.columns.length %>)</summary>

@@ -3,6 +3,8 @@
 <form class="panel form" method="post" action="/admin/stores/save">
   <% if (store) { %><input type="hidden" name="id" value="<%= store.id %>"><% } %>
   <label>Name *<input name="name" required value="<%= store ? store.name : '' %>"></label>
+  <label>URL slug <small>— indiaoffers.in/store/<b>your-slug</b>. Blank = auto from name. ⚠ Changing it on a live store changes its URL.</small>
+    <input name="slug" value="<%= store ? store.slug : '' %>" placeholder="<%= store ? '' : 'auto from name' %>"></label>
   <label>Brand color<input type="color" name="color" value="<%= store ? store.color : '#4f46e5' %>"></label>
   <label>Category
     <select name="category">

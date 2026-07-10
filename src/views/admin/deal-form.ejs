@@ -8,6 +8,8 @@
 <form class="panel form" method="post" action="/admin/deals/save">
   <% if (deal) { %><input type="hidden" name="id" value="<%= deal.id %>"><% } %>
   <label class="full">Title *<input name="title" required value="<%= deal ? deal.title : '' %>" placeholder="boAt Airdopes 141 TWS Earbuds (42H Playback)"></label>
+  <label class="full">URL slug <small>— the deal's web address: indiaoffers.in/deal/<b>your-slug</b>. Leave blank to auto-generate from the title. If the slug is already taken, -2/-3 is appended. ⚠ Changing it on a live deal changes its URL — old links and Google results stop working until re-indexed.</small>
+    <input name="slug" value="<%= deal ? deal.slug : '' %>" placeholder="<%= deal ? '' : 'auto-generated from title' %>"></label>
   <label>Store *
     <select name="store_id" required>
       <% stores.forEach(s => { %><option value="<%= s.id %>" <%= deal && deal.store_id === s.id ? 'selected' : '' %>><%= s.name %></option><% }) %>
@@ -59,7 +61,9 @@
   <label class="full">Deal URL (merchant page) *<input name="deal_url" required value="<%= deal ? (deal.deal_url || '') : '' %>" placeholder="https://www.amazon.in/dp/…"></label>
   <label class="full">Description<textarea name="description" rows="3"><%= deal ? (deal.description || '') : '' %></textarea></label>
   <label class="full">How to get it (one step per line)<textarea name="how_to" rows="5"><%= deal ? (JSON.parse(deal.how_to || '[]').join('\n')) : '' %></textarea></label>
-  <label class="check"><input type="checkbox" name="is_trending" <%= deal && deal.is_trending ? 'checked' : '' %>> 🏠 Show in home page banners <small>— ticked deals rotate in the big hero banners on the homepage; unticked deals appear only in the deals listings</small></label>
+  <label>🔥 Hotness <small>— 0 = normal (homepage shows newest deals first). Any number above 0 pins this deal to the top of the homepage grid no matter how old it is; higher number = higher position.</small>
+    <input type="number" name="hotness" min="0" step="1" value="<%= deal && deal.hotness ? deal.hotness : 0 %>"></label>
+  <label class="check"><input type="checkbox" name="is_trending" <%= deal && deal.is_trending ? 'checked' : '' %>> 🏠 Show in home page banners <small>— ONLY ticked deals appear in the big hero banners on the homepage (3 newest ticked ones); if none are ticked the banner strip is hidden</small></label>
   <label class="check"><input type="checkbox" name="is_active" <%= !deal || deal.is_active ? 'checked' : '' %>> Live on site</label>
   <button class="btn" type="submit"><%= deal ? 'Save changes' : 'Create deal' %></button>
 </form>

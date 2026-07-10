@@ -16,7 +16,7 @@ const { savingsStack, activeBankOffers } = require('../services/savings');
 const { generateCardOfferAlerts } = require('../services/alerts');
 const { deliverPendingAlerts } = require('../services/alertSender');
 const { mailerMode, verifyTransport } = require('../services/mailer');
-const { entityList, templateCsv, importCsv } = require('../services/importer');
+const { entityList, templateCsv, importCsv, exportCsv } = require('../services/importer');
 const { buildFromLink, geminiConfigured } = require('../services/quickdeal');
 const { CATEGORIES, CAT_NAMES } = require('../data/taxonomy');
 
@@ -104,6 +104,30 @@ router.post('/import/:entity', (req, res) => {
     } catch (e) { view({ error: e.message }); }
   });
 });
+
+// ── CSV export ───────────────────────────────────────────────────────────────
+// Full dump of deals/stores in an import-compatible format: edit the sheet
+// (slugs, prices, hotness…) and re-upload it to update the same rows in place.
+router.get('/export/:entity.csv', async (req, res, next) => {
+  try {
+    const out = await exportCsv(req.params.entity);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${out.filename}"`);
+    res.send(out.csv);
+  } catch (e) { res.status(404).send(e.message); }
+});
+
+// Reserve a unique slug: if the wanted one is taken by another row, append -2,
+// -3 … until free. `excludeId` lets an edit keep its own slug.
+async function ensureUniqueSlug(table, want, excludeId) {
+  const base = slugify(String(want || '').trim()) || 'item';
+  let slug = base, n = 1;
+  for (;;) {
+    const rows = await db.query(`SELECT id FROM ${table} WHERE slug = ?`, [slug]);
+    if (!rows.length || (excludeId && rows[0].id === excludeId)) return slug;
+    slug = `${base}-${++n}`;
+  }
+}
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
@@ -283,27 +307,32 @@ router.post('/deals/save', async (req, res, next) => {
       promo: String(srPromo[i] || '').trim() || undefined
     })).filter(r => r.bank || r.label || r.saving > 0);
     const savingsRows = rows.length ? JSON.stringify(rows) : null;
+    const hotness = Math.max(0, Math.round(Number(b.hotness) || 0));
+    const wantSlug = String(b.slug || '').trim();
     if (b.id) {
+      // Slug: only changed when the admin typed one; blank keeps the current URL.
+      const slug = wantSlug ? await ensureUniqueSlug('deals', wantSlug, b.id) : null;
       await db.query(`
-        UPDATE deals SET store_id=?, title=?, description=?, category=?, image_url=?, mrp=?, price=?,
+        UPDATE deals SET slug=COALESCE(?, slug), store_id=?, title=?, description=?, category=?, image_url=?, mrp=?, price=?,
           true_price=?, savings_note=?, savings_rows=?, coupon_code=?, deal_url=?, how_to=?, badge=?, cashback_text=?,
-          is_trending=?, is_active=?, expiry_date=?, updated_at=?
+          is_trending=?, hotness=?, is_active=?, expiry_date=?, updated_at=?
         WHERE id=?
-      `, [b.store_id, b.title, b.description || '', b.category || '', b.image_url || null,
+      `, [slug, b.store_id, b.title, b.description || '', b.category || '', b.image_url || null,
           numOrNull(b.mrp), numOrNull(b.price), numOrNull(b.true_price), (b.savings_note || '').trim() || null, savingsRows,
           b.coupon_code || null, b.deal_url || null, howTo,
-          b.badge || null, b.cashback_text || null, boolInt(b.is_trending), boolInt(b.is_active),
+          b.badge || null, b.cashback_text || null, boolInt(b.is_trending), hotness, boolInt(b.is_active),
           b.expiry_date || null, nowSql(), b.id]);
     } else {
+      const slug = await ensureUniqueSlug('deals', wantSlug || b.title);
       await db.query(`
         INSERT INTO deals (id, slug, store_id, title, description, category, image_url, mrp, price,
-          true_price, savings_note, savings_rows, coupon_code, deal_url, how_to, badge, cashback_text, is_trending, is_active, expiry_date, posted_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-      `, [uid('dl'), slugify(b.title) + '-' + Math.random().toString(36).slice(2, 5), b.store_id, b.title,
+          true_price, savings_note, savings_rows, coupon_code, deal_url, how_to, badge, cashback_text, is_trending, hotness, is_active, expiry_date, posted_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+      `, [uid('dl'), slug, b.store_id, b.title,
           b.description || '', b.category || '', b.image_url || null, numOrNull(b.mrp), numOrNull(b.price),
           numOrNull(b.true_price), (b.savings_note || '').trim() || null, savingsRows,
           b.coupon_code || null, b.deal_url || null, howTo, b.badge || null, b.cashback_text || null,
-          boolInt(b.is_trending), boolInt(b.is_active), b.expiry_date || null]);
+          boolInt(b.is_trending), hotness, boolInt(b.is_active), b.expiry_date || null]);
     }
     res.redirect('/admin/deals');
   } catch (err) { next(err); }
@@ -428,17 +457,20 @@ router.post('/stores/save', async (req, res, next) => {
     const vals = [b.name, b.color || '#4f46e5', b.logo_url || null, b.category || '', b.description || '',
       b.website_url || null, b.affiliate_url || b.website_url || null, b.affiliate_type || 'none',
       affiliateParams, affiliatePrefix, b.cashback_text || null, boolInt(b.is_active)];
+    const wantSlug = String(b.slug || '').trim();
     if (b.id) {
+      // Slug: only changed when the admin typed one; blank keeps the current URL.
+      const slug = wantSlug ? await ensureUniqueSlug('stores', wantSlug, b.id) : null;
       await db.query(`
-        UPDATE stores SET name=?, color=?, logo_url=?, category=?, description=?, website_url=?,
+        UPDATE stores SET slug=COALESCE(?, slug), name=?, color=?, logo_url=?, category=?, description=?, website_url=?,
           affiliate_url=?, affiliate_type=?, affiliate_params=?, affiliate_prefix=?, cashback_text=?, is_active=? WHERE id=?
-      `, [...vals, b.id]);
+      `, [slug, ...vals, b.id]);
     } else {
       await db.query(`
         INSERT INTO stores (name, color, logo_url, category, description, website_url,
           affiliate_url, affiliate_type, affiliate_params, affiliate_prefix, cashback_text, is_active, id, slug)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [...vals, uid('st'), slugify(b.name)]);
+      `, [...vals, uid('st'), await ensureUniqueSlug('stores', wantSlug || b.name)]);
     }
     res.redirect('/admin/stores');
   } catch (err) { next(err); }

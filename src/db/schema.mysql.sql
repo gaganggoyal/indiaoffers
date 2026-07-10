@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS deals (
   badge           VARCHAR(30),
   cashback_text   VARCHAR(100),
   is_trending     TINYINT(1) DEFAULT 0,
+  hotness         INT DEFAULT 0,
   is_active       TINYINT(1) DEFAULT 1,
   clicks          INT DEFAULT 0,
   expiry_date     DATE,

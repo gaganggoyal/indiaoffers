@@ -77,8 +77,8 @@ const ENTITIES = {
   stores: {
     label: 'Stores', table: 'stores', idPrefix: 'st',
     requiredForInsert: ['name', 'slug'],
-    template: ['name', 'category', 'website_url', 'affiliate_url', 'affiliate_type', 'affiliate_params', 'cashback_text', 'color', 'logo_url', 'description', 'is_active'],
-    sample: ['Ajio', 'fashion', 'https://www.ajio.com', 'https://www.ajio.com', 'none', 'utm_source=indiaoffers', 'Upto 6% IO rewards', '#2f6df6', '', 'Fashion & lifestyle store', '1'],
+    template: ['name', 'slug', 'category', 'website_url', 'affiliate_url', 'affiliate_type', 'affiliate_params', 'affiliate_prefix', 'cashback_text', 'color', 'logo_url', 'description', 'is_active'],
+    sample: ['Ajio', 'ajio', 'fashion', 'https://www.ajio.com', 'https://www.ajio.com', 'none', 'utm_source=indiaoffers', '', 'Upto 6% IO rewards', '#2f6df6', '', 'Fashion & lifestyle store', '1'],
     build(rec, hs, ctx) {
       const cols = {}; const set = setter(rec, hs, cols);
       if (hs.has('name') || hs.has('slug')) cols.slug = slugify(g(rec, 'slug') || g(rec, 'name'));
@@ -91,6 +91,7 @@ const ENTITIES = {
       set('affiliate_url', ['affiliate_url'], str);
       set('affiliate_type', ['affiliate_type'], v => { const t = (str(v) || 'none').toLowerCase(); return ['none', 'amazon', 'flipkart'].includes(t) ? t : 'none'; });
       set('affiliate_params', ['affiliate_params', 'affiliate_tag', 'tag'], v => (str(v) || '').replace(/^[?&]+/, '') || null);
+      set('affiliate_prefix', ['affiliate_prefix', 'tracking_prefix'], str);
       set('cashback_text', ['cashback_text', 'cashback'], str);
       set('is_active', ['is_active', 'active', 'live'], v => bool(v, 1));
       if (g(rec, 'id')) cols.id = g(rec, 'id');
@@ -101,8 +102,8 @@ const ENTITIES = {
   deals: {
     label: 'Deals', table: 'deals', idPrefix: 'dl', needsStores: true,
     requiredForInsert: ['title', 'slug', 'store_id', 'deal_url'],
-    template: ['title', 'store', 'category', 'deal_url', 'image_url', 'mrp', 'price', 'true_price', 'savings_note', 'coupon_code', 'badge', 'cashback_text', 'how_to', 'is_trending', 'is_active', 'expiry_date'],
-    sample: ['Sony WH-1000XM5 Headphones', 'Amazon', 'electronics', 'https://www.amazon.in/dp/B09XS7JWHH', '', '34990', '24990', '', '', 'SAVE10', 'LOOT', 'Upto 4% IO rewards', 'Add to cart|Apply coupon SAVE10|Pay with ICICI card', '1', '1', '2026-12-31'],
+    template: ['title', 'slug', 'store', 'category', 'deal_url', 'image_url', 'mrp', 'price', 'true_price', 'savings_note', 'coupon_code', 'badge', 'cashback_text', 'description', 'how_to', 'is_trending', 'hotness', 'is_active', 'expiry_date'],
+    sample: ['Sony WH-1000XM5 Headphones', 'sony-wh-1000xm5-headphones', 'Amazon', 'electronics', 'https://www.amazon.in/dp/B09XS7JWHH', '', '34990', '24990', '', '', 'SAVE10', 'LOOT', 'Upto 4% IO rewards', '', 'Add to cart|Apply coupon SAVE10|Pay with ICICI card', '1', '0', '1', '2026-12-31'],
     build(rec, hs, ctx) {
       const cols = {}; const set = setter(rec, hs, cols);
       if (hs.has('title') || hs.has('slug') || hs.has('name')) cols.slug = slugify(g(rec, 'slug') || g(rec, 'title', 'name'));
@@ -121,7 +122,8 @@ const ENTITIES = {
       set('how_to', ['how_to', 'steps'], pipeJson);
       set('badge', ['badge'], str);
       set('cashback_text', ['cashback_text', 'cashback'], str);
-      set('is_trending', ['is_trending', 'trending'], v => bool(v, 0));
+      set('is_trending', ['is_trending', 'trending', 'banner', 'home_banner'], v => bool(v, 0));
+      set('hotness', ['hotness', 'hot'], v => { const n = num(v); return n == null ? 0 : Math.max(0, Math.round(n)); });
       set('is_active', ['is_active', 'active', 'live'], v => bool(v, 1));
       set('expiry_date', ['expiry_date', 'expiry'], str);
       cols.updated_at = nowSql();
@@ -245,9 +247,92 @@ async function applyUpsert(cfg, built, existingId) {
   return 'inserted';
 }
 
+// ── CSV export (deals / stores) ─────────────────────────────────────────────
+// Produces a sheet the importer can re-ingest as-is: every column header is an
+// alias the import understands, and each row carries id + slug so a re-upload
+// updates the same records in place (edit slugs, prices, hotness … in Excel).
+const csvCell = v => {
+  const s = v == null ? '' : String(v);
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+const dateOnly = v => {
+  if (!v) return '';
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return String(v).slice(0, 10);
+};
+// JSON array string ("how_to") → pipe-separated cell, the format import expects
+const joinPipes = v => {
+  if (!v) return '';
+  try { const a = JSON.parse(v); return Array.isArray(a) ? a.join(' | ') : String(v); }
+  catch { return String(v); }
+};
+
+const EXPORTS = {
+  deals: {
+    label: 'Deals',
+    sql: `SELECT d.*, s.slug AS _store_slug, s.name AS _store_name
+          FROM deals d LEFT JOIN stores s ON s.id = d.store_id
+          ORDER BY d.posted_at DESC`,
+    columns: {
+      id: r => r.id,
+      slug: r => r.slug,
+      title: r => r.title,
+      store: r => r._store_slug || r._store_name || r.store_id,
+      category: r => r.category,
+      deal_url: r => r.deal_url,
+      image_url: r => r.image_url,
+      mrp: r => r.mrp,
+      price: r => r.price,
+      true_price: r => r.true_price,
+      savings_note: r => r.savings_note,
+      coupon_code: r => r.coupon_code,
+      badge: r => r.badge,
+      cashback_text: r => r.cashback_text,
+      description: r => r.description,
+      how_to: r => joinPipes(r.how_to),
+      is_trending: r => (r.is_trending ? 1 : 0),
+      hotness: r => r.hotness || 0,
+      is_active: r => (r.is_active ? 1 : 0),
+      expiry_date: r => dateOnly(r.expiry_date)
+    }
+  },
+  stores: {
+    label: 'Stores',
+    sql: `SELECT * FROM stores ORDER BY name`,
+    columns: {
+      id: r => r.id,
+      slug: r => r.slug,
+      name: r => r.name,
+      category: r => r.category,
+      website_url: r => r.website_url,
+      affiliate_url: r => r.affiliate_url,
+      affiliate_type: r => r.affiliate_type,
+      affiliate_params: r => r.affiliate_params,
+      affiliate_prefix: r => r.affiliate_prefix,
+      cashback_text: r => r.cashback_text,
+      color: r => r.color,
+      logo_url: r => r.logo_url,
+      description: r => r.description,
+      is_active: r => (r.is_active ? 1 : 0)
+    }
+  }
+};
+
+/** Full CSV dump of one entity. Returns { filename, csv }. */
+async function exportCsv(entityKey) {
+  const cfg = EXPORTS[entityKey];
+  if (!cfg) throw new Error('Export not available for: ' + entityKey);
+  const rows = await db.query(cfg.sql);
+  const heads = Object.keys(cfg.columns);
+  const lines = [heads.join(',')];
+  for (const r of rows) lines.push(heads.map(h => csvCell(cfg.columns[h](r))).join(','));
+  const stamp = new Date().toISOString().slice(0, 10);
+  return { filename: `indiaoffers-${entityKey}-${stamp}.csv`, csv: lines.join('\n') + '\n' };
+}
+
 // ── public API ──────────────────────────────────────────────────────────────
 function entityList() {
-  return Object.entries(ENTITIES).map(([key, c]) => ({ key, label: c.label, columns: c.template }));
+  return Object.entries(ENTITIES).map(([key, c]) => ({ key, label: c.label, columns: c.template, exportable: !!EXPORTS[key] }));
 }
 
 /** CSV text (with a header row) for one entity's downloadable template. */
@@ -298,4 +383,4 @@ async function importCsv(entityKey, csvText) {
   return res;
 }
 
-module.exports = { entityList, templateCsv, importCsv, ENTITIES };
+module.exports = { entityList, templateCsv, importCsv, exportCsv, ENTITIES };

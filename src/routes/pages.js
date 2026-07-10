@@ -48,17 +48,18 @@ const ORGANIZATION_LD = {
 // ── Home ──────────────────────────────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
   try {
-    // Hero banners show only deals the admin ticked "Show in home page banners"
-    // (is_trending). If none are ticked yet, fall back to the 3 latest deals.
-    const [bannerRaw, dealsRaw, offers, storeMap, featuredCards] = await Promise.all([
+    // Hero banners show ONLY deals the admin ticked "Show in home page banners"
+    // (is_trending) — no fallback; untick everything and the hero disappears.
+    // The grid below shows the newest deals, but any deal with hotness > 0 is
+    // pinned above the rest (higher number = higher on the page) regardless of
+    // how old it is.
+    const [heroRaw, dealsRaw, offers, storeMap, featuredCards] = await Promise.all([
       db.query(`SELECT * FROM deals WHERE is_active = 1 AND is_trending = 1 ORDER BY posted_at DESC LIMIT 3`),
-      db.query(`SELECT * FROM deals WHERE is_active = 1 ORDER BY posted_at DESC LIMIT 15`),
+      db.query(`SELECT * FROM deals WHERE is_active = 1 ORDER BY COALESCE(hotness, 0) DESC, posted_at DESC LIMIT 15`),
       activeBankOffers(),
       storesById(),
       db.query(`SELECT * FROM bank_cards WHERE is_active = 1 ORDER BY is_featured DESC, sort_order ASC LIMIT 4`)
     ]);
-    const heroRaw = bannerRaw.length ? bannerRaw
-      : dealsRaw.slice(0, 3);
     const heroIds = new Set(heroRaw.map(d => d.id));
     const gridRaw = dealsRaw.filter(d => !heroIds.has(d.id)).slice(0, 12);
     const heroDeals = decorateDeals(heroRaw, offers);

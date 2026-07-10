@@ -1,7 +1,8 @@
 <%- include('partials/head') %>
 <%- include('partials/header') %>
 
-<!-- Hero: 3 top recent deals as banners -->
+<!-- Hero: up to 3 admin-picked banner deals; hidden when none are ticked -->
+<% if (heroDeals.length) { %>
 <section class="wrap">
   <div class="hero-row">
     <% heroDeals.forEach((d, i) => { const st = storeMap[d.store_id] || { name: '', color: '#4f46e5' }; %>
@@ -24,6 +25,7 @@
     <% }) %>
   </div>
 </section>
+<% } %>
 
 <!-- Hot zones — high-intent SEO landing pages -->
 <section class="wrap">

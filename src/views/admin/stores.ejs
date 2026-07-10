@@ -1,5 +1,11 @@
 <%- include('_top') %>
-<div class="page-bar"><h1>Stores</h1><a class="btn" href="/admin/stores/new">+ New Store</a></div>
+<div class="page-bar"><h1>Stores</h1>
+  <div class="pb-actions">
+    <a class="btn-sec" href="/admin/export/stores.csv">📤 Export CSV</a>
+    <a class="btn-sec" href="/admin/import?type=stores">📥 Import CSV</a>
+    <a class="btn" href="/admin/stores/new">+ New Store</a>
+  </div>
+</div>
 <%- include('_filters', { action: '/admin/stores', q: active.q, ph: 'Search stores by name…', selects: [
   { name: 'status', value: active.status, all: 'Any status', options: [{ v: 'live', l: 'Live' }, { v: 'hidden', l: 'Off' }] }
 ] }) %>
