@@ -6,7 +6,7 @@
 
     <!-- Left: how IndiaOffers works + what you get -->
     <aside class="reg-showcase">
-      <h1>Join India's smartest<br><em>deal-hunting</em> community</h1>
+      <h1>Join India's smartest <br><em>deal-hunting</em> community</h1>
       <p class="rs-sub">One free account. Loot deals, card-sale alerts and real rewards.</p>
 
       <div class="howto-video rs-video" aria-label="How IndiaOffers works — quick demo">
@@ -54,10 +54,10 @@
         <div class="hp-field" aria-hidden="true"><label>Company<input name="company" tabindex="-1" autocomplete="off"></label></div>
 
         <div class="af-grid">
-          <label>Username *<input name="username" required value="<%= form.username || '' %>" placeholder="e.g. rahul_deals" pattern="[a-zA-Z0-9_.]{3,30}"></label>
-          <label>Email *<input type="email" name="email" required value="<%= form.email || '' %>" placeholder="you@example.com"></label>
+          <label>Username *<input name="username" required value="<%= form.username || '' %>" placeholder="e.g. rahul_deals" pattern="[a-zA-Z0-9_.]{3,30}" autocomplete="username"><small class="avail" hidden></small></label>
+          <label>Email *<input type="email" name="email" required value="<%= form.email || '' %>" placeholder="you@example.com" autocomplete="email"><small class="avail" hidden></small></label>
           <label>Mobile number<input name="mobile" value="<%= form.mobile || '' %>" placeholder="10-digit mobile" inputmode="tel"></label>
-          <label>Password *<input type="password" name="password" required minlength="6" placeholder="Min 6 characters"></label>
+          <label>Password *<input type="password" name="password" required minlength="6" placeholder="Min 6 characters" autocomplete="new-password"></label>
         </div>
 
         <div class="af-checks">
@@ -94,5 +94,43 @@
 
   </div>
 </section>
+
+<script>
+// Live availability: tells the visitor "username taken" while they type,
+// instead of after they've filled the whole form and lost the password field.
+(function () {
+  var form = document.querySelector('.reg-form-card form');
+  if (!form || !window.fetch) return;
+  var msgs = {
+    username: { ok: '✓ username is available', taken: '✗ already taken — try another', invalid: 'use 3–30 letters, numbers, _ or .' },
+    email:    { ok: '✓ looks good', taken: '✗ already registered — log in instead', invalid: 'please enter a valid email' }
+  };
+  ['username', 'email'].forEach(function (key) {
+    var input = form.querySelector('input[name=' + key + ']');
+    if (!input) return;
+    var note = input.parentElement.querySelector('.avail');
+    var timer;
+    function check() {
+      var v = input.value.trim();
+      if (!v) { note.hidden = true; input.classList.remove('is-good', 'is-bad'); return; }
+      fetch('/api/availability?' + key + '=' + encodeURIComponent(v))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var state = d[key];
+          if (!state || input.value.trim() !== v) return;
+          note.hidden = false;
+          note.textContent = msgs[key][state];
+          note.className = 'avail ' + (state === 'ok' ? 'good' : 'bad');
+          input.classList.toggle('is-good', state === 'ok');
+          input.classList.toggle('is-bad', state !== 'ok');
+        })
+        .catch(function () {});
+    }
+    input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(check, 450); });
+    input.addEventListener('blur', check);
+    if (input.value.trim()) check();   // re-renders after a server-side error pre-check too
+  });
+})();
+</script>
 
 <%- include('../partials/footer') %>

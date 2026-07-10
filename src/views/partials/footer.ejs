@@ -49,6 +49,20 @@
   </div>
   <div class="footer-note">© <%= new Date().getFullYear() %> IndiaOffers.in · Prices and offers change fast — always verify on the merchant page before paying. · <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms &amp; Conditions</a></div>
 </footer>
+
+<!-- App-style bottom tab bar — phones only (CSS hides it on desktop) -->
+<nav class="tabbar" aria-label="Quick navigation">
+  <a href="/" class="<%= path === '/' ? 'on' : '' %>"><span class="tb-ico">🏠</span>Home</a>
+  <a href="/deals" class="<%= path.startsWith('/deals') || path.startsWith('/deal/') ? 'on' : '' %>"><span class="tb-ico">🏷️</span>Deals</a>
+  <a href="/loot-deals" class="<%= path === '/loot-deals' ? 'on' : '' %>"><span class="tb-ico">🔥</span>Loot</a>
+  <a href="/bank-offers" class="<%= path.startsWith('/bank-offers') || path.startsWith('/card') ? 'on' : '' %>"><span class="tb-ico">💳</span>Offers</a>
+  <% if (typeof user !== 'undefined' && user) { %>
+    <a href="/account" class="<%= path.startsWith('/account') || path.startsWith('/submit-deal') ? 'on' : '' %>"><span class="tb-ico">👤</span>Profile</a>
+  <% } else { %>
+    <a href="/register" class="<%= path === '/register' || path === '/login' || path === '/verify-email' ? 'on' : '' %>"><span class="tb-ico">✨</span>Join</a>
+  <% } %>
+</nav>
+
 <script src="<%= ver('/js/site.js') %>" defer></script>
 </body>
 </html>

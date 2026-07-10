@@ -779,19 +779,76 @@ router.get('/messages', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// USERS (subscribers) — read-only list
+// USERS — full management: verify, block/unblock, adjust points, safe delete.
 router.get('/users', async (req, res, next) => {
   try {
     const f = listFilter(req.query, {
       search: ['u.username', 'u.email', 'u.mobile'],
-      bool: { whatsapp: 'u.whatsapp_optin', bulk: 'u.is_bulk_buyer' }
+      bool: { whatsapp: 'u.whatsapp_optin', verified: 'u.email_verified', active: 'u.is_active' }
     });
     const users = await db.query(`
       SELECT u.*,
         (SELECT COUNT(*) FROM user_cards uc WHERE uc.user_id = u.id) AS card_count,
-        (SELECT COUNT(*) FROM user_categories ucat WHERE ucat.user_id = u.id) AS cat_count
+        (SELECT COUNT(*) FROM user_categories ucat WHERE ucat.user_id = u.id) AS cat_count,
+        (SELECT COUNT(*) FROM user_deals ud WHERE ud.user_id = u.id) AS deal_count,
+        (SELECT COUNT(*) FROM alerts a WHERE a.user_id = u.id) AS alert_count
       FROM users u${f.clause} ORDER BY u.created_at DESC LIMIT 500`, f.params);
-    res.render('admin/users', { title: 'Admin — Users', admin: req.admin, section: 'users', users, active: f.active });
+    res.render('admin/users', { title: 'Admin — Users', admin: req.admin, section: 'users', users, active: f.active, msg: req.query.msg || null });
+  } catch (err) { next(err); }
+});
+
+// Look a user up first so actions on a stale row 404 instead of half-applying.
+async function findUser(id) {
+  const rows = await db.query('SELECT * FROM users WHERE id = ?', [String(id || '')]);
+  return rows[0] || null;
+}
+const backToUsers = (res, msg) => res.redirect('/admin/users?msg=' + encodeURIComponent(msg));
+
+// Manually mark the email verified (e.g. the code never arrived).
+router.post('/users/:id/verify', async (req, res, next) => {
+  try {
+    const u = await findUser(req.params.id);
+    if (!u) return backToUsers(res, 'User not found — the list may be stale.');
+    await db.query('UPDATE users SET email_verified = 1, otp_code = NULL, verify_token = NULL, otp_expires = NULL WHERE id = ?', [u.id]);
+    backToUsers(res, `✓ ${u.username} marked verified — they can log in now.`);
+  } catch (err) { next(err); }
+});
+
+// Block / unblock: is_active = 0 locks the account out of login without
+// touching any of their data (fully reversible, unlike delete).
+router.post('/users/:id/toggle', async (req, res, next) => {
+  try {
+    const u = await findUser(req.params.id);
+    if (!u) return backToUsers(res, 'User not found — the list may be stale.');
+    const to = u.is_active ? 0 : 1;
+    await db.query('UPDATE users SET is_active = ? WHERE id = ?', [to, u.id]);
+    backToUsers(res, to ? `✓ ${u.username} unblocked — they can log in again.` : `⛔ ${u.username} blocked — login is disabled, data kept.`);
+  } catch (err) { next(err); }
+});
+
+// Set partner points to an exact value (rewards corrections).
+router.post('/users/:id/points', async (req, res, next) => {
+  try {
+    const u = await findUser(req.params.id);
+    if (!u) return backToUsers(res, 'User not found — the list may be stale.');
+    const pts = Math.max(0, Math.round(Number(req.body.points) || 0));
+    await db.query('UPDATE users SET points = ? WHERE id = ?', [pts, u.id]);
+    backToUsers(res, `⭐ ${u.username} now has ${pts} points.`);
+  } catch (err) { next(err); }
+});
+
+// Permanent delete. Children reference users via FOREIGN KEYs, so they are
+// removed first (alerts, category prefs, card prefs, deal submissions) —
+// otherwise the DB rejects the delete with a constraint error.
+router.post('/users/:id/delete', async (req, res, next) => {
+  try {
+    const u = await findUser(req.params.id);
+    if (!u) return backToUsers(res, 'User not found — the list may be stale.');
+    for (const t of ['alerts', 'user_categories', 'user_cards', 'user_deals']) {
+      await db.query(`DELETE FROM ${t} WHERE user_id = ?`, [u.id]);
+    }
+    await db.query('DELETE FROM users WHERE id = ?', [u.id]);
+    backToUsers(res, `🗑 ${u.username} and all their data deleted permanently.`);
   } catch (err) { next(err); }
 });
 

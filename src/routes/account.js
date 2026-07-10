@@ -68,7 +68,8 @@ async function completeVerification(res, user) {
   await db.query('UPDATE users SET email_verified = 1, otp_code = NULL, verify_token = NULL, otp_expires = NULL, last_login = ? WHERE id = ?',
     [nowSql(), user.id]);
   res.cookie('io_user', signUser(user), sessionCookie(30 * 864e5));
-  res.redirect('/account?welcome=1');
+  // Land on the homepage (deals!) — the header now shows their 👤 profile button.
+  res.redirect('/?welcome=1');
 }
 
 const verifyView = (user, extra) => Object.assign({
@@ -122,6 +123,26 @@ router.post('/verify-email/resend', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── Live availability check ───────────────────────────────────────────────────
+// The register form pings this as the visitor types, so "username taken" shows
+// up next to the field immediately — not after they've filled the whole form.
+router.get('/api/availability', async (req, res) => {
+  try {
+    const out = {};
+    if (req.query.username !== undefined) {
+      const username = String(req.query.username || '').trim().toLowerCase();
+      if (!/^[a-z0-9_.]{3,30}$/.test(username)) out.username = 'invalid';
+      else out.username = (await db.query('SELECT id FROM users WHERE username = ?', [username])).length ? 'taken' : 'ok';
+    }
+    if (req.query.email !== undefined) {
+      const email = String(req.query.email || '').trim().toLowerCase();
+      if (!/^\S+@\S+\.\S+$/.test(email)) out.email = 'invalid';
+      else out.email = (await db.query('SELECT id FROM users WHERE email = ?', [email])).length ? 'taken' : 'ok';
+    }
+    res.json(out);
+  } catch (e) { res.status(500).json({}); }
+});
+
 // ── Register ──────────────────────────────────────────────────────────────────
 router.get('/register', async (req, res, next) => {
   try {
@@ -153,8 +174,10 @@ router.post('/register', async (req, res, next) => {
     if (mobile && !/^[0-9+\-\s]{7,15}$/.test(mobile)) return rerender('Please enter a valid mobile number.');
     if (String(b.password || '').length < 6) return rerender('Password must be at least 6 characters.');
 
-    const clash = await db.query('SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
-    if (clash.length) return rerender('That username or email is already registered.');
+    const clashU = await db.query('SELECT id FROM users WHERE username = ?', [username]);
+    if (clashU.length) return rerender('That username is already taken — please pick another one.');
+    const clashE = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+    if (clashE.length) return rerender('That email is already registered — try logging in instead.');
 
     // Honeypot: hidden "company" field — humans never see it, bots fill it.
     if (String(b.company || '').trim() !== '') return res.redirect('/');
@@ -187,7 +210,7 @@ router.get('/login', (req, res) => {
   if (req.user) return res.redirect('/account');
   res.render('account/login', {
     title: 'Login — IndiaOffers.in', meta: {},
-    next: req.query.next || '/account', error: null
+    next: req.query.next || '/', error: null
   });
 });
 
@@ -198,7 +221,7 @@ router.post('/login', async (req, res, next) => {
     if (rows.length === 0 || !bcrypt.compareSync(req.body.password || '', rows[0].password_hash)) {
       return res.status(401).render('account/login', {
         title: 'Login — IndiaOffers.in', meta: {},
-        next: req.body.next || '/account', error: 'Invalid username/email or password.'
+        next: req.body.next || '/', error: 'Invalid username/email or password.'
       });
     }
     // Unverified account: send a fresh code and route to the verify page.
@@ -208,7 +231,8 @@ router.post('/login', async (req, res, next) => {
     }
     await db.query('UPDATE users SET last_login = ? WHERE id = ?', [nowSql(), rows[0].id]);
     res.cookie('io_user', signUser(rows[0]), sessionCookie(30 * 864e5));
-    const dest = req.body.next && req.body.next.startsWith('/') ? req.body.next : '/account';
+    // Back to the homepage by default — their 👤 profile button is in the header.
+    const dest = req.body.next && req.body.next.startsWith('/') ? req.body.next : '/';
     res.redirect(dest);
   } catch (err) { next(err); }
 });

@@ -681,3 +681,142 @@ main { min-height: 60vh; padding-bottom: 50px; }
   .acc-stats { grid-template-columns: 1fr 1fr; }
   .acc-hero { padding: 20px; }
 }
+
+/* ═══ homepage welcome strip (after registration / login) ═══ */
+.welcome-strip { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; background: linear-gradient(120deg, var(--primary) 0%, #7c3aed 60%, #9333ea 100%); color: #fff; border-radius: 14px; padding: 14px 20px; margin-top: 18px; box-shadow: 0 10px 28px rgba(79,70,229,.25); }
+.welcome-strip .ws-txt { font-size: 13.5px; }
+.welcome-strip .ws-btn { background: #fff; color: var(--primary-dark); font-weight: 800; font-size: 12.5px; padding: 8px 16px; border-radius: 50px; white-space: nowrap; }
+
+/* ═══ live availability hints on the register form ═══ */
+.avail { font-size: 12px; font-weight: 700; }
+.avail.good { color: var(--good); }
+.avail.bad { color: var(--danger); }
+.acc-form input.is-good { border-color: var(--good); }
+.acc-form input.is-bad { border-color: var(--danger); }
+
+/* ═══ panel-heading icon chips (turns black emoji into designed badges) ═══ */
+.ph-ico { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; font-size: 15px; margin-right: 4px; vertical-align: -8px; background: linear-gradient(135deg, var(--primary), #9333ea); box-shadow: 0 3px 10px rgba(79,70,229,.28); }
+.ph-ico.ph-alert { background: linear-gradient(135deg, #f59e0b, #f97316); box-shadow: 0 3px 10px rgba(245,158,11,.3); }
+.ph-ico.ph-earn { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 3px 10px rgba(16,185,129,.3); }
+/* the emoji itself goes white so the gradient chip carries the colour */
+.ph-ico { filter: none; }
+.ph-ico::selection { background: transparent; }
+
+/* ═══ account preferences — polished ═══ */
+.pref-sub { font-size: 12.5px; color: var(--muted); margin: -6px 0 2px; }
+.pref-id { display: flex; gap: 8px; flex-wrap: wrap; }
+.pid-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--primary-soft); border: 1px solid #c7d2fe; color: var(--primary-dark); font-size: 12.5px; padding: 7px 13px; border-radius: 50px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pid-chip b { font-weight: 700; }
+.acc-panel .af-fieldset { background: #fbfcff; }
+.acc-panel .af-fieldset legend { background: var(--card); border: 1px solid var(--line); border-radius: 50px; padding: 3px 12px; font-size: 12px; }
+.chk input, .ms-opt input { accent-color: var(--primary); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE APP EXPERIENCE — bottom tab bar, swipe carousels, thumb-sized
+   targets, iOS-zoom-proof inputs. Keep this block LAST so it wins the cascade.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* app-like feel everywhere: no grey tap flashes, no rubber-band side scroll */
+a, button { -webkit-tap-highlight-color: transparent; }
+html, body { overscroll-behavior-x: none; }
+
+/* bottom tab bar — hidden on desktop */
+.tabbar { display: none; }
+
+@media (max-width: 900px) {
+  /* ── bottom tab bar ─────────────────────────────────────────────────── */
+  .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    background: rgba(255,255,255,.94); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border-top: 1px solid var(--line); box-shadow: 0 -6px 24px rgba(15,23,42,.08);
+    padding: 7px 6px calc(7px + env(safe-area-inset-bottom, 0px)); }
+  .tabbar a { display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-size: 10.5px; font-weight: 700; color: var(--muted); padding: 3px 0 2px; border-radius: 12px; }
+  .tabbar .tb-ico { font-size: 21px; line-height: 1.15; transition: transform .15s; }
+  .tabbar a.on { color: var(--primary); }
+  .tabbar a.on .tb-ico { transform: translateY(-2px) scale(1.12); }
+  .tabbar a:active .tb-ico { transform: scale(.92); }
+  /* clear the bar: pages + footer never hide behind it */
+  main { padding-bottom: 30px; }
+  .footer { padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)); }
+
+  /* ── hero banners & promo banners → swipeable carousels ────────────── */
+  .hero-row, .banner-row { display: flex; gap: 12px; overflow-x: auto;
+    scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; margin-left: -20px; margin-right: -20px;
+    padding: 4px 20px 10px; }
+  .hero-row::-webkit-scrollbar, .banner-row::-webkit-scrollbar { display: none; }
+  .hero-banner, .banner { flex: 0 0 85%; scroll-snap-align: center; }
+  .hero-banner { min-height: 235px; }
+
+  /* ── chip rows scroll sideways instead of stacking tall ────────────── */
+  .filters, .zone-chips, .cat-row { flex-wrap: nowrap; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; }
+  .filters::-webkit-scrollbar, .zone-chips::-webkit-scrollbar, .cat-row::-webkit-scrollbar { display: none; }
+  .f, .zc, .cat { white-space: nowrap; flex: 0 0 auto; }
+  .f-spacer { display: none; }
+
+  /* comfortable thumb targets */
+  .f, .zc { padding-top: 9px; padding-bottom: 9px; }
+  .pg { padding: 12px 16px; }
+}
+
+@media (max-width: 600px) {
+  /* edge bleed matches the tighter 14px page padding */
+  .hero-row, .banner-row, .filters, .zone-chips, .cat-row {
+    margin-left: -14px; margin-right: -14px; }
+  .hero-row, .banner-row { padding-left: 14px; padding-right: 14px; }
+  .filters, .zone-chips, .cat-row { padding-left: 14px; padding-right: 14px; }
+
+  /* iOS zooms into any input under 16px — keep form text at 16px on phones */
+  input[type=text], input[type=search], input[type=email], input[type=password],
+  input[type=tel], input[type=number], input:not([type]), select, textarea { font-size: 16px !important; }
+  .vc-otp { font-size: 28px !important; }
+
+  /* category tiles: 3-up compact app grid */
+  .cat-grid { grid-template-columns: repeat(3, 1fr); gap: 9px; }
+  .cat-tile { padding: 14px 6px; gap: 6px; }
+  .cat-tile .cat-ico { font-size: 24px; }
+  .cat-tile .cat-name { font-size: 11.5px; line-height: 1.25; }
+
+  /* welcome strip stacks nicely */
+  .welcome-strip { flex-direction: column; align-items: flex-start; padding: 14px 16px; }
+
+  /* register page: explainer video trims down */
+  .reg-showcase h1 { font-size: 24px; }
+  .hv-stage { min-height: 225px; }
+  .hv-frame { padding: 22px 20px; }
+  .hv-frame h3 { font-size: 18px; }
+  .hv-frame p { font-size: 13px; }
+
+  /* account: hero + tiles tighten up */
+  .acc-hero { padding: 18px 16px; }
+  .acc-hero h1 { font-size: 20px; }
+  .ah-avatar { width: 46px; height: 46px; font-size: 20px; }
+  .ah-actions { width: 100%; }
+  .ah-actions .btn-primary { flex: 1; }
+  .acc-stats { gap: 9px; }
+  .as-tile { padding: 12px 13px; }
+  .as-num { font-size: 19px; }
+  .as-sub { display: none; }
+  .pid-chip { font-size: 12px; }
+
+  /* deal detail: full-width grab button feels native */
+  .dd-grab { align-self: stretch; }
+  .dd-grab .btn-go { display: block; width: 100%; font-size: 15.5px; padding: 14px; }
+
+  /* store hero: center-stack like an app profile header */
+  .store-hero { flex-direction: column; text-align: center; gap: 12px; }
+  .store-hero .store-hero-txt { align-items: center; }
+  .store-hero .btn-go { width: 100%; }
+
+  /* stat pills / stackline wrap tighter */
+  .stackline { font-size: 12px; padding: 11px 12px; gap: 7px; }
+  .sl-item { padding: 5px 10px; }
+}
+
+/* small mobile polish: section-head links never wrap mid-phrase; verified pill stays whole */
+.sec-head { gap: 12px; }
+.sec-head a { white-space: nowrap; flex: 0 0 auto; }
+.ah-verified { white-space: nowrap; }

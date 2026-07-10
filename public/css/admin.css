@@ -66,6 +66,10 @@ tr.hl { background: #ecfdf5; }
 .pill.ok { background: #ecfdf5; color: var(--good); }
 .pill.off { background: #f1f5f9; color: var(--muted); }
 .mono { font-family: ui-monospace, monospace; }
+.flash { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 10px; padding: 10px 14px; font-size: 13.5px; font-weight: 600; margin-bottom: 12px; }
+.pts-form { display: flex; align-items: center; gap: 6px; }
+.pts-form input { width: 70px; padding: 6px 8px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 13px; outline: none; }
+.pts-form input:focus { border-color: var(--primary); }
 .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .thumb { width: 84px; height: 44px; border-radius: 8px; background-size: cover; background-position: center; }
 .row-actions { white-space: nowrap; display: flex; gap: 10px; align-items: center; }

@@ -1,27 +1,53 @@
 <%- include('_top') %>
 <div class="page-bar"><h1>Registered Users</h1><span class="muted"><%= users.length %> users</span></div>
+<% const VERIFIED_OPTS = [{ v: 'yes', l: 'Verified' }, { v: 'no', l: 'Unverified' }];
+   const ACTIVE_OPTS   = [{ v: 'yes', l: 'Active' }, { v: 'no', l: 'Blocked' }]; %>
 <%- include('_filters', { action: '/admin/users', q: active.q, ph: 'Search by name, email or mobile…', selects: [
-  { name: 'whatsapp', value: active.whatsapp, all: 'Any WhatsApp', options: [{ v: 'yes', l: 'WhatsApp opt-in' }, { v: 'no', l: 'No WhatsApp' }] },
-  { name: 'bulk',     value: active.bulk,     all: 'All buyers',   options: [{ v: 'yes', l: 'Bulk buyers' }, { v: 'no', l: 'Regular' }] }
+  { name: 'verified', value: active.verified, all: 'Any verification', options: VERIFIED_OPTS },
+  { name: 'active',   value: active.active,   all: 'Any status',       options: ACTIVE_OPTS },
+  { name: 'whatsapp', value: active.whatsapp, all: 'Any WhatsApp',     options: [{ v: 'yes', l: 'WhatsApp opt-in' }, { v: 'no', l: 'No WhatsApp' }] }
 ] }) %>
+<% if (msg) { %><div class="flash"><%= msg %></div><% } %>
 <div class="panel">
   <table>
-    <thead><tr><th>Username</th><th>Email</th><th>Mobile</th><th>WhatsApp</th><th>Bulk</th><th>Cards</th><th>Categories</th><th>Joined</th></tr></thead>
+    <thead><tr><th>User</th><th>Verified</th><th>Status</th><th>⭐ Points</th><th>Prefs</th><th>Deals</th><th>Joined</th><th>Actions</th></tr></thead>
     <tbody>
       <% users.forEach(u => { %>
         <tr>
-          <td><b><%= u.username %></b></td>
-          <td><small><%= u.email %></small></td>
-          <td><%= u.mobile || '—' %></td>
-          <td><span class="pill <%= u.whatsapp_optin ? 'ok' : 'off' %>"><%= u.whatsapp_optin ? 'yes' : 'no' %></span></td>
-          <td><%= u.is_bulk_buyer ? '🏬' : '—' %></td>
-          <td><%= u.card_count %></td>
-          <td><%= u.cat_count %></td>
+          <td><b><%= u.username %></b><% if (u.is_bulk_buyer) { %> <span title="Bulk / business buyer">🏬</span><% } %>
+              <br><small class="muted"><%= u.email %><%= u.mobile ? ' · ' + u.mobile : '' %><%= u.whatsapp_optin ? ' · 🟢 WA' : '' %></small></td>
+          <td><span class="pill <%= u.email_verified ? 'ok' : 'off' %>"><%= u.email_verified ? '✓ verified' : 'pending' %></span></td>
+          <td><span class="pill <%= u.is_active ? 'ok' : 'off' %>"><%= u.is_active ? 'active' : 'blocked' %></span></td>
+          <td>
+            <form method="post" action="/admin/users/<%= u.id %>/points" class="pts-form">
+              <input type="number" name="points" min="0" value="<%= u.points || 0 %>" title="Set partner points, then press Enter or Set">
+              <button class="lnk" type="submit">Set</button>
+            </form>
+          </td>
+          <td><small><%= u.cat_count %> cats · <%= u.card_count %> cards</small></td>
+          <td><%= u.deal_count %></td>
           <td><small class="muted"><%= String(u.created_at).slice(0, 10) %></small></td>
+          <td class="row-actions">
+            <% if (!u.email_verified) { %>
+              <form method="post" action="/admin/users/<%= u.id %>/verify"
+                    onsubmit="return confirm('Mark <%= u.username %> as email-verified?\n\nOnly do this if you are sure the email <%= u.email %> belongs to them — they will be able to log in immediately.')">
+                <button class="lnk" type="submit">Verify</button>
+              </form>
+            <% } %>
+            <form method="post" action="/admin/users/<%= u.id %>/toggle"
+                  onsubmit="return confirm('<%= u.is_active ? 'Block' : 'Unblock' %> <%= u.username %>?\n\n<%= u.is_active ? 'They will not be able to log in, but ALL their data (points, alerts, submissions) is kept. You can unblock anytime — this is the safe option.' : 'They will be able to log in again.' %>')">
+              <button class="lnk <%= u.is_active ? 'danger' : '' %>" type="submit"><%= u.is_active ? 'Block' : 'Unblock' %></button>
+            </form>
+            <form method="post" action="/admin/users/<%= u.id %>/delete"
+                  onsubmit="return confirm('⚠️ PERMANENTLY DELETE <%= u.username %>?\n\nThis also deletes, in the right order so the database stays consistent:\n  • <%= u.alert_count %> alert(s)\n  • <%= u.deal_count %> deal submission(s)\n  • their category & card preferences\n  • <%= u.points || 0 %> partner points\n\nThis CANNOT be undone. If you just want to keep them out, use Block instead.')">
+              <button class="lnk danger" type="submit">Delete</button>
+            </form>
+          </td>
         </tr>
       <% }) %>
     </tbody>
   </table>
-  <% if (users.length === 0) { %><p class="muted" style="padding:14px">No registered users yet.</p><% } %>
+  <% if (users.length === 0) { %><p class="muted" style="padding:14px">No users match.</p><% } %>
 </div>
+<p class="muted" style="margin-top:10px;font-size:12.5px">💡 <b>Block</b> locks the account but keeps every record (reversible). <b>Delete</b> wipes the user and everything linked to them — alerts, preferences and deal submissions are removed first so the database never throws a constraint error.</p>
 <%- include('_bottom') %>

@@ -1,6 +1,15 @@
 <%- include('partials/head') %>
 <%- include('partials/header') %>
 
+<% if (typeof welcome !== 'undefined' && welcome && typeof user !== 'undefined' && user) { %>
+<section class="wrap">
+  <div class="welcome-strip">
+    <span class="ws-txt">🎉 <b>Welcome, <%= user.username %>!</b> You're all set — grab a deal below, and tap <b>👤 <%= user.username %></b> in the menu anytime for your alerts, points &amp; preferences.</span>
+    <a class="ws-btn" href="/account">View my profile →</a>
+  </div>
+</section>
+<% } %>
+
 <!-- Hero: up to 3 admin-picked banner deals/buying guides; hidden when none are ticked -->
 <% if (heroItems.length) { %>
 <section class="wrap">

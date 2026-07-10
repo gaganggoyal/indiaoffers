@@ -51,7 +51,7 @@
     <div class="acc-col">
       <div class="panel-block acc-panel">
         <div class="pb-head">
-          <h2>🔔 Your alerts</h2>
+          <h2><span class="ph-ico ph-alert">🔔</span> Your alerts</h2>
           <% if (unread) { %>
             <form method="post" action="/account/alerts/read"><button class="lnk">Mark all read</button></form>
           <% } %>
@@ -78,7 +78,7 @@
       </div>
 
       <div class="panel-block acc-panel acc-cta">
-        <h2>💰 Earn with IndiaOffers</h2>
+        <h2><span class="ph-ico ph-earn">💰</span> Earn with IndiaOffers</h2>
         <p class="muted">Found a hot deal anywhere online? Submit it — approved deals earn points you can turn into free gifts, vouchers and real cash.</p>
         <div class="acc-cta-row">
           <a class="btn-primary" href="/submit-deal">Submit a deal →</a>
@@ -89,20 +89,21 @@
 
     <!-- Preferences -->
     <div class="acc-col">
-      <form class="panel-block acc-panel" method="post" action="/account/preferences">
-        <h2>⚙️ Preferences</h2>
-        <div class="af-grid two">
-          <label class="ro">Username<input value="<%= account.username %>" disabled></label>
-          <label class="ro">Email<input value="<%= account.email %>" disabled></label>
+      <form class="panel-block acc-panel acc-form" method="post" action="/account/preferences">
+        <h2><span class="ph-ico ph-pref">⚙️</span> Preferences</h2>
+        <p class="pref-sub">Tune what we watch for you — the better we know your cards &amp; categories, the sharper your alerts.</p>
+        <div class="pref-id">
+          <span class="pid-chip">👤 <b><%= account.username %></b></span>
+          <span class="pid-chip">✉️ <b><%= account.email %></b></span>
         </div>
-        <label>Mobile number<input name="mobile" value="<%= account.mobile || '' %>" placeholder="10-digit mobile"></label>
+        <label>Mobile number<input name="mobile" value="<%= account.mobile || '' %>" placeholder="10-digit mobile" inputmode="tel"></label>
         <div class="af-checks">
           <label class="chk"><input type="checkbox" name="whatsapp_optin" <%= account.whatsapp_optin ? 'checked' : '' %>> WhatsApp alerts</label>
           <label class="chk"><input type="checkbox" name="is_bulk_buyer" <%= account.is_bulk_buyer ? 'checked' : '' %>> Bulk / business buyer</label>
         </div>
 
         <fieldset class="af-fieldset">
-          <legend>Interested categories</legend>
+          <legend>🛍️ Interested categories</legend>
           <%- include('../partials/msearch', {
             name: 'categories', placeholder: 'Search categories…', selected: myCats,
             groups: categoryGroups.map(g => ({ label: g.label, options: g.options.map(o => ({ value: o.slug, label: o.icon + ' ' + o.name })) }))
@@ -110,7 +111,7 @@
         </fieldset>
 
         <fieldset class="af-fieldset">
-          <legend>Your bank cards</legend>
+          <legend>💳 Your bank cards</legend>
           <p class="af-hint">Pick your card's <b>bank</b> — we alert you when a sale drops on their cards.</p>
           <%- include('../partials/msearch', {
             name: 'banks', placeholder: 'Search your bank…', selected: myBanks,

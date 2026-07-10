@@ -84,7 +84,8 @@ router.get('/', async (req, res, next) => {
         jsonld: [WEBSITE_LD, ORGANIZATION_LD]
       },
       heroItems, deals, topOffers, storeMap, featuredCards, collections: COLLECTIONS,
-      categories: CATEGORIES, categoryTree: CATEGORY_TREE, catIcons: CAT_ICONS
+      categories: CATEGORIES, categoryTree: CATEGORY_TREE, catIcons: CAT_ICONS,
+      welcome: req.query.welcome === '1'
     });
   } catch (err) { next(err); }
 });
