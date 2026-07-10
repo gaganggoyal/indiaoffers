@@ -6,7 +6,7 @@ const router = require('express').Router();
 const db = require('../db');
 const config = require('../config');
 const { savingsStack, activeBankOffers, decorateDeals } = require('../services/savings');
-const { CATEGORIES, CATEGORY_TREE, CAT_ICONS, categoryName, descendantSlugs } = require('../data/taxonomy');
+const { CATEGORIES, CATEGORY_TREE, CATEGORY_MAP, CAT_ICONS, categoryName, descendantSlugs } = require('../data/taxonomy');
 const { COLLECTIONS, collectionBySlug } = require('../data/collections');
 
 async function storesById() {
@@ -100,13 +100,26 @@ router.get('/deals', async (req, res, next) => {
       storesById()
     ]);
 
+    // Clean category filter: show the 5 top-level departments only. When a
+    // department (or a leaf beneath it) is active, expose that department's
+    // leaf categories as a secondary drill-down row instead of dumping all.
+    const activeDeptNode = category
+      ? CATEGORY_TREE.find(d => d.slug === category || descendantSlugs(d.slug).includes(category))
+      : null;
+    const subCats = activeDeptNode
+      ? descendantSlugs(activeDeptNode.slug).map(s => CATEGORY_MAP[s]).filter(Boolean)
+      : [];
+
     res.render('deals', {
       title: q ? `Deals matching “${q}” — IndiaOffers.in`
              : category ? `Best ${categoryName(category)} Deals Today — IndiaOffers.in`
              : 'Today\'s Best Deals & Discounts in India — IndiaOffers.in',
       meta: { description: 'Live deals with real discounts, working coupons and card offers across top Indian stores.' },
       deals: decorateDeals(rows, offers), storeMap,
-      categories: CATEGORIES, catIcons: CAT_ICONS,
+      categoryTree: CATEGORY_TREE, catIcons: CAT_ICONS,
+      catName: category ? categoryName(category) : '',
+      activeDept: activeDeptNode ? activeDeptNode.slug : '',
+      subCats,
       active: { category: category || '', store: store || '', sort: sort || 'latest', q: q || '' }
     });
   } catch (err) { next(err); }

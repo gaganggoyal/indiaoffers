@@ -3,15 +3,15 @@
 
 <section class="wrap">
   <div class="page-head">
-    <% const catName = active.category ? (categories.find(c => c.slug === active.category) || {}).name || active.category : ''; %>
-    <h1><%= active.q ? `Deals matching “${active.q}”` : active.category ? `${catName} Deals` : "Today's Best Deals" %></h1>
+    <h1><%= active.q ? `Deals matching “${active.q}”` : catName ? `${catName} Deals` : "Today's Best Deals" %></h1>
     <p>Handpicked deals with real discounts, working coupons and card offers.</p>
   </div>
 
+  <!-- Top-level departments only — clean, matches the homepage -->
   <div class="filters">
     <a class="f <%= !active.category ? 'on' : '' %>" href="/deals">All</a>
-    <% categories.forEach(c => { %>
-      <a class="f <%= active.category === c.slug ? 'on' : '' %>" href="/deals?category=<%= c.slug %>"><%= c.icon %> <%= c.name %></a>
+    <% categoryTree.forEach(dept => { %>
+      <a class="f <%= activeDept === dept.slug ? 'on' : '' %>" href="/deals?category=<%= dept.slug %>"><%= dept.icon %> <%= dept.name %></a>
     <% }) %>
     <span class="f-spacer"></span>
     <% const qs = p => { const u = new URLSearchParams(); if (active.category) u.set('category', active.category); if (active.q) u.set('q', active.q); u.set('sort', p); return '/deals?' + u.toString(); } %>
@@ -20,6 +20,15 @@
     <a class="f <%= active.sort === 'price' ? 'on' : '' %>" href="<%= qs('price') %>">Price ↑</a>
     <a class="f <%= active.sort === 'popular' ? 'on' : '' %>" href="<%= qs('popular') %>">Popular</a>
   </div>
+
+  <!-- Drill-down into the active department's sub-categories only -->
+  <% if (subCats && subCats.length) { %>
+    <div class="filters subcats">
+      <% subCats.forEach(c => { %>
+        <a class="f <%= active.category === c.slug ? 'on' : '' %>" href="/deals?category=<%= c.slug %>"><%= c.icon %> <%= c.name %></a>
+      <% }) %>
+    </div>
+  <% } %>
 
   <% if (deals.length === 0) { %>
     <div class="empty">No deals found<%= active.q ? ` for “${active.q}”` : '' %>. <a href="/deals">See all deals</a></div>
