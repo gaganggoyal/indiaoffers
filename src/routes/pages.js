@@ -3,6 +3,7 @@
 /** Public server-rendered pages. */
 
 const router = require('express').Router();
+const crypto = require('crypto');
 const db = require('../db');
 const config = require('../config');
 const { savingsStack, activeBankOffers, decorateDeals } = require('../services/savings');
@@ -385,10 +386,41 @@ router.get('/become-partner', (req, res) => res.render('become-partner', {
   meta: { description: 'Submit the deals you find on IndiaOffers.in and earn points redeemable for free gifts, shopping vouchers and real money. How to submit a deal in 15 seconds.' }
 }));
 
+// ── Contact-form bot defence ──────────────────────────────────────────────────
+// Invisible to humans (no captcha):
+//  1. Honeypot — a hidden "website" field; bots auto-fill it, people never see it.
+//  2. Time trap — the form carries an HMAC-signed render timestamp; submissions
+//     arriving faster than a human can type (< 4 s) or from a stale/forged form
+//     (> 6 h) are dropped.
+//  3. Heuristics — Cyrillic text or 3+ links in the message (the actual spam we get).
+//  4. Rate limit — max 3 messages per IP per hour.
+// Trapped bots get the normal "sent" page so there is nothing to learn from,
+// but nothing is stored or emailed.
+const signContactTs = ts => crypto.createHmac('sha256', config.jwtSecret).update('contact:' + ts).digest('hex').slice(0, 24);
+const contactToken = () => { const ts = Date.now(); return ts + '.' + signContactTs(ts); };
+const contactTokenAge = tok => {
+  const [ts, sig] = String(tok || '').split('.');
+  if (!ts || !sig || sig !== signContactTs(ts)) return null;
+  return Date.now() - Number(ts);
+};
+const contactHits = new Map();                        // ip → recent submit times
+const contactRateLimited = ip => {
+  const now = Date.now();
+  const recent = (contactHits.get(ip) || []).filter(t => now - t < 36e5);
+  recent.push(now);
+  contactHits.set(ip, recent);
+  if (contactHits.size > 5000) {                      // don't grow unbounded
+    for (const [k, v] of contactHits) if (v.every(t => now - t >= 36e5)) contactHits.delete(k);
+  }
+  return recent.length > 3;
+};
+const looksLikeSpam = text =>
+  /[Ѐ-ӿ]/.test(text) || (text.match(/https?:\/\//gi) || []).length >= 3;
+
 const contactView = extra => Object.assign({
   title: 'Contact Us — IndiaOffers.in',
   meta: { description: 'Ask us anything about online shopping — deals, coupons, card offers, refunds. WhatsApp us or send a query straight to our care team.' },
-  sent: false, error: null, form: {}
+  sent: false, error: null, form: {}, fk: contactToken()
 }, extra);
 
 router.get('/contact', (req, res) => res.render('contact', contactView({})));
@@ -403,6 +435,18 @@ router.post('/contact', async (req, res, next) => {
     const message = String(b.message || '').trim().slice(0, 4000);
     if (!name || !message || !/^\S+@\S+\.\S+$/.test(email)) {
       return res.status(400).render('contact', contactView({ error: 'Please fill your name, a valid email and your query.', form: b }));
+    }
+    // Bot checks — fail silently with the normal success page.
+    const age = contactTokenAge(b.fk);
+    if (String(b.website || '').trim() !== ''            // honeypot filled
+        || age === null || age < 4000 || age > 216e5     // no/forged/instant/stale token
+        || looksLikeSpam(`${name} ${topic} ${message}`)) {
+      return res.render('contact', contactView({ sent: true }));
+    }
+    if (contactRateLimited(req.ip)) {
+      return res.status(429).render('contact', contactView({
+        error: 'You have sent a few messages in a short time — please wait an hour, or WhatsApp us for anything urgent.', form: b
+      }));
     }
     // Keep a copy in the DB (visible in the admin panel), then email support.
     await db.query(

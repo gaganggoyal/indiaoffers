@@ -10,6 +10,11 @@
   <div class="contact-grid">
     <form class="contact-form" method="post" action="/contact">
       <h2>Send us your query</h2>
+      <input type="hidden" name="fk" value="<%= fk %>">
+      <!-- honeypot: invisible to people, bots fill it and get silently dropped -->
+      <div class="hp-field" aria-hidden="true">
+        <label>Website<input name="website" tabindex="-1" autocomplete="off"></label>
+      </div>
       <% if (sent) { %><div class="form-ok">✓ Got it! Your query is on its way to our care team — we usually reply within 24 hours.</div><% } %>
       <% if (error) { %><div class="form-err"><%= error %></div><% } %>
       <div class="cf-two">
