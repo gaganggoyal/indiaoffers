@@ -45,9 +45,11 @@ src/
 │   ├── pages.js              public SSR pages + landing pages + sitemap/robots
 │   ├── go.js                 /go/d/:id, /go/s/:id redirects
 │   ├── api.js                /api/suggest, /api/savings/:id, /api/health
-│   └── admin.js              login + CRUD (deals/bank offers/coupons/stores/banners)
-├── middleware/auth.js         httpOnly-cookie admin session
-└── views/                     EJS templates (public + admin)
+│   ├── account.js            register/login/verify (OTP email), /api/availability,
+│   │                         account dashboard, alerts, deal submissions
+│   └── admin.js              login + CRUD (deals/offers/coupons/stores/banners/users)
+├── middleware/auth.js         httpOnly-cookie sessions (admin + user)
+└── views/                     EJS templates (public + account + admin)
 public/                        css / js / logo assets
 ```
 
@@ -61,7 +63,9 @@ summarized on every deal card.
 
 **Data model** — `stores`, `deals` (with MRP/price/deal_url/how-to steps),
 `bank_offers` (bank, instrument, percent|flat, cap, min order, store scope,
-validity), `coupons`, `banners`, `clicks`, `admins`.
+validity), `coupons`, `banners`, `clicks`, `admins`, plus the accounts side:
+`users` and its FK children `user_categories`, `user_cards`, `user_deals`
+(submissions) and `alerts` — child rows are always deleted before the user row.
 
 **Tracking** — every "Grab this deal" goes through `/go/d/:id`: click logged with
 IP/UA/referrer, Amazon `tag=`/Flipkart `affid=` appended automatically, 302 to
@@ -109,17 +113,57 @@ Add a new zone by appending one config object to `src/data/collections.js`
 (`slug`, `aliases`, `title`, `h1`, `description`, `keywords`, `intro`, `where`,
 `order`, `faqs`); the route and sitemap entry are wired up automatically.
 
+## User accounts & community
+
+Visitors can register (`/register`) and become IndiaOffers partners:
+
+- **Registration** — split-screen page with a "how it works" showcase; **live
+  username/email availability** hints as you type (debounced calls to
+  `GET /api/availability`), honeypot bot protection, and field-specific clash
+  errors so nobody re-types their password. Email is confirmed with a **6-digit
+  OTP** (or magic link); verification and login both land on the **homepage**
+  with a one-time welcome strip pointing to the 👤 profile button.
+- **Preferences** — users pick their **categories** and **bank cards**; these
+  power personalised alerts (WhatsApp opt-in supported, bulk-buyer flag for
+  shops).
+- **Alerts** — users create deal alerts from their account dashboard.
+- **Deal submissions** — logged-in users submit deals (`/submit-deal`); approved
+  submissions earn **partner points** redeemable for gifts/vouchers/cash.
+- Account dashboard (`/account`) shows alerts, points/earnings and preference
+  panels with app-style gradient icons.
+
 ## Admin
 
 Everything on the site is content-managed at `/admin`:
 - **Deals** — prices, image, merchant URL, how-to steps, badges, expiry; the edit page previews the live savings stack
 - **Bank offers** — bank, instrument, discount type/value/cap, min order, store scope, validity window
 - **Coupons, Stores, Banners** — full CRUD
+- **Users** — search + filters (verified/blocked/WhatsApp), manually **Verify**,
+  **Block/Unblock** (reversible lockout, data kept), set **partner points**
+  inline, and **Delete** with an explicit warning. Deletes remove the user's
+  alerts, preferences and submissions **first**, in FK-safe order, so the
+  database never throws a constraint error.
 - Dashboard shows live counts + top deals by outbound clicks
+
+## Mobile app experience
+
+The whole site behaves like an app on phones (≤900px):
+
+- **Fixed bottom tab bar** — Home · Deals · Loot · Offers · Profile (or ✨ Join
+  when logged out), frosted-glass blur, active-tab lift, `env(safe-area-inset-*)`
+  padding for notched iPhones
+- **Swipeable carousels** — hero banners and promo rows use scroll-snap with
+  edge-bleed; filters, Hot Zones and category chips scroll horizontally in one
+  thumb row
+- **iOS polish** — 16px inputs (no Safari focus zoom), no tap-highlight flashes,
+  brand `accent-color` checkboxes, full-width deal CTAs, compact 3-up category
+  grid
+- All mobile CSS lives in the final block of `public/css/site.css` (kept last so
+  it wins the cascade); pages are verified for **zero horizontal overflow** in
+  real iPhone emulation
 
 ## Roadmap (not built yet)
 
 - Price-history tracking + drop alerts (email/Telegram)
-- User accounts, watchlists
+- Watchlists
 - Cashback wallet (v1 tracking pixel code is in git history at tag/commit `620967d`)
-- Community deal submissions
