@@ -363,6 +363,16 @@ router.get('/help', (req, res) => res.render('help', {
   meta: { description: 'How deals, coupons, bank-card offers, alerts and the partner rewards programme work on IndiaOffers.in.' }
 }));
 
+router.get('/privacy', (req, res) => res.render('privacy', {
+  title: 'Privacy Policy — IndiaOffers.in',
+  meta: { description: 'What you share with IndiaOffers.in is voluntary and never sold. How we handle accounts, deal submissions, queries, cookies and affiliate links.' }
+}));
+
+router.get('/terms', (req, res) => res.render('terms', {
+  title: 'Terms & Conditions — IndiaOffers.in',
+  meta: { description: 'The friendly rulebook of IndiaOffers.in: we discover deals, stores sell products — prices change fast, so always verify at checkout. Partner programme and affiliate disclosure included.' }
+}));
+
 router.get('/become-partner', (req, res) => res.render('become-partner', {
   title: 'Become a Partner — Submit Deals, Earn Gifts & Real Money — IndiaOffers.in',
   meta: { description: 'Submit the deals you find on IndiaOffers.in and earn points redeemable for free gifts, shopping vouchers and real money. How to submit a deal in 15 seconds.' }
@@ -485,6 +495,7 @@ router.get('/sitemap.xml', async (req, res, next) => {
       { loc: '/about', pri: '0.5' }, { loc: '/careers', pri: '0.4' },
       { loc: '/contact', pri: '0.5' }, { loc: '/help', pri: '0.5' },
       { loc: '/become-partner', pri: '0.6' },
+      { loc: '/privacy', pri: '0.3' }, { loc: '/terms', pri: '0.3' },
       ...COLLECTIONS.map(c => ({ loc: `/${c.slug}`, pri: '0.9' })),
       ...deals.map(d => ({ loc: `/deal/${d.slug}`, pri: '0.8', mod: d.updated_at })),
       ...cards.map(c => ({ loc: `/card/${c.slug}`, pri: '0.7' })),

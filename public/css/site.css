@@ -232,6 +232,8 @@ main { min-height: 60vh; padding-bottom: 50px; }
 .footer a:not(.brand) { display: block; font-size: 13px; padding: 3px 0; }
 .footer a:hover { color: #fff; }
 .footer-note { border-top: 1px solid #1e293b; text-align: center; font-size: 12px; padding: 16px; }
+.footer-note a { color: #cbd5e1; font-weight: 600; text-decoration: underline; }
+.footer-note a:hover { color: #fff; }
 .pwa-install { margin-top: 14px; background: var(--primary); color: #fff; border: 0; font-weight: 700; font-size: 13px; padding: 10px 16px; border-radius: 10px; cursor: pointer; }
 .pwa-install:hover { background: var(--primary-dark); }
 
