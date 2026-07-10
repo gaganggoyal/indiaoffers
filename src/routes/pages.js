@@ -56,11 +56,10 @@ router.get('/', async (req, res, next) => {
     // disappears. The grid below shows the newest deals, but any deal with
     // hotness > 0 is pinned above the rest (higher number = higher on the
     // page) regardless of how old it is.
-    const [heroRaw, heroGuidesRaw, bannersRaw, dealsRaw, offers, storeMap, featuredCards] = await Promise.all([
+    const [heroRaw, heroGuidesRaw, bannersRaw, offers, storeMap, featuredCards] = await Promise.all([
       db.query(`SELECT * FROM deals WHERE is_active = 1 AND is_trending = 1 ORDER BY posted_at DESC LIMIT 3`),
       db.query(`SELECT * FROM guides WHERE is_active = 1 AND is_trending = 1 ORDER BY updated_at DESC LIMIT 3`),
       db.query(`SELECT * FROM banners WHERE is_active = 1 ORDER BY sort_order ASC, created_at DESC LIMIT 3`),
-      db.query(`SELECT * FROM deals WHERE is_active = 1 ORDER BY COALESCE(hotness, 0) DESC, posted_at DESC LIMIT 15`),
       activeBankOffers(),
       storesById(),
       db.query(`SELECT * FROM bank_cards WHERE is_active = 1 ORDER BY is_featured DESC, sort_order ASC LIMIT 4`)
@@ -74,8 +73,21 @@ router.get('/', async (req, res, next) => {
       ...bannersRaw.map(b => ({ type: 'banner', b })),
       ...dated
     ].slice(0, 3);
-    const heroIds = new Set(heroItems.filter(h => h.type === 'deal').map(h => h.d.id));
-    const gridRaw = dealsRaw.filter(d => !heroIds.has(d.id)).slice(0, 12);
+
+    // The grid paginates over every active deal. Hero-featured deals are
+    // excluded in SQL (not post-filtered) so page boundaries stay stable.
+    const perPage = 12;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const heroIds = heroItems.filter(h => h.type === 'deal').map(h => h.d.id);
+    const notHero = heroIds.length ? ` AND id NOT IN (${heroIds.map(() => '?').join(',')})` : '';
+    const [countRows, gridRaw] = await Promise.all([
+      db.query(`SELECT COUNT(*) AS n FROM deals WHERE is_active = 1${notHero}`, heroIds),
+      db.query(`SELECT * FROM deals WHERE is_active = 1${notHero}
+                ORDER BY COALESCE(hotness, 0) DESC, posted_at DESC
+                LIMIT ${perPage} OFFSET ${(page - 1) * perPage}`, heroIds)
+    ]);
+    const total = countRows[0] ? Number(countRows[0].n) : 0;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
     const deals = decorateDeals(gridRaw, offers);
     const topOffers = offers
       .slice()
@@ -91,6 +103,7 @@ router.get('/', async (req, res, next) => {
       },
       heroItems, deals, topOffers, storeMap, featuredCards, collections: COLLECTIONS,
       categories: CATEGORIES, categoryTree: CATEGORY_TREE, catIcons: CAT_ICONS,
+      pagination: { page, totalPages, total, perPage },
       welcome: req.query.welcome === '1'
     });
   } catch (err) { next(err); }

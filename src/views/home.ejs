@@ -90,11 +90,25 @@
 </section>
 
 <!-- Deals grid -->
-<section class="wrap">
+<section class="wrap" id="deals">
   <div class="sec-head"><h2>🔥 Today's Best Deals</h2><a href="/deals">All deals →</a></div>
   <div class="grid">
     <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
   </div>
+  <% if (pagination.totalPages > 1) {
+       const cur = pagination.page, last = pagination.totalPages;
+       const pageUrl = n => '/' + (n > 1 ? '?page=' + n : '') + '#deals'; %>
+  <nav class="pager" aria-label="Deal pages">
+    <% if (cur > 1) { %><a class="pg" href="<%= pageUrl(cur - 1) %>" rel="prev">← Prev</a><% } %>
+    <% for (let n = 1; n <= last; n++) {
+         if (n === 1 || n === last || (n >= cur - 1 && n <= cur + 1)) { %>
+      <a class="pg <%= n === cur ? 'on' : '' %>" href="<%= pageUrl(n) %>"><%= n %></a>
+    <%   } else if (n === cur - 2 || n === cur + 2) { %>
+      <span class="pg-gap">…</span>
+    <%   } } %>
+    <% if (cur < last) { %><a class="pg" href="<%= pageUrl(cur + 1) %>" rel="next">Next →</a><% } %>
+  </nav>
+  <% } %>
 </section>
 
 <!-- Apply for bank cards -->
