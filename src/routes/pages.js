@@ -402,7 +402,7 @@ router.post('/contact', async (req, res, next) => {
       'INSERT INTO contact_messages (id, name, email, mobile, topic, message) VALUES (?, ?, ?, ?, ?, ?)',
       [db.uid('cm'), name, email, mobile || null, topic || null, message]);
     await sendMail({
-      to: config.support.email,
+      to: config.support.contactTo,
       subject: `[IndiaOffers contact] ${topic || 'Query'} — ${name}`,
       text: `From: ${name} <${email}>${mobile ? `\nMobile: ${mobile}` : ''}\nTopic: ${topic}\n\n${message}`,
       html: `<p><b>From:</b> ${name} &lt;${email}&gt;${mobile ? `<br><b>Mobile:</b> ${mobile}` : ''}<br><b>Topic:</b> ${topic}</p><p>${message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</p>`
