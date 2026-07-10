@@ -24,9 +24,33 @@
   <% if (deals.length === 0) { %>
     <div class="empty">No deals found<%= active.q ? ` for “${active.q}”` : '' %>. <a href="/deals">See all deals</a></div>
   <% } else { %>
+    <% if (fallback) { %>
+      <div class="fallback-note">No live deals in <b><%= catName || 'this search' %></b> right now — here are today's top deals instead.</div>
+    <% } %>
     <div class="grid">
       <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
     </div>
+
+    <% if (!fallback && pagination.totalPages > 1) {
+         const pageUrl = n => { const u = new URLSearchParams();
+           if (active.category) u.set('category', active.category);
+           if (active.store) u.set('store', active.store);
+           if (active.q) u.set('q', active.q);
+           if (active.sort && active.sort !== 'latest') u.set('sort', active.sort);
+           if (n > 1) u.set('page', n);
+           const s = u.toString(); return '/deals' + (s ? '?' + s : ''); };
+         const cur = pagination.page, last = pagination.totalPages; %>
+      <nav class="pager" aria-label="Deal pages">
+        <% if (cur > 1) { %><a class="pg" href="<%= pageUrl(cur - 1) %>" rel="prev">← Prev</a><% } %>
+        <% for (let n = 1; n <= last; n++) {
+             if (n === 1 || n === last || (n >= cur - 1 && n <= cur + 1)) { %>
+          <a class="pg <%= n === cur ? 'on' : '' %>" href="<%= pageUrl(n) %>"><%= n %></a>
+        <%   } else if (n === cur - 2 || n === cur + 2) { %>
+          <span class="pg-gap">…</span>
+        <%   } } %>
+        <% if (cur < last) { %><a class="pg" href="<%= pageUrl(cur + 1) %>" rel="next">Next →</a><% } %>
+      </nav>
+    <% } %>
   <% } %>
 </section>
 

@@ -81,11 +81,14 @@ router.get('/deals', async (req, res, next) => {
     let where = 'WHERE d.is_active = 1';
     const params = [];
     // Accept a leaf slug or any branch (department / sub-group) and expand it to
-    // the leaf categories beneath it.
+    // the leaf categories beneath it. A deal matches if the branch contains its
+    // primary category OR one of its SEO categories (comma-wrapped ,a,b,).
     const catLeaves = category ? descendantSlugs(category) : [];
     if (catLeaves.length) {
-      where += ` AND d.category IN (${catLeaves.map(() => '?').join(',')})`;
-      params.push(...catLeaves);
+      const inList = catLeaves.map(() => '?').join(',');
+      const seoLike = catLeaves.map(() => 'd.seo_categories LIKE ?').join(' OR ');
+      where += ` AND (d.category IN (${inList}) OR ${seoLike})`;
+      params.push(...catLeaves, ...catLeaves.map(s => `%,${s},%`));
     }
     if (store) { where += ' AND d.store_id = ?'; params.push(store); }
     if (q) { where += ' AND (d.title LIKE ? OR d.description LIKE ?)'; params.push(`%${q}%`, `%${q}%`); }
@@ -94,11 +97,30 @@ router.get('/deals', async (req, res, next) => {
                 : sort === 'popular' ? 'd.clicks DESC'
                 : 'd.is_trending DESC, d.posted_at DESC';
 
-    const [rows, offers, storeMap] = await Promise.all([
-      db.query(`SELECT d.* FROM deals d ${where} ORDER BY ${order} LIMIT 60`, params),
+    // Pagination — keeps each page light so it loads fast.
+    const perPage = 24;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const offset = (page - 1) * perPage;
+
+    const [countRows, rows, offers, storeMap] = await Promise.all([
+      db.query(`SELECT COUNT(*) AS n FROM deals d ${where}`, params),
+      db.query(`SELECT d.* FROM deals d ${where} ORDER BY ${order} LIMIT ${perPage} OFFSET ${offset}`, params),
       activeBankOffers(),
       storesById()
     ]);
+    const total = countRows[0] ? Number(countRows[0].n) : 0;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+    // SEO safety net: never show an empty category page to a Google visitor —
+    // fall back to today's top deals with a friendly note.
+    let deals = decorateDeals(rows, offers);
+    let fallback = false;
+    if (deals.length === 0 && (category || q) && page === 1) {
+      const fb = await db.query(
+        `SELECT d.* FROM deals d WHERE d.is_active = 1 ORDER BY d.is_trending DESC, d.posted_at DESC LIMIT ${perPage}`);
+      deals = decorateDeals(fb, offers);
+      fallback = true;
+    }
 
     // Clean category filter: show the 5 top-level departments only. A leaf slug
     // (e.g. from a deal-card link) highlights its parent department.
@@ -111,10 +133,11 @@ router.get('/deals', async (req, res, next) => {
              : category ? `Best ${categoryName(category)} Deals Today — IndiaOffers.in`
              : 'Today\'s Best Deals & Discounts in India — IndiaOffers.in',
       meta: { description: 'Live deals with real discounts, working coupons and card offers across top Indian stores.' },
-      deals: decorateDeals(rows, offers), storeMap,
+      deals, storeMap, fallback,
       categoryTree: CATEGORY_TREE, catIcons: CAT_ICONS,
       catName: category ? categoryName(category) : '',
       activeDept: activeDeptNode ? activeDeptNode.slug : '',
+      pagination: { page, totalPages, total, perPage },
       active: { category: category || '', store: store || '', sort: sort || 'latest', q: q || '' }
     });
   } catch (err) { next(err); }

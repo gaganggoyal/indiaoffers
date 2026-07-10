@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS deals (
   title           TEXT NOT NULL,
   description     TEXT,
   category        TEXT,
+  seo_categories  TEXT,                     -- extra related leaf slugs, comma-wrapped: ,a,b,
   image_url       TEXT,
   mrp             REAL,                     -- original price
   price           REAL,                     -- deal price

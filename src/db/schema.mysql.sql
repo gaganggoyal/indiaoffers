@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS deals (
   title           VARCHAR(200) NOT NULL,
   description     TEXT,
   category        VARCHAR(50),
+  seo_categories  VARCHAR(255),             -- extra related leaf slugs, comma-wrapped: ,a,b,
   image_url       VARCHAR(1000),
   mrp             DECIMAL(10,2),
   price           DECIMAL(10,2),

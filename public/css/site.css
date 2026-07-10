@@ -107,6 +107,11 @@ main { min-height: 60vh; padding-bottom: 50px; }
 .f.on { background: var(--primary); border-color: var(--primary); color: #fff; }
 .f-spacer { flex: 1; }
 .empty { text-align: center; padding: 50px 20px; color: var(--muted); background: var(--card); border-radius: var(--r); }
+.fallback-note { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; color: var(--muted); font-size: 14px; }
+.pager { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; margin: 30px 0 6px; }
+.pg { min-width: 40px; text-align: center; background: var(--card); border: 1px solid var(--line); padding: 9px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; }
+.pg.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.pg-gap { color: var(--muted); padding: 0 2px; }
 
 /* deal detail */
 .crumbs { font-size: 12.5px; color: var(--muted); margin: 18px 0 14px; }
