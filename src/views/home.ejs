@@ -1,27 +1,40 @@
 <%- include('partials/head') %>
 <%- include('partials/header') %>
 
-<!-- Hero: up to 3 admin-picked banner deals; hidden when none are ticked -->
-<% if (heroDeals.length) { %>
+<!-- Hero: up to 3 admin-picked banner deals/buying guides; hidden when none are ticked -->
+<% if (heroItems.length) { %>
 <section class="wrap">
   <div class="hero-row">
-    <% heroDeals.forEach((d, i) => { const st = storeMap[d.store_id] || { name: '', color: '#4f46e5' }; %>
-      <a class="hero-banner" href="/deal/<%= d.slug %>"
-         style="--sc:<%= st.color %>">
-        <div class="hb-img" style="background-image:url('<%= d.image_url || '' %>')"></div>
-        <div class="hb-shade"></div>
-        <div class="hb-txt">
-          <span class="hb-tag"><%= d.badge || 'JUST IN' %> · <%= st.name %></span>
-          <h2><%= d.title %></h2>
-          <div class="hb-price">
-            <% if (d.stack.price != null) { %><b><%= fmt(d.stack.price) %></b><% } %>
-            <% if (d.stack.mrp && d.stack.mrp > d.stack.price) { %><s><%= fmt(d.stack.mrp) %></s><% } %>
-            <% if (d.stack.discountPct) { %><span class="hb-off"><%= d.stack.discountPct %>% OFF</span><% } %>
+    <% heroItems.forEach(item => { %>
+      <% if (item.type === 'deal') { const d = item.d; const st = storeMap[d.store_id] || { name: '', color: '#4f46e5' }; %>
+        <a class="hero-banner" href="/deal/<%= d.slug %>"
+           style="--sc:<%= st.color %>">
+          <div class="hb-img" style="background-image:url('<%= d.image_url || '' %>')"></div>
+          <div class="hb-shade"></div>
+          <div class="hb-txt">
+            <span class="hb-tag"><%= d.badge || 'JUST IN' %> · <%= st.name %></span>
+            <h2><%= d.title %></h2>
+            <div class="hb-price">
+              <% if (d.stack.price != null) { %><b><%= fmt(d.stack.price) %></b><% } %>
+              <% if (d.stack.mrp && d.stack.mrp > d.stack.price) { %><s><%= fmt(d.stack.mrp) %></s><% } %>
+              <% if (d.stack.discountPct) { %><span class="hb-off"><%= d.stack.discountPct %>% OFF</span><% } %>
+            </div>
+            <% if (d.stack.hasSavings && d.stack.truePrice != null && d.stack.truePrice < d.stack.price) { %><span class="hb-true">Best price <%= fmt(d.stack.truePrice) %><% if (d.stack.best && d.stack.best.bank) { %> with <%= d.stack.best.bank %><% } %></span><% } %>
+            <span class="hb-cta">Grab this deal →</span>
           </div>
-          <% if (d.stack.hasSavings && d.stack.truePrice != null && d.stack.truePrice < d.stack.price) { %><span class="hb-true">Best price <%= fmt(d.stack.truePrice) %><% if (d.stack.best && d.stack.best.bank) { %> with <%= d.stack.best.bank %><% } %></span><% } %>
-          <span class="hb-cta">Grab this deal →</span>
-        </div>
-      </a>
+        </a>
+      <% } else { const g = item.g; %>
+        <a class="hero-banner" href="/guide/<%= g.slug %>" style="--sc:#7c3aed">
+          <div class="hb-img" style="background-image:url('<%= g.hero_image || '' %>')"></div>
+          <div class="hb-shade"></div>
+          <div class="hb-txt">
+            <span class="hb-tag">📖 BUYING GUIDE</span>
+            <h2><%= g.title %></h2>
+            <% if (g.subtitle) { %><div class="hb-price"><span class="hb-sub"><%= g.subtitle %></span></div><% } %>
+            <span class="hb-cta">Read the guide →</span>
+          </div>
+        </a>
+      <% } %>
     <% }) %>
   </div>
 </section>

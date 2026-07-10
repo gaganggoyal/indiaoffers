@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS guides (
   intro           TEXT,
   hero_image      TEXT,
   video_url       TEXT,                     -- overall buying-guide video
+  is_trending     INTEGER DEFAULT 0,        -- ticked = shown in home hero banners
   is_active       INTEGER DEFAULT 1,
   sort_order      INTEGER DEFAULT 0,
   updated_at      TEXT DEFAULT (datetime('now')),

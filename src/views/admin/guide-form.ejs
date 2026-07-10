@@ -15,6 +15,7 @@
   <label class="full">Intro<textarea name="intro" rows="3"><%= guide ? (guide.intro || '') : '' %></textarea></label>
   <label class="full">Hero image URL<input name="hero_image" value="<%= guide ? (guide.hero_image || '') : '' %>"></label>
   <label class="full">Guide video URL (YouTube)<input name="video_url" value="<%= guide ? (guide.video_url || '') : '' %>"></label>
+  <label class="check"><input type="checkbox" name="is_trending" <%= guide && guide.is_trending ? 'checked' : '' %>> 🏠 Show in home page banners <small>— the guide appears as a big hero banner on the homepage, alongside any banner-ticked deals (3 newest ticked items in total)</small></label>
   <label class="check"><input type="checkbox" name="is_active" <%= !guide || guide.is_active ? 'checked' : '' %>> Live on site</label>
   <button class="btn" type="submit"><%= guide ? 'Save guide' : 'Create guide (then add products)' %></button>
 </form>

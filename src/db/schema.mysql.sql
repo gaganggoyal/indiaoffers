@@ -160,6 +160,7 @@ CREATE TABLE IF NOT EXISTS guides (
   intro           TEXT,
   hero_image      VARCHAR(1000),
   video_url       VARCHAR(1000),
+  is_trending     TINYINT(1) DEFAULT 0,
   is_active       TINYINT(1) DEFAULT 1,
   sort_order      INT DEFAULT 0,
   updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

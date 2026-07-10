@@ -10,7 +10,7 @@
     <tbody>
       <% guides.forEach(g => { %>
         <tr>
-          <td><b><%= g.title %></b><br><small class="muted">/guide/<%= g.slug %></small></td>
+          <td><b><%= g.title %></b> <% if (g.is_trending) { %><span title="Shown in home page banners">🏠</span><% } %><br><small class="muted">/guide/<%= g.slug %></small></td>
           <td><%= g.category || '—' %></td>
           <td><%= g.item_count %></td>
           <td><%= g.sort_order %></td>

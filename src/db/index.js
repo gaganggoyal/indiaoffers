@@ -51,6 +51,7 @@ if (config.db.driver === 'mysql') {
   addColumn('alerts', 'sent_at', 'sent_at TEXT');
   addColumn('users', 'points', 'points INTEGER DEFAULT 0');
   addColumn('deals', 'hotness', 'hotness INTEGER DEFAULT 0');
+  addColumn('guides', 'is_trending', 'is_trending INTEGER DEFAULT 0');
 
   const toSqlite = sql => sql
     .replace(/INSERT\s+IGNORE/gi, 'INSERT OR IGNORE')

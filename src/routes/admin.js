@@ -674,19 +674,19 @@ router.post('/guides/save', async (req, res, next) => {
   try {
     const b = req.body;
     const vals = [b.title, b.category || null, b.subtitle || null, b.intro || null,
-      b.hero_image || null, b.video_url || null, parseInt(b.sort_order, 10) || 0, boolInt(b.is_active)];
+      b.hero_image || null, b.video_url || null, parseInt(b.sort_order, 10) || 0, boolInt(b.is_trending), boolInt(b.is_active)];
     if (b.id) {
       await db.query(`
         UPDATE guides SET title=?, category=?, subtitle=?, intro=?, hero_image=?, video_url=?,
-          sort_order=?, is_active=?, updated_at=? WHERE id=?
+          sort_order=?, is_trending=?, is_active=?, updated_at=? WHERE id=?
       `, [...vals, nowSql(), b.id]);
       res.redirect('/admin/guides/' + b.id + '/edit');
     } else {
       const id = uid('gd');
       await db.query(`
-        INSERT INTO guides (title, category, subtitle, intro, hero_image, video_url, sort_order, is_active, id, slug)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [...vals, id, slugify(b.title) + '-' + Math.random().toString(36).slice(2, 5)]);
+        INSERT INTO guides (title, category, subtitle, intro, hero_image, video_url, sort_order, is_trending, is_active, id, slug)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [...vals, id, await ensureUniqueSlug('guides', b.title)]);
       res.redirect('/admin/guides/' + id + '/edit');
     }
   } catch (err) { next(err); }
