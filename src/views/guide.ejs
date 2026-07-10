@@ -50,7 +50,7 @@
           </div>
 
           <% if (it.why_choose) { %>
-            <div class="pk-why"><b>Why pick this:</b> <%= it.why_choose %></div>
+            <div class="pk-why"><b>Why pick this:</b> <%- waText(it.why_choose) %></div>
           <% } %>
 
           <% if (it.embed) { %>

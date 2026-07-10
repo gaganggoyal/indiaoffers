@@ -697,6 +697,56 @@ router.post('/guides/:gid/items/:itemId/delete', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// USER-SUBMITTED DEALS (partner programme) — review, approve with points, reject
+router.get('/submissions', async (req, res, next) => {
+  try {
+    const f = listFilter(req.query, {
+      search: ['ud.title', 'ud.store_name', 'u.username'],
+      eq: { status: 'ud.status' }
+    });
+    const subs = await db.query(`
+      SELECT ud.*, u.username, u.email, u.points AS user_points
+      FROM user_deals ud JOIN users u ON u.id = ud.user_id
+      ${f.clause} ORDER BY CASE WHEN ud.status = 'pending' THEN 0 ELSE 1 END, ud.created_at DESC LIMIT 300`, f.params);
+    const pendingRows = await db.query("SELECT COUNT(*) AS n FROM user_deals WHERE status = 'pending'");
+    res.render('admin/submissions', { title: 'Admin — Deal Submissions', admin: req.admin, section: 'submissions',
+      subs, pending: Number(pendingRows[0].n), active: f.active });
+  } catch (err) { next(err); }
+});
+
+router.post('/submissions/:id/approve', async (req, res, next) => {
+  try {
+    const rows = await db.query('SELECT * FROM user_deals WHERE id = ?', [req.params.id]);
+    if (rows.length && rows[0].status !== 'approved') {
+      const points = Math.max(0, Math.min(1000, parseInt(req.body.points, 10) || 10));
+      await db.query(`UPDATE user_deals SET status = 'approved', points = ?, admin_note = ?, reviewed_at = ? WHERE id = ?`,
+        [points, (req.body.admin_note || '').trim().slice(0, 500) || null, nowSql(), req.params.id]);
+      await db.query('UPDATE users SET points = COALESCE(points, 0) + ? WHERE id = ?', [points, rows[0].user_id]);
+    }
+    res.redirect('/admin/submissions');
+  } catch (err) { next(err); }
+});
+
+router.post('/submissions/:id/reject', async (req, res, next) => {
+  try {
+    const rows = await db.query('SELECT * FROM user_deals WHERE id = ?', [req.params.id]);
+    if (rows.length && rows[0].status === 'pending') {
+      await db.query(`UPDATE user_deals SET status = 'rejected', admin_note = ?, reviewed_at = ? WHERE id = ?`,
+        [(req.body.admin_note || '').trim().slice(0, 500) || null, nowSql(), req.params.id]);
+    }
+    res.redirect('/admin/submissions');
+  } catch (err) { next(err); }
+});
+
+// CONTACT MESSAGES — queries submitted via /contact (also emailed to support)
+router.get('/messages', async (req, res, next) => {
+  try {
+    const f = listFilter(req.query, { search: ['name', 'email', 'message'] });
+    const messages = await db.query(`SELECT * FROM contact_messages${f.clause} ORDER BY created_at DESC LIMIT 300`, f.params);
+    res.render('admin/messages', { title: 'Admin — Contact Messages', admin: req.admin, section: 'messages', messages, active: f.active });
+  } catch (err) { next(err); }
+});
+
 // USERS (subscribers) — read-only list
 router.get('/users', async (req, res, next) => {
   try {

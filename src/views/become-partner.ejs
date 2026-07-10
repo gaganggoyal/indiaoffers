@@ -1,0 +1,74 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <div class="page-hero">
+    <h1>Become an IndiaOffers Partner 🤝</h1>
+    <p>Submit the deals you find, and get rewarded when we publish them — <b>free gifts, shopping vouchers and real money.</b> No fees, no targets, no catch.</p>
+    <% if (user) { %>
+      <a class="hero-cta" href="/submit-deal">Submit your first deal →</a>
+    <% } else { %>
+      <a class="hero-cta" href="/register">Create a free account →</a>
+    <% } %>
+  </div>
+
+  <div class="sec-head"><h2>🎬 HOW TO SUBMIT A DEAL — in 15 seconds</h2></div>
+  <div class="howto-video" aria-label="How to submit a deal — quick demo">
+    <div class="hv-bar"><i></i><i></i><i></i><span>HOW TO SUBMIT A DEAL</span></div>
+    <div class="hv-stage">
+      <div class="hv-frame">
+        <span class="hv-step">STEP 1</span>
+        <span class="hv-ico">🔍</span>
+        <h3>Spot a killer deal</h3>
+        <p>A price drop, a coupon stack, a loot — anywhere online. If it made YOU excited, it belongs here.</p>
+      </div>
+      <div class="hv-frame">
+        <span class="hv-step">STEP 2</span>
+        <span class="hv-ico">🔗</span>
+        <h3>Paste the link &amp; price</h3>
+        <p>Open <b>Submit a Deal</b>, drop the product link, deal price and any coupon code. Takes under a minute.</p>
+      </div>
+      <div class="hv-frame">
+        <span class="hv-step">STEP 3</span>
+        <span class="hv-ico">✅</span>
+        <h3>We verify &amp; publish</h3>
+        <p>Our team checks the price and link. Good deal? It goes live on IndiaOffers with lakhs of eyeballs.</p>
+      </div>
+      <div class="hv-frame">
+        <span class="hv-step">STEP 4</span>
+        <span class="hv-ico">🎁</span>
+        <h3>You earn rewards</h3>
+        <p>Points land in your account on approval — redeem them for free gifts, vouchers and real money.</p>
+      </div>
+    </div>
+    <div class="hv-dots"><i></i><i></i><i></i><i></i></div>
+  </div>
+
+  <div class="sec-head"><h2>💎 What you earn</h2></div>
+  <div class="perk-grid">
+    <div class="perk"><span class="pk-ico">⭐</span><h3>Points per approved deal</h3><p>Every approved submission earns points — hotter deals earn bonus points at our team's discretion.</p></div>
+    <div class="perk"><span class="pk-ico">🎁</span><h3>Free gifts</h3><p>Redeem points for real products shipped free to your door.</p></div>
+    <div class="perk"><span class="pk-ico">💰</span><h3>Real money &amp; vouchers</h3><p>Convert points to cash rewards and Amazon/Flipkart vouchers.</p></div>
+    <div class="perk"><span class="pk-ico">🏅</span><h3>Top-hunter bonuses</h3><p>Consistent partners get surprise bonus drops and early access to point events.</p></div>
+  </div>
+
+  <div class="prose">
+    <h2>The fine print (kept short)</h2>
+    <ul>
+      <li>You need a <b>free IndiaOffers account</b> to submit deals — <a href="/register" style="color:var(--primary);font-weight:700">sign up here</a>.</li>
+      <li>Deals must be <b>real and live</b> — working link, genuine discount. Our team verifies every submission.</li>
+      <li>Points are credited <b>when a submission is approved</b>; duplicates and dead deals are politely declined.</li>
+      <li>Questions? <a class="wa-link" href="<%= waUrl %>" target="_blank" rel="noopener">WhatsApp Us</a> or <a href="/contact" style="color:var(--primary);font-weight:700">contact the team</a>.</li>
+    </ul>
+    <p style="margin-top:18px">
+      <% if (user) { %>
+        <a class="btn-primary" href="/submit-deal">🚀 Submit a deal now</a>
+      <% } else { %>
+        <a class="btn-primary" href="/register">🚀 Create your free account</a>
+        <a class="btn-ghost" href="/login?next=/submit-deal" style="margin-left:10px">I already have an account</a>
+      <% } %>
+    </p>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

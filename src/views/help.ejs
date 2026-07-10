@@ -1,0 +1,37 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <div class="page-head">
+    <h1>Help &amp; FAQs 🙋</h1>
+    <p>Quick answers to the questions we get most. Can't find yours? <a href="/contact" style="color:var(--primary);font-weight:700">Contact us</a> — we reply fast.</p>
+  </div>
+
+  <div class="prose">
+    <h3>🏷️ How do deals on IndiaOffers work?</h3>
+    <p>Every deal links you to the store (Amazon, Flipkart, etc.) where you buy directly. We list the deal price, any coupon code, and the bank-card offers you can stack on top — the <b>"How to get this deal"</b> steps on each deal page walk you through it.</p>
+
+    <h3>💳 What are the "best price with bank" amounts?</h3>
+    <p>Many stores run instant-discount offers with specific bank cards. When a deal qualifies, we show the <b>effective price after that card discount</b> — pay with the mentioned card (and promo code, if shown) to get it.</p>
+
+    <h3>🎟️ A coupon code didn't work — what now?</h3>
+    <p>Codes can expire mid-day or be limited to specific users/products. Check minimum order value and card requirements first. Still stuck? <a href="/contact" style="color:var(--primary);font-weight:700">Report it to us</a> — we'll verify and fix the listing.</p>
+
+    <h3>⚡ Prices changed between here and the store?</h3>
+    <p>Deal prices move fast — loots can die in minutes. We verify prices when posting, but the store's checkout price is always final. If a deal is dead, the next one is always around the corner on <a href="/deals" style="color:var(--primary);font-weight:700">Today's Deals</a>.</p>
+
+    <h3>🔔 How do alerts work?</h3>
+    <p><a href="/register" style="color:var(--primary);font-weight:700">Create a free account</a>, tell us which bank cards you hold and which categories you like — we notify you when a matching sale or card offer drops.</p>
+
+    <h3>🎯 How do I earn rewards by submitting deals?</h3>
+    <p>Registered users can submit deals they find via <a href="/submit-deal" style="color:var(--primary);font-weight:700">Submit a Deal</a>. Our team reviews each one; approved deals earn you <b>points redeemable for free gifts, vouchers and real money</b>. Full details on the <a href="/become-partner" style="color:var(--primary);font-weight:700">Become a Partner</a> page.</p>
+
+    <h3>🛒 Do you sell products yourselves?</h3>
+    <p>No — we're a deals discovery platform. Purchases, payments, delivery and returns are handled entirely by the store you buy from. Some links are affiliate links, which support the site at no extra cost to you.</p>
+
+    <h3>💬 Need anything else?</h3>
+    <p>Message us on <a class="wa-link" href="<%= waUrl %>" target="_blank" rel="noopener">WhatsApp (<%= support.whatsapp %>)</a> or email <a href="mailto:<%= support.email %>" style="color:var(--primary);font-weight:700"><%= support.email %></a>.</p>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

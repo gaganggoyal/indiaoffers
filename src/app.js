@@ -52,6 +52,17 @@ app.use((req, res, next) => {
     const esc = String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return esc.trim().split(/\r?\n\s*\r?\n/).map(b => '<p>' + b.replace(/\r?\n/g, '<br>') + '</p>').join('');
   };
+  // Support channels + "WhatsApp Us" auto-link: escapes the text, then turns any
+  // "WhatsApp Us" mention (as typed by the admin, e.g. in a guide's why-choose
+  // field) into a wa.me link to our support number.
+  res.locals.support = config.support;
+  res.locals.waUrl = `https://wa.me/${config.support.whatsappDigits}`;
+  res.locals.waText = s => {
+    if (!s) return '';
+    const esc = String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return esc.replace(/whats\s*app\s+us/gi,
+      m => `<a class="wa-link" href="https://wa.me/${config.support.whatsappDigits}" target="_blank" rel="noopener">${m}</a>`);
+  };
   next();
 });
 

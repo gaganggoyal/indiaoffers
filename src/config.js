@@ -23,6 +23,14 @@ module.exports = {
     flipkartAffid: process.env.FLIPKART_AFFILIATE_ID || 'indiaoffers'
   },
 
+  // Public support channels shown on Contact / partner pages and linked from
+  // "WhatsApp Us" mentions in buying guides. whatsappDigits feeds wa.me links.
+  support: {
+    email: process.env.SUPPORT_EMAIL || 'care@indiaoffers.in',
+    whatsapp: process.env.SUPPORT_WHATSAPP || '+91 95696 08101',
+    whatsappDigits: (process.env.SUPPORT_WHATSAPP || '919569608101').replace(/\D/g, '')
+  },
+
   // Outbound email for user alerts. With SMTP_HOST set we send real mail via
   // nodemailer; otherwise the mailer runs in "log" mode (emails are printed, not
   // sent) so the feature works end-to-end in dev without any credentials.

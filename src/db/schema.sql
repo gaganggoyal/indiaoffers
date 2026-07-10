@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash   TEXT NOT NULL,
   whatsapp_optin  INTEGER DEFAULT 0,        -- consent to WhatsApp updates
   is_bulk_buyer   INTEGER DEFAULT 0,        -- buys for a business/shop
+  points          INTEGER DEFAULT 0,        -- partner rewards earned from approved deal submissions
   is_active       INTEGER DEFAULT 1,
   last_login      TEXT,
   created_at      TEXT DEFAULT (datetime('now'))
@@ -205,6 +206,38 @@ CREATE TABLE IF NOT EXISTS clicks (
   user_agent      TEXT,
   referrer        TEXT,
   clicked_at      TEXT DEFAULT (datetime('now'))
+);
+
+-- Deals submitted by registered users (partner programme). Admin reviews each
+-- one, approves (awarding points) or rejects; approved deals are then published
+-- by the admin as normal deals.
+CREATE TABLE IF NOT EXISTS user_deals (
+  id              TEXT PRIMARY KEY,
+  user_id         TEXT NOT NULL REFERENCES users(id),
+  title           TEXT NOT NULL,
+  deal_url        TEXT NOT NULL,
+  price           REAL,
+  mrp             REAL,
+  store_name      TEXT,
+  coupon_code     TEXT,
+  image_url       TEXT,
+  note            TEXT,                     -- why it's a great deal
+  status          TEXT DEFAULT 'pending',   -- pending | approved | rejected
+  points          INTEGER DEFAULT 0,        -- points awarded on approval
+  admin_note      TEXT,
+  reviewed_at     TEXT,
+  created_at      TEXT DEFAULT (datetime('now'))
+);
+
+-- Queries submitted through the Contact Us form (also emailed to support)
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id              TEXT PRIMARY KEY,
+  name            TEXT NOT NULL,
+  email           TEXT NOT NULL,
+  mobile          TEXT,
+  topic           TEXT,
+  message         TEXT NOT NULL,
+  created_at      TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS admins (

@@ -1,0 +1,48 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>Deal Submissions</h1><span class="muted"><%= pending %> pending review</span></div>
+<%- include('_filters', { action: '/admin/submissions', q: active.q, ph: 'Search by title, store or username…', selects: [
+  { name: 'status', value: active.status, all: 'All statuses', options: [{ v: 'pending', l: 'Pending' }, { v: 'approved', l: 'Approved' }, { v: 'rejected', l: 'Rejected' }] }
+] }) %>
+<div class="panel">
+  <table>
+    <thead><tr><th>Deal</th><th>Price</th><th>By</th><th>Submitted</th><th>Status</th><th style="min-width:260px">Review</th></tr></thead>
+    <tbody>
+      <% subs.forEach(s => { %>
+        <tr>
+          <td>
+            <b><%= s.title %></b>
+            <small class="muted" style="display:block">
+              <a href="<%= s.deal_url %>" target="_blank" rel="noopener nofollow">open link ↗</a>
+              <%= s.store_name ? ' · ' + s.store_name : '' %><%= s.coupon_code ? ' · code: ' + s.coupon_code : '' %>
+            </small>
+            <% if (s.note) { %><small class="muted" style="display:block">“<%= s.note %>”</small><% } %>
+          </td>
+          <td><%= s.price != null ? '₹' + Number(s.price).toLocaleString('en-IN') : '—' %><% if (s.mrp != null) { %><small class="muted" style="display:block">MRP ₹<%= Number(s.mrp).toLocaleString('en-IN') %></small><% } %></td>
+          <td><b><%= s.username %></b><small class="muted" style="display:block"><%= s.email %> · ⭐<%= s.user_points || 0 %></small></td>
+          <td><small class="muted"><%= String(s.created_at).slice(0, 10) %></small></td>
+          <td>
+            <span class="pill <%= s.status === 'approved' ? 'ok' : s.status === 'rejected' ? 'off' : '' %>"><%= s.status %></span>
+            <% if (s.status === 'approved') { %><small class="muted" style="display:block">+<%= s.points %> pts</small><% } %>
+            <% if (s.admin_note) { %><small class="muted" style="display:block"><%= s.admin_note %></small><% } %>
+          </td>
+          <td>
+            <% if (s.status === 'pending') { %>
+              <form method="post" action="/admin/submissions/<%= s.id %>/approve" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+                <input name="points" type="number" min="0" max="1000" value="10" style="width:70px" title="Points to award">
+                <button class="btn" type="submit">✓ Approve</button>
+              </form>
+              <form method="post" action="/admin/submissions/<%= s.id %>/reject" style="display:flex;gap:6px;align-items:center">
+                <input name="admin_note" placeholder="reason (optional)" style="flex:1;min-width:110px">
+                <button class="btn btn-ghost" type="submit">✕ Reject</button>
+              </form>
+            <% } else { %>
+              <small class="muted">reviewed <%= s.reviewed_at ? String(s.reviewed_at).slice(0, 10) : '' %></small>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% if (subs.length === 0) { %><p class="muted" style="padding:14px">No submissions yet. Users submit deals from the “Submit a Deal” page (partner programme).</p><% } %>
+</div>
+<%- include('_bottom') %>

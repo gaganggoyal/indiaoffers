@@ -194,6 +194,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash   VARCHAR(255) NOT NULL,
   whatsapp_optin  TINYINT(1) DEFAULT 0,
   is_bulk_buyer   TINYINT(1) DEFAULT 0,
+  points          INT DEFAULT 0,
   is_active       TINYINT(1) DEFAULT 1,
   last_login      DATETIME,
   created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -226,4 +227,36 @@ CREATE TABLE IF NOT EXISTS alerts (
   sent_at         DATETIME NULL,
   created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_user (user_id, is_read)
+) ENGINE=InnoDB;
+
+-- Deals submitted by registered users (partner programme)
+CREATE TABLE IF NOT EXISTS user_deals (
+  id              VARCHAR(32) PRIMARY KEY,
+  user_id         VARCHAR(32) NOT NULL,
+  title           VARCHAR(300) NOT NULL,
+  deal_url        VARCHAR(1000) NOT NULL,
+  price           DECIMAL(12,2),
+  mrp             DECIMAL(12,2),
+  store_name      VARCHAR(120),
+  coupon_code     VARCHAR(80),
+  image_url       VARCHAR(1000),
+  note            TEXT,
+  status          VARCHAR(20) DEFAULT 'pending',
+  points          INT DEFAULT 0,
+  admin_note      VARCHAR(500),
+  reviewed_at     DATETIME NULL,
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_ud_status (status, created_at),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+-- Queries submitted through the Contact Us form (also emailed to support)
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id              VARCHAR(32) PRIMARY KEY,
+  name            VARCHAR(120) NOT NULL,
+  email           VARCHAR(150) NOT NULL,
+  mobile          VARCHAR(20),
+  topic           VARCHAR(80),
+  message         TEXT NOT NULL,
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;

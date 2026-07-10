@@ -1,0 +1,55 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <div class="page-head">
+    <h1>Contact Us 💬</h1>
+    <p>Stuck on a deal, a coupon that won't apply, or anything about online shopping? We're shoppers too — ask us anything.</p>
+  </div>
+
+  <div class="contact-grid">
+    <form class="contact-form" method="post" action="/contact">
+      <h2>Send us your query</h2>
+      <% if (sent) { %><div class="form-ok">✓ Got it! Your query is on its way to our care team — we usually reply within 24 hours.</div><% } %>
+      <% if (error) { %><div class="form-err"><%= error %></div><% } %>
+      <div class="cf-two">
+        <label>Your name *<input name="name" required maxlength="120" value="<%= form.name || '' %>" placeholder="Full name"></label>
+        <label>Email *<input type="email" name="email" required maxlength="150" value="<%= form.email || '' %>" placeholder="you@example.com"></label>
+      </div>
+      <div class="cf-two">
+        <label>Mobile (optional)<input name="mobile" maxlength="15" value="<%= form.mobile || '' %>" placeholder="10-digit mobile"></label>
+        <label>Topic
+          <select name="topic">
+            <% ['Deal question','Coupon not working','Bank / card offer help','Order or refund advice','Partnership / business','Something else'].forEach(t => { %>
+              <option <%= form.topic === t ? 'selected' : '' %>><%= t %></option>
+            <% }) %>
+          </select>
+        </label>
+      </div>
+      <label>Your query *<textarea name="message" required rows="6" maxlength="4000" placeholder="Tell us what you need help with — any question about online shopping, deals, coupons, card offers, refunds…"><%= form.message || '' %></textarea></label>
+      <button class="btn-primary" type="submit">Send query →</button>
+      <small class="muted">Your message goes straight to <b><%= support.email %></b>.</small>
+    </form>
+
+    <div class="contact-aside">
+      <a class="contact-chan wa" href="<%= waUrl %>" target="_blank" rel="noopener">
+        <span class="cc-ico">💚</span>
+        <span><b>WhatsApp Us</b><span>Fastest replies · <%= support.whatsapp %></span></span>
+      </a>
+      <a class="contact-chan" href="mailto:<%= support.email %>">
+        <span class="cc-ico">✉️</span>
+        <span><b>Email</b><span><%= support.email %></span></span>
+      </a>
+      <div class="contact-chan">
+        <span class="cc-ico">⏰</span>
+        <span><b>Response time</b><span>Usually within 24 hours, 7 days a week</span></span>
+      </div>
+      <div class="contact-chan">
+        <span class="cc-ico">🎯</span>
+        <span><b>Found a deal for us?</b><span><a href="/become-partner" style="color:var(--primary);font-weight:700">Become a partner</a> and earn rewards</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

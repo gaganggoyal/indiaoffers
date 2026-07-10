@@ -59,7 +59,7 @@
   <label class="full">Deal URL (merchant page) *<input name="deal_url" required value="<%= deal ? (deal.deal_url || '') : '' %>" placeholder="https://www.amazon.in/dp/…"></label>
   <label class="full">Description<textarea name="description" rows="3"><%= deal ? (deal.description || '') : '' %></textarea></label>
   <label class="full">How to get it (one step per line)<textarea name="how_to" rows="5"><%= deal ? (JSON.parse(deal.how_to || '[]').join('\n')) : '' %></textarea></label>
-  <label class="check"><input type="checkbox" name="is_trending" <%= deal && deal.is_trending ? 'checked' : '' %>> Trending (featured on homepage)</label>
+  <label class="check"><input type="checkbox" name="is_trending" <%= deal && deal.is_trending ? 'checked' : '' %>> 🏠 Show in home page banners <small>— ticked deals rotate in the big hero banners on the homepage; unticked deals appear only in the deals listings</small></label>
   <label class="check"><input type="checkbox" name="is_active" <%= !deal || deal.is_active ? 'checked' : '' %>> Live on site</label>
   <button class="btn" type="submit"><%= deal ? 'Save changes' : 'Create deal' %></button>
 </form>

@@ -13,12 +13,6 @@
     <% categoryTree.forEach(dept => { %>
       <a class="f <%= activeDept === dept.slug ? 'on' : '' %>" href="/deals?category=<%= dept.slug %>"><%= dept.icon %> <%= dept.name %></a>
     <% }) %>
-    <span class="f-spacer"></span>
-    <% const qs = p => { const u = new URLSearchParams(); if (active.category) u.set('category', active.category); if (active.q) u.set('q', active.q); u.set('sort', p); return '/deals?' + u.toString(); } %>
-    <a class="f <%= active.sort === 'latest' ? 'on' : '' %>" href="<%= qs('latest') %>">Latest</a>
-    <a class="f <%= active.sort === 'discount' ? 'on' : '' %>" href="<%= qs('discount') %>">Biggest saving</a>
-    <a class="f <%= active.sort === 'price' ? 'on' : '' %>" href="<%= qs('price') %>">Price ↑</a>
-    <a class="f <%= active.sort === 'popular' ? 'on' : '' %>" href="<%= qs('popular') %>">Popular</a>
   </div>
 
   <% if (deals.length === 0) { %>
@@ -36,7 +30,6 @@
            if (active.category) u.set('category', active.category);
            if (active.store) u.set('store', active.store);
            if (active.q) u.set('q', active.q);
-           if (active.sort && active.sort !== 'latest') u.set('sort', active.sort);
            if (n > 1) u.set('page', n);
            const s = u.toString(); return '/deals' + (s ? '?' + s : ''); };
          const cur = pagination.page, last = pagination.totalPages; %>

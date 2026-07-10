@@ -84,7 +84,7 @@
 
   <% if (related.length) { %>
     <div class="sec-head" style="margin-top:34px"><h2>More from <%= store.name %></h2><a href="/store/<%= store.slug %>">View store →</a></div>
-    <div class="grid">
+    <div class="grid grid-sm">
       <% related.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
     </div>
   <% } %>

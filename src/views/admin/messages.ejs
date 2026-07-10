@@ -1,0 +1,20 @@
+<%- include('_top') %>
+<div class="page-bar"><h1>Contact Messages</h1><span class="muted"><%= messages.length %> shown · also emailed to support</span></div>
+<%- include('_filters', { action: '/admin/messages', q: active.q, ph: 'Search by name, email or text…' }) %>
+<div class="panel">
+  <table>
+    <thead><tr><th>From</th><th>Topic</th><th>Message</th><th>Received</th></tr></thead>
+    <tbody>
+      <% messages.forEach(m => { %>
+        <tr>
+          <td><b><%= m.name %></b><small class="muted" style="display:block"><a href="mailto:<%= m.email %>"><%= m.email %></a><%= m.mobile ? ' · ' + m.mobile : '' %></small></td>
+          <td><%= m.topic || '—' %></td>
+          <td style="max-width:480px"><small><%= m.message %></small></td>
+          <td><small class="muted"><%= String(m.created_at).slice(0, 16).replace('T', ' ') %></small></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% if (messages.length === 0) { %><p class="muted" style="padding:14px">No messages yet — queries sent from the Contact page appear here.</p><% } %>
+</div>
+<%- include('_bottom') %>

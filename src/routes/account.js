@@ -170,4 +170,54 @@ router.post('/account/alerts/read', userAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── Submit a deal (partner programme) ─────────────────────────────────────────
+// Registered users submit deals they find; admin reviews them in /admin/submissions
+// and awards points on approval. Points show here and on the account dashboard.
+async function submitDealData(userId) {
+  const [urows, submissions] = await Promise.all([
+    db.query('SELECT points FROM users WHERE id = ?', [userId]),
+    db.query('SELECT * FROM user_deals WHERE user_id = ? ORDER BY created_at DESC LIMIT 30', [userId])
+  ]);
+  return { points: urows[0] ? (urows[0].points || 0) : 0, submissions };
+}
+
+const submitDealView = extra => Object.assign({
+  title: 'Submit a Deal — Earn Rewards — IndiaOffers.in',
+  meta: { description: 'Submit deals you find and earn points redeemable for free gifts, vouchers and real money when they are approved.' },
+  sent: false, error: null, form: {}
+}, extra);
+
+router.get('/submit-deal', userAuth, async (req, res, next) => {
+  try {
+    res.render('submit-deal', submitDealView(await submitDealData(req.user.id)));
+  } catch (err) { next(err); }
+});
+
+router.post('/submit-deal', userAuth, async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const title = String(b.title || '').trim().slice(0, 300);
+    const dealUrl = String(b.deal_url || '').trim().slice(0, 1000);
+    const numOrNull = v => (v === undefined || v === null || v === '') ? null : parseFloat(v);
+    const rerender = async error => res.status(400).render('submit-deal',
+      submitDealView({ error, form: b, ...(await submitDealData(req.user.id)) }));
+
+    if (!title) return rerender('Please give the deal a title.');
+    if (!/^https?:\/\/\S+\.\S+/.test(dealUrl)) return rerender('Please paste a valid deal link (starting with http/https).');
+    const recent = await db.query(
+      "SELECT COUNT(*) AS n FROM user_deals WHERE user_id = ? AND status = 'pending'", [req.user.id]);
+    if (Number(recent[0].n) >= 20) return rerender('You have 20 deals pending review — hang tight while we catch up!');
+
+    await db.query(`
+      INSERT INTO user_deals (id, user_id, title, deal_url, price, mrp, store_name, coupon_code, note, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    `, [db.uid('ud'), req.user.id, title, dealUrl, numOrNull(b.price), numOrNull(b.mrp),
+        String(b.store_name || '').trim().slice(0, 120) || null,
+        String(b.coupon_code || '').trim().slice(0, 80) || null,
+        String(b.note || '').trim().slice(0, 2000) || null]);
+
+    res.render('submit-deal', submitDealView({ sent: true, ...(await submitDealData(req.user.id)) }));
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

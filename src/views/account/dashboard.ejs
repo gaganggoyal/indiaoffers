@@ -12,6 +12,14 @@
 
   <% if (saved) { %><div class="form-ok">✓ Preferences saved.</div><% } %>
 
+  <div class="panel-block" style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px">
+    <div>
+      <span class="points-pill">⭐ Partner points: <%= account.points || 0 %></span>
+      <span class="muted" style="font-size:13px;margin-left:10px">Earn points by submitting deals — redeem for gifts, vouchers &amp; real money.</span>
+    </div>
+    <a class="btn-primary" href="/submit-deal">🎯 Submit a deal</a>
+  </div>
+
   <div class="acc-grid">
     <!-- Alerts -->
     <div class="acc-col">

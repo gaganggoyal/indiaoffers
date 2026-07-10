@@ -6,6 +6,7 @@ const router = require('express').Router();
 const db = require('../db');
 const config = require('../config');
 const { savingsStack, activeBankOffers, decorateDeals } = require('../services/savings');
+const { sendMail } = require('../services/mailer');
 const { CATEGORIES, CATEGORY_TREE, CAT_ICONS, categoryName, descendantSlugs } = require('../data/taxonomy');
 const { COLLECTIONS, collectionBySlug } = require('../data/collections');
 
@@ -47,15 +48,21 @@ const ORGANIZATION_LD = {
 // ── Home ──────────────────────────────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
   try {
-    const [heroRaw, dealsRaw, offers, storeMap, featuredCards] = await Promise.all([
-      db.query(`SELECT * FROM deals WHERE is_active = 1 ORDER BY posted_at DESC LIMIT 3`),
-      db.query(`SELECT * FROM deals WHERE is_active = 1 ORDER BY is_trending DESC, posted_at DESC LIMIT 12`),
+    // Hero banners show only deals the admin ticked "Show in home page banners"
+    // (is_trending). If none are ticked yet, fall back to the 3 latest deals.
+    const [bannerRaw, dealsRaw, offers, storeMap, featuredCards] = await Promise.all([
+      db.query(`SELECT * FROM deals WHERE is_active = 1 AND is_trending = 1 ORDER BY posted_at DESC LIMIT 3`),
+      db.query(`SELECT * FROM deals WHERE is_active = 1 ORDER BY posted_at DESC LIMIT 15`),
       activeBankOffers(),
       storesById(),
       db.query(`SELECT * FROM bank_cards WHERE is_active = 1 ORDER BY is_featured DESC, sort_order ASC LIMIT 4`)
     ]);
+    const heroRaw = bannerRaw.length ? bannerRaw
+      : dealsRaw.slice(0, 3);
+    const heroIds = new Set(heroRaw.map(d => d.id));
+    const gridRaw = dealsRaw.filter(d => !heroIds.has(d.id)).slice(0, 12);
     const heroDeals = decorateDeals(heroRaw, offers);
-    const deals = decorateDeals(dealsRaw, offers);
+    const deals = decorateDeals(gridRaw, offers);
     const topOffers = offers
       .slice()
       .sort((a, b) => (b.max_discount || b.discount_value * 40) - (a.max_discount || a.discount_value * 40))
@@ -77,7 +84,7 @@ router.get('/', async (req, res, next) => {
 // ── Deals listing ─────────────────────────────────────────────────────────────
 router.get('/deals', async (req, res, next) => {
   try {
-    const { category, store, sort, q } = req.query;
+    const { category, store, q } = req.query;
     let where = 'WHERE d.is_active = 1';
     const params = [];
     // Accept a leaf slug or any branch (department / sub-group) and expand it to
@@ -92,10 +99,7 @@ router.get('/deals', async (req, res, next) => {
     }
     if (store) { where += ' AND d.store_id = ?'; params.push(store); }
     if (q) { where += ' AND (d.title LIKE ? OR d.description LIKE ?)'; params.push(`%${q}%`, `%${q}%`); }
-    const order = sort === 'price' ? 'd.price ASC'
-                : sort === 'discount' ? '(d.mrp - d.price) DESC'
-                : sort === 'popular' ? 'd.clicks DESC'
-                : 'd.is_trending DESC, d.posted_at DESC';
+    const order = 'd.posted_at DESC';
 
     // Pagination — keeps each page light so it loads fast.
     const perPage = 24;
@@ -117,7 +121,7 @@ router.get('/deals', async (req, res, next) => {
     let fallback = false;
     if (deals.length === 0 && (category || q) && page === 1) {
       const fb = await db.query(
-        `SELECT d.* FROM deals d WHERE d.is_active = 1 ORDER BY d.is_trending DESC, d.posted_at DESC LIMIT ${perPage}`);
+        `SELECT d.* FROM deals d WHERE d.is_active = 1 ORDER BY d.posted_at DESC LIMIT ${perPage}`);
       deals = decorateDeals(fb, offers);
       fallback = true;
     }
@@ -138,7 +142,7 @@ router.get('/deals', async (req, res, next) => {
       catName: category ? categoryName(category) : '',
       activeDept: activeDeptNode ? activeDeptNode.slug : '',
       pagination: { page, totalPages, total, perPage },
-      active: { category: category || '', store: store || '', sort: sort || 'latest', q: q || '' }
+      active: { category: category || '', store: store || '', q: q || '' }
     });
   } catch (err) { next(err); }
 });
@@ -343,6 +347,60 @@ router.get('/store/:slug', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── Company pages — About / Careers / Contact / Help / Become a Partner ───────
+router.get('/about', (req, res) => res.render('about', {
+  title: 'About Us — India\'s Home for Loot Deals & Coupons — IndiaOffers.in',
+  meta: { description: 'IndiaOffers.in hunts loot deals, ₹1 steals, working coupons and bank-card offers across Amazon, Flipkart and more — founded by a deal hunter with 15+ years of online-shopping expertise.' }
+}));
+
+router.get('/careers', (req, res) => res.render('careers', {
+  title: 'Careers — Become a Deal Hunter Partner — IndiaOffers.in',
+  meta: { description: 'Join IndiaOffers as a Deal Hunter Partner: submit deals you find, and earn free gifts, vouchers and real money when they are approved.' }
+}));
+
+router.get('/help', (req, res) => res.render('help', {
+  title: 'Help & FAQs — IndiaOffers.in',
+  meta: { description: 'How deals, coupons, bank-card offers, alerts and the partner rewards programme work on IndiaOffers.in.' }
+}));
+
+router.get('/become-partner', (req, res) => res.render('become-partner', {
+  title: 'Become a Partner — Submit Deals, Earn Gifts & Real Money — IndiaOffers.in',
+  meta: { description: 'Submit the deals you find on IndiaOffers.in and earn points redeemable for free gifts, shopping vouchers and real money. How to submit a deal in 15 seconds.' }
+}));
+
+const contactView = extra => Object.assign({
+  title: 'Contact Us — IndiaOffers.in',
+  meta: { description: 'Ask us anything about online shopping — deals, coupons, card offers, refunds. WhatsApp us or send a query straight to our care team.' },
+  sent: false, error: null, form: {}
+}, extra);
+
+router.get('/contact', (req, res) => res.render('contact', contactView({})));
+
+router.post('/contact', async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const name = String(b.name || '').trim().slice(0, 120);
+    const email = String(b.email || '').trim().slice(0, 150);
+    const mobile = String(b.mobile || '').trim().slice(0, 15);
+    const topic = String(b.topic || '').trim().slice(0, 80);
+    const message = String(b.message || '').trim().slice(0, 4000);
+    if (!name || !message || !/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).render('contact', contactView({ error: 'Please fill your name, a valid email and your query.', form: b }));
+    }
+    // Keep a copy in the DB (visible in the admin panel), then email support.
+    await db.query(
+      'INSERT INTO contact_messages (id, name, email, mobile, topic, message) VALUES (?, ?, ?, ?, ?, ?)',
+      [db.uid('cm'), name, email, mobile || null, topic || null, message]);
+    await sendMail({
+      to: config.support.email,
+      subject: `[IndiaOffers contact] ${topic || 'Query'} — ${name}`,
+      text: `From: ${name} <${email}>${mobile ? `\nMobile: ${mobile}` : ''}\nTopic: ${topic}\n\n${message}`,
+      html: `<p><b>From:</b> ${name} &lt;${email}&gt;${mobile ? `<br><b>Mobile:</b> ${mobile}` : ''}<br><b>Topic:</b> ${topic}</p><p>${message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</p>`
+    });
+    res.render('contact', contactView({ sent: true }));
+  } catch (err) { next(err); }
+});
+
 // ── Search (nav box submits here) ─────────────────────────────────────────────
 router.get('/search', (req, res) => {
   const q = (req.query.q || '').trim();
@@ -409,7 +467,7 @@ COLLECTIONS.forEach(col => {
 
 // ── SEO plumbing ──────────────────────────────────────────────────────────────
 router.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /go/\nDisallow: /account\nDisallow: /login\nDisallow: /register\nDisallow: /api/\nSitemap: ${config.siteUrl}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /go/\nDisallow: /account\nDisallow: /login\nDisallow: /register\nDisallow: /submit-deal\nDisallow: /api/\nSitemap: ${config.siteUrl}/sitemap.xml\n`);
 });
 
 router.get('/sitemap.xml', async (req, res, next) => {
@@ -424,6 +482,9 @@ router.get('/sitemap.xml', async (req, res, next) => {
       { loc: '/', pri: '1.0' }, { loc: '/deals', pri: '0.9' },
       { loc: '/bank-offers', pri: '0.9' }, { loc: '/cards', pri: '0.8' },
       { loc: '/guides', pri: '0.8' }, { loc: '/stores', pri: '0.7' },
+      { loc: '/about', pri: '0.5' }, { loc: '/careers', pri: '0.4' },
+      { loc: '/contact', pri: '0.5' }, { loc: '/help', pri: '0.5' },
+      { loc: '/become-partner', pri: '0.6' },
       ...COLLECTIONS.map(c => ({ loc: `/${c.slug}`, pri: '0.9' })),
       ...deals.map(d => ({ loc: `/deal/${d.slug}`, pri: '0.8', mod: d.updated_at })),
       ...cards.map(c => ({ loc: `/card/${c.slug}`, pri: '0.7' })),
