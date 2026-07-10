@@ -49,25 +49,31 @@ const ORGANIZATION_LD = {
 // ── Home ──────────────────────────────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
   try {
-    // Hero banners show ONLY deals/guides the admin ticked "Show in home page
-    // banners" (is_trending) — no fallback; untick everything and the hero
-    // disappears. Deals and buying guides mix freely: the 3 most recent ticked
-    // items win. The grid below shows the newest deals, but any deal with
+    // The hero mixes three sources, capped at 3 slots: admin-made image
+    // banners (/admin/banners) always come first by sort order, then
+    // deals/guides ticked "Show in home page banners" (is_trending) by
+    // recency. No fallback — deactivate/untick everything and the hero
+    // disappears. The grid below shows the newest deals, but any deal with
     // hotness > 0 is pinned above the rest (higher number = higher on the
     // page) regardless of how old it is.
-    const [heroRaw, heroGuidesRaw, dealsRaw, offers, storeMap, featuredCards] = await Promise.all([
+    const [heroRaw, heroGuidesRaw, bannersRaw, dealsRaw, offers, storeMap, featuredCards] = await Promise.all([
       db.query(`SELECT * FROM deals WHERE is_active = 1 AND is_trending = 1 ORDER BY posted_at DESC LIMIT 3`),
       db.query(`SELECT * FROM guides WHERE is_active = 1 AND is_trending = 1 ORDER BY updated_at DESC LIMIT 3`),
+      db.query(`SELECT * FROM banners WHERE is_active = 1 ORDER BY sort_order ASC, created_at DESC LIMIT 3`),
       db.query(`SELECT * FROM deals WHERE is_active = 1 ORDER BY COALESCE(hotness, 0) DESC, posted_at DESC LIMIT 15`),
       activeBankOffers(),
       storesById(),
       db.query(`SELECT * FROM bank_cards WHERE is_active = 1 ORDER BY is_featured DESC, sort_order ASC LIMIT 4`)
     ]);
     const when = v => new Date(v || 0).getTime() || 0;
-    const heroItems = [
+    const dated = [
       ...decorateDeals(heroRaw, offers).map(d => ({ type: 'deal', d, ts: when(d.posted_at) })),
       ...heroGuidesRaw.map(g => ({ type: 'guide', g, ts: when(g.updated_at || g.created_at) }))
-    ].sort((a, b) => b.ts - a.ts).slice(0, 3);
+    ].sort((a, b) => b.ts - a.ts);
+    const heroItems = [
+      ...bannersRaw.map(b => ({ type: 'banner', b })),
+      ...dated
+    ].slice(0, 3);
     const heroIds = new Set(heroItems.filter(h => h.type === 'deal').map(h => h.d.id));
     const gridRaw = dealsRaw.filter(d => !heroIds.has(d.id)).slice(0, 12);
     const deals = decorateDeals(gridRaw, offers);

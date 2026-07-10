@@ -10,12 +10,29 @@
 </section>
 <% } %>
 
-<!-- Hero: up to 3 admin-picked banner deals/buying guides; hidden when none are ticked -->
+<!-- Hero: up to 3 slots — admin image banners first, then ticked deals/guides -->
 <% if (heroItems.length) { %>
 <section class="wrap">
   <div class="hero-row">
     <% heroItems.forEach(item => { %>
-      <% if (item.type === 'deal') { const d = item.d; const st = storeMap[d.store_id] || { name: '', color: '#4f46e5' }; %>
+      <% if (item.type === 'banner') { const b = item.b; %>
+        <% if (b.image_url) { %>
+          <!-- ready-made creative: the image IS the banner, whole thing clicks through -->
+          <a class="hero-banner hb-pure" href="<%= b.link_url || '#' %>" aria-label="<%= b.title %>">
+            <div class="hb-img" style="background-image:url('<%= b.image_url %>')"></div>
+          </a>
+        <% } else { %>
+          <a class="hero-banner" href="<%= b.link_url || '#' %>" style="--sc:<%= b.bg_color || '#4f46e5' %>">
+            <div class="hb-img" style="background:linear-gradient(135deg, <%= b.bg_color || '#4f46e5' %>, #1e1b4b)"></div>
+            <div class="hb-shade"></div>
+            <div class="hb-txt">
+              <h2><%= b.title %></h2>
+              <% if (b.subtitle) { %><div class="hb-price"><span class="hb-sub"><%= b.subtitle %></span></div><% } %>
+              <span class="hb-cta">Check it out →</span>
+            </div>
+          </a>
+        <% } %>
+      <% } else if (item.type === 'deal') { const d = item.d; const st = storeMap[d.store_id] || { name: '', color: '#4f46e5' }; %>
         <a class="hero-banner" href="/deal/<%= d.slug %>"
            style="--sc:<%= st.color %>">
           <div class="hb-img" style="background-image:url('<%= d.image_url || '' %>')"></div>

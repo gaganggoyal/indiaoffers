@@ -4,7 +4,7 @@
   <% if (banner) { %><input type="hidden" name="id" value="<%= banner.id %>"><% } %>
   <label class="full">Title *<input name="title" required value="<%= banner ? banner.title : '' %>"></label>
   <label class="full">Subtitle<input name="subtitle" value="<%= banner ? (banner.subtitle || '') : '' %>"></label>
-  <label class="full">Banner image <small>(900×500 recommended, blank = colour gradient)</small>
+  <label class="full">Banner image <small>(1200×800 / 3:2 recommended — shown full &amp; uncropped, whole banner clicks through; blank = colour gradient with the title on it)</small>
     <input name="image_url" id="f_banner_image" value="<%= banner ? (banner.image_url || '') : '' %>" placeholder="Paste an image URL, or upload a file below">
     <span class="uploader" data-target="f_banner_image">
       <span class="up-preview"></span>
