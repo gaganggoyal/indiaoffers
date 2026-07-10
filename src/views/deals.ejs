@@ -21,15 +21,6 @@
     <a class="f <%= active.sort === 'popular' ? 'on' : '' %>" href="<%= qs('popular') %>">Popular</a>
   </div>
 
-  <!-- Drill-down into the active department's sub-categories only -->
-  <% if (subCats && subCats.length) { %>
-    <div class="filters subcats">
-      <% subCats.forEach(c => { %>
-        <a class="f <%= active.category === c.slug ? 'on' : '' %>" href="/deals?category=<%= c.slug %>"><%= c.icon %> <%= c.name %></a>
-      <% }) %>
-    </div>
-  <% } %>
-
   <% if (deals.length === 0) { %>
     <div class="empty">No deals found<%= active.q ? ` for “${active.q}”` : '' %>. <a href="/deals">See all deals</a></div>
   <% } else { %>

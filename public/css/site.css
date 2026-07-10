@@ -106,9 +106,6 @@ main { min-height: 60vh; padding-bottom: 50px; }
 .f { background: var(--card); border: 1px solid var(--line); padding: 7px 14px; border-radius: 50px; font-size: 13px; font-weight: 600; }
 .f.on { background: var(--primary); border-color: var(--primary); color: #fff; }
 .f-spacer { flex: 1; }
-.filters.subcats { margin-top: -8px; margin-bottom: 18px; }
-.filters.subcats .f { font-size: 12.5px; padding: 5px 12px; background: var(--bg); }
-.filters.subcats .f.on { background: var(--primary); border-color: var(--primary); color: #fff; }
 .empty { text-align: center; padding: 50px 20px; color: var(--muted); background: var(--card); border-radius: var(--r); }
 
 /* deal detail */
