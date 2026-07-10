@@ -66,9 +66,21 @@ document.querySelectorAll('.msearch').forEach(root => {
   const empty  = root.querySelector('.ms-empty');
   const opts   = [...root.querySelectorAll('.ms-opt')];
   const boxes  = opts.map(o => o.querySelector('input'));
+  const count  = root.querySelector('.ms-count');
 
-  const open = () => { menu.hidden = false; input.setAttribute('aria-expanded', 'true'); };
-  const close = () => { menu.hidden = true; input.setAttribute('aria-expanded', 'false'); };
+  // Keep the menu (incl. its Done footer) clear of the mobile bottom tab bar /
+  // viewport edge — the control grows as chips are added, pushing the menu down.
+  const nudge = () => requestAnimationFrame(() => {
+    if (menu.hidden) return;
+    const gap = menu.getBoundingClientRect().bottom - (window.innerHeight - 90);
+    if (gap > 0) window.scrollBy({ top: gap, behavior: 'smooth' });
+  });
+  const open = () => {
+    if (!menu.hidden) return;
+    menu.hidden = false; root.classList.add('ms-open'); input.setAttribute('aria-expanded', 'true');
+    nudge();
+  };
+  const close = () => { menu.hidden = true; root.classList.remove('ms-open'); input.setAttribute('aria-expanded', 'false'); };
 
   function renderChips() {
     chips.innerHTML = '';
@@ -84,6 +96,10 @@ document.querySelectorAll('.msearch').forEach(root => {
       chips.appendChild(chip);
     });
     input.placeholder = boxes.some(b => b.checked) ? 'Add more…' : root.dataset.placeholder;
+    if (count) {
+      const n = boxes.filter(b => b.checked).length;
+      count.textContent = n ? n + ' selected' : 'Pick as many as you like';
+    }
   }
 
   function filter() {
@@ -103,9 +119,12 @@ document.querySelectorAll('.msearch').forEach(root => {
   }
 
   opts.forEach((o, i) => o.addEventListener('click', e => {
-    // Let the native checkbox toggle, then sync UI.
-    setTimeout(() => { renderChips(); }, 0);
+    // Let the native checkbox toggle, then sync UI. Clear the search so the
+    // full list is back for the next pick (and keep focus for fast multi-add).
+    setTimeout(() => { renderChips(); input.value = ''; filter(); input.focus(); nudge(); }, 0);
   }));
+  const done = root.querySelector('.ms-done');
+  if (done) done.addEventListener('click', () => { close(); input.blur(); });
   root.querySelector('.ms-control').addEventListener('click', e => {
     if (e.target === input || e.target.closest('.ms-chip')) return;
     input.focus();
