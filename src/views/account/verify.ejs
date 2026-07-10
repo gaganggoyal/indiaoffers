@@ -1,0 +1,28 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<section class="wrap auth-wrap">
+  <div class="verify-card">
+    <div class="vc-ico">📬</div>
+    <h1>Check your inbox!</h1>
+    <p class="auth-sub">We've sent a <b>6-digit code</b> and a one-click verify link to<br><b class="vc-email"><%= maskedEmail %></b></p>
+
+    <% if (sent) { %><div class="form-ok">✉️ Code sent — it can take a minute to arrive. Check the spam folder too.</div><% } %>
+    <% if (error) { %><div class="form-err"><%= error %></div><% } %>
+
+    <form method="post" action="/verify-email" class="vc-form">
+      <input type="hidden" name="u" value="<%= uid %>">
+      <input class="vc-otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required placeholder="••••••" autofocus>
+      <button class="btn-primary btn-lg" type="submit">Verify &amp; start saving →</button>
+    </form>
+
+    <form method="post" action="/verify-email/resend" class="vc-resend">
+      <input type="hidden" name="u" value="<%= uid %>">
+      <span class="muted">Didn't get it?</span> <button class="lnk" type="submit">Resend code</button>
+    </form>
+
+    <p class="vc-note">The code expires in 15 minutes. Wrong email address? <a href="/register">Register again</a> with the right one.</p>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

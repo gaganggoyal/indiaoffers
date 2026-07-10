@@ -1,50 +1,97 @@
 <%- include('../partials/head') %>
 <%- include('../partials/header') %>
 
-<section class="wrap auth-wrap">
-  <div class="auth-card wide">
-    <h1>Create your IndiaOffers account</h1>
-    <p class="auth-sub">Get alerted the moment there's a sale on <b>your</b> bank card, plus deals in the categories you care about.</p>
-    <% if (error) { %><div class="form-err"><%= error %></div><% } %>
+<section class="wrap reg-page">
+  <div class="reg-split">
 
-    <form method="post" action="/register" class="acc-form">
-      <div class="af-grid">
-        <label>Username *<input name="username" required value="<%= form.username || '' %>" placeholder="e.g. rahul_deals" pattern="[a-zA-Z0-9_.]{3,30}"></label>
-        <label>Email *<input type="email" name="email" required value="<%= form.email || '' %>" placeholder="you@example.com"></label>
-        <label>Mobile number<input name="mobile" value="<%= form.mobile || '' %>" placeholder="10-digit mobile" inputmode="tel"></label>
-        <label>Password *<input type="password" name="password" required minlength="6" placeholder="Min 6 characters"></label>
+    <!-- Left: how IndiaOffers works + what you get -->
+    <aside class="reg-showcase">
+      <h1>Join India's smartest<br><em>deal-hunting</em> community</h1>
+      <p class="rs-sub">One free account. Loot deals, card-sale alerts and real rewards.</p>
+
+      <div class="howto-video rs-video" aria-label="How IndiaOffers works — quick demo">
+        <div class="hv-bar"><i></i><i></i><i></i><span>HOW INDIAOFFERS WORKS</span></div>
+        <div class="hv-stage">
+          <div class="hv-frame">
+            <span class="hv-ico">🛍️</span>
+            <h3>1 · Browse handpicked deals</h3>
+            <p>Loot deals, ₹1 deals, coupons &amp; card offers across Amazon, Flipkart, Myntra and more — verified by real people.</p>
+          </div>
+          <div class="hv-frame">
+            <span class="hv-ico">🔔</span>
+            <h3>2 · Get alerts made for YOU</h3>
+            <p>Pick your bank cards &amp; favourite categories — the moment a sale drops on them, you're the first to know.</p>
+          </div>
+          <div class="hv-frame">
+            <span class="hv-ico">🎯</span>
+            <h3>3 · Submit deals you find</h3>
+            <p>Spotted a price glitch or a hot deal? Submit it in 15 seconds and become an IndiaOffers partner.</p>
+          </div>
+          <div class="hv-frame">
+            <span class="hv-ico">🎁</span>
+            <h3>4 · Earn gifts &amp; real money</h3>
+            <p>Every approved deal earns points — redeem them for free gifts, shopping vouchers and real cash.</p>
+          </div>
+        </div>
+        <div class="hv-dots"><i></i><i></i><i></i><i></i></div>
       </div>
 
-      <div class="af-checks">
-        <label class="chk"><input type="checkbox" name="whatsapp_optin" <%= form.whatsapp_optin ? 'checked' : '' %>> Send me deal &amp; card alerts on <b>WhatsApp</b></label>
-        <label class="chk"><input type="checkbox" name="is_bulk_buyer" <%= form.is_bulk_buyer ? 'checked' : '' %>> I buy in bulk for a <b>business / shop</b></label>
-      </div>
+      <ul class="rs-perks">
+        <li>💳 <b>Card-sale alerts</b> — we watch your bank's offers so you don't have to</li>
+        <li>⭐ <b>Partner points</b> — submit deals, earn gifts &amp; real money</li>
+        <li>🔒 <b>Your data stays yours</b> — never sold, ever. <a href="/privacy">Promise.</a></li>
+      </ul>
+    </aside>
 
-      <fieldset class="af-fieldset">
-        <legend>Categories you're interested in</legend>
-        <p class="af-hint">Search and add the categories you shop — we'll prioritise these in your alerts.</p>
-        <% const selCats = Array.isArray(form.categories) ? form.categories : (form.categories ? [form.categories] : []); %>
-        <%- include('../partials/msearch', {
-          name: 'categories', placeholder: 'Search categories…', selected: selCats,
-          groups: categoryGroups.map(g => ({ label: g.label, options: g.options.map(o => ({ value: o.slug, label: o.icon + ' ' + o.name })) }))
-        }) %>
-      </fieldset>
+    <!-- Right: the sign-up form -->
+    <div class="reg-form-card">
+      <h2>Create your free account</h2>
+      <p class="rf-sub">Takes 30 seconds — we'll email you a code to confirm it's really you.</p>
+      <% if (error) { %><div class="form-err"><%= error %></div><% } %>
 
-      <fieldset class="af-fieldset">
-        <legend>Your bank cards</legend>
-        <p class="af-hint">Just pick your card's <b>bank</b> — we'll ping you whenever a sale drops on their cards.</p>
-        <% const selBanks = Array.isArray(form.banks) ? form.banks : (form.banks ? [form.banks] : []); %>
-        <% if (banks.length === 0) { %><p class="muted">No cards listed yet.</p><% } else { %>
+      <form method="post" action="/register" class="acc-form">
+        <!-- honeypot: invisible to people, bots fill it -->
+        <div class="hp-field" aria-hidden="true"><label>Company<input name="company" tabindex="-1" autocomplete="off"></label></div>
+
+        <div class="af-grid">
+          <label>Username *<input name="username" required value="<%= form.username || '' %>" placeholder="e.g. rahul_deals" pattern="[a-zA-Z0-9_.]{3,30}"></label>
+          <label>Email *<input type="email" name="email" required value="<%= form.email || '' %>" placeholder="you@example.com"></label>
+          <label>Mobile number<input name="mobile" value="<%= form.mobile || '' %>" placeholder="10-digit mobile" inputmode="tel"></label>
+          <label>Password *<input type="password" name="password" required minlength="6" placeholder="Min 6 characters"></label>
+        </div>
+
+        <div class="af-checks">
+          <label class="chk"><input type="checkbox" name="whatsapp_optin" <%= form.whatsapp_optin ? 'checked' : '' %>> Send me deal &amp; card alerts on <b>WhatsApp</b></label>
+          <label class="chk"><input type="checkbox" name="is_bulk_buyer" <%= form.is_bulk_buyer ? 'checked' : '' %>> I buy in bulk for a <b>business / shop</b></label>
+        </div>
+
+        <fieldset class="af-fieldset">
+          <legend>Categories you're interested in</legend>
+          <p class="af-hint">Search and add the categories you shop — we'll prioritise these in your alerts.</p>
+          <% const selCats = Array.isArray(form.categories) ? form.categories : (form.categories ? [form.categories] : []); %>
           <%- include('../partials/msearch', {
-            name: 'banks', placeholder: 'Search your bank…', selected: selBanks,
-            groups: [{ label: 'Banks', options: banks.map(b => ({ value: b, label: '🏦 ' + b })) }]
+            name: 'categories', placeholder: 'Search categories…', selected: selCats,
+            groups: categoryGroups.map(g => ({ label: g.label, options: g.options.map(o => ({ value: o.slug, label: o.icon + ' ' + o.name })) }))
           }) %>
-        <% } %>
-      </fieldset>
+        </fieldset>
 
-      <button class="btn-primary btn-lg" type="submit">Create account</button>
-      <p class="auth-alt">Already have an account? <a href="/login">Log in</a></p>
-    </form>
+        <fieldset class="af-fieldset">
+          <legend>Your bank cards</legend>
+          <p class="af-hint">Just pick your card's <b>bank</b> — we'll ping you whenever a sale drops on their cards.</p>
+          <% const selBanks = Array.isArray(form.banks) ? form.banks : (form.banks ? [form.banks] : []); %>
+          <% if (banks.length === 0) { %><p class="muted">No cards listed yet.</p><% } else { %>
+            <%- include('../partials/msearch', {
+              name: 'banks', placeholder: 'Search your bank…', selected: selBanks,
+              groups: [{ label: 'Banks', options: banks.map(b => ({ value: b, label: '🏦 ' + b })) }]
+            }) %>
+          <% } %>
+        </fieldset>
+
+        <button class="btn-primary btn-lg" type="submit">Create my free account →</button>
+        <p class="auth-alt">Already have an account? <a href="/login">Log in</a></p>
+      </form>
+    </div>
+
   </div>
 </section>
 

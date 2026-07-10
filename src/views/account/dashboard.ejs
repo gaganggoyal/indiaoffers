@@ -2,37 +2,65 @@
 <%- include('../partials/header') %>
 
 <section class="wrap account-page">
-  <div class="page-head acc-head">
-    <div>
-      <h1>Hi, <%= account.username %> 👋</h1>
-      <p>Manage your alert preferences and see what's new on your cards.</p>
+
+  <!-- Hero band -->
+  <div class="acc-hero">
+    <div class="ah-id">
+      <span class="ah-avatar"><%= account.username.slice(0, 1).toUpperCase() %></span>
+      <div>
+        <h1>Hi, <%= account.username %> 👋</h1>
+        <p>Member since <%= String(account.created_at).slice(0, 10) %> · <span class="ah-verified">✓ email verified</span></p>
+      </div>
     </div>
-    <form method="post" action="/logout"><button class="btn-ghost">Log out</button></form>
+    <div class="ah-actions">
+      <a class="btn-primary" href="/submit-deal">🎯 Submit a deal</a>
+      <form method="post" action="/logout"><button class="btn-ghost ah-logout">Log out</button></form>
+    </div>
   </div>
 
+  <% if (welcome) { %><div class="form-ok">🎉 Email verified — welcome to IndiaOffers! Set your cards &amp; categories below to start getting alerts.</div><% } %>
   <% if (saved) { %><div class="form-ok">✓ Preferences saved.</div><% } %>
 
-  <div class="panel-block" style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px">
-    <div>
-      <span class="points-pill">⭐ Partner points: <%= account.points || 0 %></span>
-      <span class="muted" style="font-size:13px;margin-left:10px">Earn points by submitting deals — redeem for gifts, vouchers &amp; real money.</span>
+  <!-- Stat tiles -->
+  <% const unread = alerts.filter(a => !a.is_read).length; %>
+  <div class="acc-stats">
+    <div class="as-tile">
+      <span class="as-num">⭐ <%= account.points || 0 %></span>
+      <span class="as-lbl">Partner points</span>
+      <span class="as-sub">redeem for gifts, vouchers &amp; real money</span>
     </div>
-    <a class="btn-primary" href="/submit-deal">🎯 Submit a deal</a>
+    <div class="as-tile">
+      <span class="as-num">🔔 <%= unread %></span>
+      <span class="as-lbl">Unread alerts</span>
+      <span class="as-sub"><%= alerts.length %> total in your inbox</span>
+    </div>
+    <div class="as-tile">
+      <span class="as-num">🎯 <%= submissionCount %></span>
+      <span class="as-lbl">Deals submitted</span>
+      <span class="as-sub"><a href="/submit-deal">submit more, earn more →</a></span>
+    </div>
+    <div class="as-tile">
+      <span class="as-num">💳 <%= myBanks.length %></span>
+      <span class="as-lbl">Banks followed</span>
+      <span class="as-sub">we watch their card sales for you</span>
+    </div>
   </div>
 
   <div class="acc-grid">
     <!-- Alerts -->
     <div class="acc-col">
-      <div class="panel-block">
+      <div class="panel-block acc-panel">
         <div class="pb-head">
           <h2>🔔 Your alerts</h2>
-          <% const unread = alerts.filter(a => !a.is_read).length; %>
           <% if (unread) { %>
             <form method="post" action="/account/alerts/read"><button class="lnk">Mark all read</button></form>
           <% } %>
         </div>
         <% if (alerts.length === 0) { %>
-          <p class="muted">No alerts yet. When we put a sale on one of your cards, you'll see it here — add your cards below to start.</p>
+          <div class="acc-empty">
+            <span>📭</span>
+            <p><b>No alerts yet.</b><br>Add your bank cards and favourite categories in preferences — the moment a sale drops on them, it lands here (and in your email).</p>
+          </div>
         <% } else { %>
           <ul class="alert-list">
             <% alerts.forEach(a => { %>
@@ -48,11 +76,20 @@
           </ul>
         <% } %>
       </div>
+
+      <div class="panel-block acc-panel acc-cta">
+        <h2>💰 Earn with IndiaOffers</h2>
+        <p class="muted">Found a hot deal anywhere online? Submit it — approved deals earn points you can turn into free gifts, vouchers and real cash.</p>
+        <div class="acc-cta-row">
+          <a class="btn-primary" href="/submit-deal">Submit a deal →</a>
+          <a class="btn-ghost" href="/become-partner">How the partner programme works</a>
+        </div>
+      </div>
     </div>
 
     <!-- Preferences -->
     <div class="acc-col">
-      <form class="panel-block" method="post" action="/account/preferences">
+      <form class="panel-block acc-panel" method="post" action="/account/preferences">
         <h2>⚙️ Preferences</h2>
         <div class="af-grid two">
           <label class="ro">Username<input value="<%= account.username %>" disabled></label>

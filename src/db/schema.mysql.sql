@@ -197,6 +197,10 @@ CREATE TABLE IF NOT EXISTS users (
   whatsapp_optin  TINYINT(1) DEFAULT 0,
   is_bulk_buyer   TINYINT(1) DEFAULT 0,
   points          INT DEFAULT 0,
+  email_verified  TINYINT(1) DEFAULT 0,
+  otp_code        VARCHAR(10),
+  verify_token    VARCHAR(64),
+  otp_expires     VARCHAR(20),
   is_active       TINYINT(1) DEFAULT 1,
   last_login      DATETIME,
   created_at      DATETIME DEFAULT CURRENT_TIMESTAMP

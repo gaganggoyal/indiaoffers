@@ -23,7 +23,7 @@
       <% if (typeof user !== 'undefined' && user) { %>
         <a href="/account" class="acct <%= path.startsWith('/account') ? 'on' : '' %>">👤 <%= user.username %></a>
       <% } else { %>
-        <a href="/login" class="acct <%= path === '/login' || path === '/register' ? 'on' : '' %>">Login</a>
+        <a href="/register" class="acct <%= path === '/login' || path === '/register' ? 'on' : '' %>">✨ Register</a>
       <% } %>
     </nav>
   </div>

@@ -52,6 +52,12 @@ if (config.db.driver === 'mysql') {
   addColumn('users', 'points', 'points INTEGER DEFAULT 0');
   addColumn('deals', 'hotness', 'hotness INTEGER DEFAULT 0');
   addColumn('guides', 'is_trending', 'is_trending INTEGER DEFAULT 0');
+  // DEFAULT 1 grandfathers users who registered before email verification existed;
+  // new signups explicitly insert 0 and must verify.
+  addColumn('users', 'email_verified', 'email_verified INTEGER DEFAULT 1');
+  addColumn('users', 'otp_code', 'otp_code TEXT');
+  addColumn('users', 'verify_token', 'verify_token TEXT');
+  addColumn('users', 'otp_expires', 'otp_expires TEXT');
 
   const toSqlite = sql => sql
     .replace(/INSERT\s+IGNORE/gi, 'INSERT OR IGNORE')

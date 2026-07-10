@@ -139,6 +139,10 @@ CREATE TABLE IF NOT EXISTS users (
   whatsapp_optin  INTEGER DEFAULT 0,        -- consent to WhatsApp updates
   is_bulk_buyer   INTEGER DEFAULT 0,        -- buys for a business/shop
   points          INTEGER DEFAULT 0,        -- partner rewards earned from approved deal submissions
+  email_verified  INTEGER DEFAULT 0,        -- 1 after the OTP / link check
+  otp_code        TEXT,                     -- current 6-digit verification code
+  verify_token    TEXT,                     -- one-click verification link token
+  otp_expires     TEXT,                     -- epoch ms the code/token dies (string for cross-db)
   is_active       INTEGER DEFAULT 1,
   last_login      TEXT,
   created_at      TEXT DEFAULT (datetime('now'))
