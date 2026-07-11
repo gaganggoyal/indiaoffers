@@ -8,8 +8,9 @@ const db = require('../db');
 const config = require('../config');
 const { savingsStack, activeBankOffers, decorateDeals } = require('../services/savings');
 const { sendMail } = require('../services/mailer');
-const { CATEGORIES, CATEGORY_TREE, CAT_ICONS, categoryName, descendantSlugs } = require('../data/taxonomy');
+const { CATEGORIES, CATEGORY_TREE, CAT_ICONS, categoryName, findNode, descendantSlugs } = require('../data/taxonomy');
 const { COLLECTIONS, collectionBySlug } = require('../data/collections');
+const { CATEGORY_CONTENT } = require('../data/category-content');
 
 async function storesById() {
   const rows = await db.query('SELECT * FROM stores WHERE is_active = 1');
@@ -29,6 +30,15 @@ const breadcrumb = items => ({
     ...(it.path ? { item: abs(it.path) } : {})
   }))
 });
+
+// FAQPage from [{ q, a }] — null-safe so callers can pass content that may lack FAQs.
+const FAQ_LD = faqs => faqs && faqs.length ? {
+  '@context': 'https://schema.org', '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({
+    '@type': 'Question', name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a }
+  }))
+} : null;
 
 // Site-level entities — emitted once, on the homepage.
 const WEBSITE_LD = {
@@ -113,6 +123,12 @@ router.get('/', async (req, res, next) => {
 router.get('/deals', async (req, res, next) => {
   try {
     const { category, store, q } = req.query;
+    // Pure category browses live on clean, indexable hub URLs — send the old
+    // query-param form there permanently so link equity consolidates.
+    if (category && !store && !q && findNode(category)) {
+      const page = parseInt(req.query.page, 10) || 1;
+      return res.redirect(301, `/category/${category}${page > 1 ? `?page=${page}` : ''}`);
+    }
     let where = 'WHERE d.is_active = 1';
     const params = [];
     // Accept a leaf slug or any branch (department / sub-group) and expand it to
@@ -164,7 +180,12 @@ router.get('/deals', async (req, res, next) => {
       title: q ? `Deals matching “${q}” — IndiaOffers.in`
              : category ? `Best ${categoryName(category)} Deals Today — IndiaOffers.in`
              : 'Today\'s Best Deals & Discounts in India — IndiaOffers.in',
-      meta: { description: 'Live deals with real discounts, working coupons and card offers across top Indian stores.' },
+      meta: {
+        description: 'Live deals with real discounts, working coupons and card offers across top Indian stores.',
+        // Search-result and store-filtered variants are thin duplicates of the
+        // main listing — keep them crawlable but out of the index.
+        ...(q || store ? { robots: 'noindex,follow' } : {})
+      },
       deals, storeMap, fallback,
       categoryTree: CATEGORY_TREE, catIcons: CAT_ICONS,
       catName: category ? categoryName(category) : '',
@@ -175,12 +196,80 @@ router.get('/deals', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── Category hubs — /category/mobiles, /category/dept-electronics, … ──────────
+// Clean, indexable landing pages for every taxonomy node, each with unique
+// editorial content (src/data/category-content.js), FAQs and ItemList JSON-LD.
+// These are the pages that compete for "best <category> deals" searches.
+router.get('/category/:slug', async (req, res, next) => {
+  try {
+    const node = findNode(req.params.slug);
+    if (!node) return res.status(404).render('404', { title: 'Category not found', meta: {} });
+    const slug = node.slug;
+    const content = CATEGORY_CONTENT[slug] || null;
+
+    const leaves = descendantSlugs(slug);
+    const inList = leaves.map(() => '?').join(',');
+    const seoLike = leaves.map(() => 'd.seo_categories LIKE ?').join(' OR ');
+    const where = `WHERE d.is_active = 1 AND (d.category IN (${inList}) OR ${seoLike})`;
+    const params = [...leaves, ...leaves.map(s => `%,${s},%`)];
+
+    const perPage = 24;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const [countRows, rows, offers, storeMap] = await Promise.all([
+      db.query(`SELECT COUNT(*) AS n FROM deals d ${where}`, params),
+      db.query(`SELECT d.* FROM deals d ${where} ORDER BY COALESCE(d.hotness, 0) DESC, d.posted_at DESC
+                LIMIT ${perPage} OFFSET ${(page - 1) * perPage}`, params),
+      activeBankOffers(),
+      storesById()
+    ]);
+    const total = countRows[0] ? Number(countRows[0].n) : 0;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    const deals = decorateDeals(rows, offers);
+
+    // Sibling/child hubs for internal linking: a department links its leaves,
+    // a leaf links the other leaves of its department.
+    const dept = CATEGORY_TREE.find(d => d.slug === slug || descendantSlugs(d.slug).includes(slug));
+    const siblingLeaves = dept ? descendantSlugs(dept.slug).filter(s => s !== slug) : [];
+
+    const itemList = deals.length ? {
+      '@context': 'https://schema.org', '@type': 'ItemList',
+      name: `Best ${node.name} Deals`,
+      itemListElement: deals.slice(0, 30).map((d, i) => ({
+        '@type': 'ListItem', position: i + 1, url: abs(`/deal/${d.slug}`), name: d.title
+      }))
+    } : null;
+    const crumb = breadcrumb([
+      { name: 'Home', path: '/' }, { name: 'Deals', path: '/deals' }, { name: node.name }
+    ]);
+
+    res.render('category', {
+      title: `Best ${node.name} Deals & Offers Today (${new Date().getFullYear()}) — IndiaOffers.in`,
+      meta: {
+        description: content
+          ? content.intro.slice(0, 150).replace(/\s+\S*$/, '') + '…'
+          : `Today's best ${node.name.toLowerCase()} deals with real discounts, working coupons and bank card offers — verified by IndiaOffers.`,
+        canonical: `/category/${slug}${page > 1 ? `?page=${page}` : ''}`,
+        jsonld: [itemList, crumb, FAQ_LD(content && content.faqs)].filter(Boolean)
+      },
+      node, content, deals, storeMap,
+      dept, siblingLeaves, catIcons: CAT_ICONS, categoryName,
+      pagination: { page, totalPages, total, perPage }
+    });
+  } catch (err) { next(err); }
+});
+
 // ── Deal detail ───────────────────────────────────────────────────────────────
 router.get('/deal/:slug', async (req, res, next) => {
   try {
-    const rows = await db.query('SELECT * FROM deals WHERE slug = ? AND is_active = 1', [req.params.slug]);
+    // Expired/retired deals stay live as pages (with an "expired" notice and
+    // fresh alternatives) instead of 404ing — the URL keeps its search ranking
+    // and the visitor still gets something useful.
+    const rows = await db.query('SELECT * FROM deals WHERE slug = ?', [req.params.slug]);
     if (rows.length === 0) return res.status(404).render('404', { title: 'Deal not found', meta: {} });
     const deal = rows[0];
+    const today = new Date().toISOString().slice(0, 10);
+    const expired = !deal.is_active
+      || (deal.expiry_date && String(deal.expiry_date).slice(0, 10) < today);
 
     const [stores, offers, related, coupons] = await Promise.all([
       db.query('SELECT * FROM stores WHERE id = ?', [deal.store_id]),
@@ -192,25 +281,27 @@ router.get('/deal/:slug', async (req, res, next) => {
     const stack = savingsStack(deal, offers);
     const howTo = parseJson(deal.how_to);
 
-    // JSON-LD: Product + Offer (rich results) and a breadcrumb trail.
+    // JSON-LD: Product + Offer (rich results) and a breadcrumb trail. Google
+    // rejects Offers without a price and relative image URLs, so both are
+    // guarded/absolutised here.
     const productLd = {
       '@context': 'https://schema.org', '@type': 'Product',
       name: deal.title,
-      ...(deal.image_url ? { image: [deal.image_url] } : {}),
+      ...(deal.image_url ? { image: [/^https?:\/\//.test(deal.image_url) ? deal.image_url : abs(deal.image_url)] } : {}),
       ...(deal.description ? { description: deal.description } : {}),
       sku: deal.id,
-      offers: {
+      ...(deal.price != null ? { offers: {
         '@type': 'Offer', priceCurrency: 'INR', price: deal.price,
-        availability: 'https://schema.org/InStock',
+        availability: expired ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
         url: abs(`/deal/${deal.slug}`),
         ...(deal.expiry_date ? { priceValidUntil: String(deal.expiry_date).slice(0, 10) } : {}),
         seller: { '@type': 'Organization', name: store ? store.name : '' }
-      }
+      } } : {})
     };
     const jsonld = [productLd, breadcrumb([
       { name: 'Home', path: '/' },
       { name: 'Deals', path: '/deals' },
-      deal.category ? { name: categoryName(deal.category), path: `/deals?category=${deal.category}` } : null,
+      deal.category ? { name: categoryName(deal.category), path: `/category/${deal.category}` } : null,
       { name: deal.title }
     ])];
 
@@ -221,7 +312,7 @@ router.get('/deal/:slug', async (req, res, next) => {
         image: deal.image_url,
         jsonld
       },
-      deal, store, stack, howTo,
+      deal, store, stack, howTo, expired, categoryName,
       related: decorateDeals(related, offers),
       coupons,
       storeMap: { [deal.store_id]: store }
@@ -401,6 +492,11 @@ router.get('/terms', (req, res) => res.render('terms', {
   meta: { description: 'The friendly rulebook of IndiaOffers.in: we discover deals, stores sell products — prices change fast, so always verify at checkout. Partner programme and affiliate disclosure included.' }
 }));
 
+router.get('/how-we-verify', (req, res) => res.render('how-we-verify', {
+  title: 'How We Verify Deals — Our Testing & Editorial Policy — IndiaOffers.in',
+  meta: { description: 'Every deal on IndiaOffers.in is checked by a human before it goes live: real price vs MRP, working coupon codes, stackable card offers — with a visible last-verified timestamp and automatic retirement of expired deals.' }
+}));
+
 router.get('/become-partner', (req, res) => res.render('become-partner', {
   title: 'Become a Partner — Submit Deals, Earn Gifts & Real Money — IndiaOffers.in',
   meta: { description: 'Submit the deals you find on IndiaOffers.in and earn points redeemable for free gifts, shopping vouchers and real money. How to submit a deal in 15 seconds.' }
@@ -491,14 +587,6 @@ router.get('/search', (req, res) => {
 // ── SEO landing pages — loot deals, ₹1 deals, coupons, … ───────────────────────
 // Keyword-targeted collection pages, driven by src/data/collections.js. Aliases
 // 301-redirect to the canonical slug so link equity never splits.
-const FAQ_LD = faqs => faqs && faqs.length ? {
-  '@context': 'https://schema.org', '@type': 'FAQPage',
-  mainEntity: faqs.map(f => ({
-    '@type': 'Question', name: f.q,
-    acceptedAnswer: { '@type': 'Answer', text: f.a }
-  }))
-} : null;
-
 function renderCollection(col) {
   return async (req, res, next) => {
     try {
@@ -548,27 +636,35 @@ COLLECTIONS.forEach(col => {
 
 // ── SEO plumbing ──────────────────────────────────────────────────────────────
 router.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /go/\nDisallow: /account\nDisallow: /login\nDisallow: /register\nDisallow: /submit-deal\nDisallow: /api/\nSitemap: ${config.siteUrl}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /go/\nDisallow: /account\nDisallow: /login\nDisallow: /register\nDisallow: /submit-deal\nDisallow: /search\nDisallow: /api/\nSitemap: ${config.siteUrl}/sitemap.xml\n`);
 });
 
 router.get('/sitemap.xml', async (req, res, next) => {
   try {
     const [deals, stores, cards, guides] = await Promise.all([
-      db.query('SELECT slug, updated_at FROM deals WHERE is_active = 1'),
+      db.query('SELECT slug, updated_at, verified_at FROM deals WHERE is_active = 1'),
       db.query('SELECT slug, created_at FROM stores WHERE is_active = 1'),
       db.query('SELECT slug FROM bank_cards WHERE is_active = 1'),
       db.query('SELECT slug, updated_at FROM guides WHERE is_active = 1')
     ]);
+    // Category hubs: departments and leaves (sub-groups are navigation-only).
+    const catUrls = [];
+    for (const dept of CATEGORY_TREE) {
+      catUrls.push({ loc: `/category/${dept.slug}`, pri: '0.9' });
+      for (const grp of dept.children) for (const leaf of grp.children)
+        catUrls.push({ loc: `/category/${leaf.slug}`, pri: '0.8' });
+    }
     const urls = [
       { loc: '/', pri: '1.0' }, { loc: '/deals', pri: '0.9' },
       { loc: '/bank-offers', pri: '0.9' }, { loc: '/cards', pri: '0.8' },
       { loc: '/guides', pri: '0.8' }, { loc: '/stores', pri: '0.7' },
       { loc: '/about', pri: '0.5' }, { loc: '/careers', pri: '0.4' },
       { loc: '/contact', pri: '0.5' }, { loc: '/help', pri: '0.5' },
-      { loc: '/become-partner', pri: '0.6' },
+      { loc: '/become-partner', pri: '0.6' }, { loc: '/how-we-verify', pri: '0.5' },
       { loc: '/privacy', pri: '0.3' }, { loc: '/terms', pri: '0.3' },
       ...COLLECTIONS.map(c => ({ loc: `/${c.slug}`, pri: '0.9' })),
-      ...deals.map(d => ({ loc: `/deal/${d.slug}`, pri: '0.8', mod: d.updated_at })),
+      ...catUrls,
+      ...deals.map(d => ({ loc: `/deal/${d.slug}`, pri: '0.8', mod: d.verified_at || d.updated_at })),
       ...cards.map(c => ({ loc: `/card/${c.slug}`, pri: '0.7' })),
       ...guides.map(g => ({ loc: `/guide/${g.slug}`, pri: '0.7', mod: g.updated_at })),
       ...stores.map(s => ({ loc: `/store/${s.slug}`, pri: '0.6', mod: s.created_at }))

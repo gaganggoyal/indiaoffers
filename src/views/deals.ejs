@@ -11,7 +11,7 @@
   <div class="filters">
     <a class="f <%= !active.category ? 'on' : '' %>" href="/deals">All</a>
     <% categoryTree.forEach(dept => { %>
-      <a class="f <%= activeDept === dept.slug ? 'on' : '' %>" href="/deals?category=<%= dept.slug %>"><%= dept.icon %> <%= dept.name %></a>
+      <a class="f <%= activeDept === dept.slug ? 'on' : '' %>" href="/category/<%= dept.slug %>"><%= dept.icon %> <%= dept.name %></a>
     <% }) %>
   </div>
 

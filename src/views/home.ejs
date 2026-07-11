@@ -81,7 +81,7 @@
   <div class="sec-head"><h2>🧭 Shop by Category</h2><a href="/deals">All deals →</a></div>
   <div class="cat-grid">
     <% categoryTree.forEach(dept => { %>
-      <a class="cat-tile" href="/deals?category=<%= dept.slug %>">
+      <a class="cat-tile" href="/category/<%= dept.slug %>">
         <span class="cat-ico"><%= dept.icon %></span>
         <span class="cat-name"><%= dept.name %></span>
       </a>

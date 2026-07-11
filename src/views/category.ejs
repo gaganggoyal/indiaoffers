@@ -1,0 +1,75 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a> <span>›</span> <a href="/deals">Deals</a> <span>›</span> <b><%= node.name %></b>
+  </nav>
+
+  <div class="page-head">
+    <h1><%= node.icon %> Best <%= node.name %> Deals &amp; Offers Today</h1>
+    <% if (content) { %>
+      <p class="lead"><%= content.intro.split(/\n\n/)[0] %></p>
+    <% } else { %>
+      <p class="lead">Today's best <%= node.name.toLowerCase() %> deals with real discounts, working coupons and bank card offers — every one checked by our team before it goes live.</p>
+    <% } %>
+  </div>
+
+  <!-- Internal linking: the other categories of this department -->
+  <% if (siblingLeaves.length) { %>
+    <div class="zone-chips">
+      <% if (dept && dept.slug !== node.slug) { %>
+        <a class="zc" href="/category/<%= dept.slug %>"><%= dept.icon %> All <%= dept.name %></a>
+      <% } %>
+      <% siblingLeaves.forEach(s => { %>
+        <a class="zc" href="/category/<%= s %>"><%= catIcons[s] || '' %> <%= categoryName(s) %></a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (!deals.length) { %>
+    <div class="empty">No live <%= node.name.toLowerCase() %> deals at this moment — new ones drop through the day. Meanwhile, see <a href="/deals">all deals</a>.</div>
+  <% } else { %>
+    <div class="grid">
+      <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+    </div>
+
+    <% if (pagination.totalPages > 1) { const cur = pagination.page, last = pagination.totalPages;
+         const pageUrl = n => `/category/${node.slug}` + (n > 1 ? `?page=${n}` : ''); %>
+      <nav class="pager" aria-label="Deal pages">
+        <% if (cur > 1) { %><a class="pg" href="<%= pageUrl(cur - 1) %>" rel="prev">← Prev</a><% } %>
+        <% for (let n = 1; n <= last; n++) {
+             if (n === 1 || n === last || (n >= cur - 1 && n <= cur + 1)) { %>
+          <a class="pg <%= n === cur ? 'on' : '' %>" href="<%= pageUrl(n) %>"><%= n %></a>
+        <%   } else if (n === cur - 2 || n === cur + 2) { %>
+          <span class="pg-gap">…</span>
+        <%   } } %>
+        <% if (cur < last) { %><a class="pg" href="<%= pageUrl(cur + 1) %>" rel="next">Next →</a><% } %>
+      </nav>
+    <% } %>
+  <% } %>
+
+  <!-- Savings guide — the editorial content that makes this a hub page, not a bare listing -->
+  <% if (content && content.intro.split(/\n\n/).length > 1) { %>
+    <div class="panel" style="margin-top:30px">
+      <h2>💡 How to save on <%= node.name.toLowerCase() %> in India</h2>
+      <div class="deal-desc"><%- richText(content.intro) %></div>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:12px">Every deal above is checked by our team before publishing — see <a href="/how-we-verify">how we verify deals</a>.</p>
+    </div>
+  <% } %>
+
+  <!-- FAQ — also emitted as FAQPage structured data in <head> -->
+  <% if (content && content.faqs && content.faqs.length) { %>
+    <section class="faq">
+      <h2>Frequently asked questions</h2>
+      <% content.faqs.forEach(f => { %>
+        <details class="faq-item">
+          <summary><%= f.q %></summary>
+          <p><%= f.a %></p>
+        </details>
+      <% }) %>
+    </section>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>

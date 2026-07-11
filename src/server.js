@@ -12,6 +12,16 @@ app.listen(config.port, () => {
   │  env: ${(process.env.NODE_ENV || 'development').padEnd(12)} db: ${db.driver.padEnd(10)}   │
   └─────────────────────────────────────────┘`);
 
+  // Expired-deal sweep: deals past their expiry date drop out of listings and
+  // the sitemap automatically (their pages stay live with an "expired" notice
+  // and fresh alternatives — see the /deal/:slug route). Runs at boot, then daily.
+  const sweepExpired = () =>
+    db.query(`UPDATE deals SET is_active = 0 WHERE is_active = 1 AND expiry_date IS NOT NULL AND expiry_date != '' AND expiry_date < ?`, [db.today()])
+      .then(r => { if (r && r.affectedRows) console.log(`[deals] expired sweep: ${r.affectedRows} deal(s) retired`); })
+      .catch(e => console.error('[deals] expired sweep failed:', e.message));
+  setTimeout(sweepExpired, 5000);
+  setInterval(sweepExpired, 24 * 60 * 60 * 1000).unref();
+
   // Optional background alert delivery. Off by default; enable with
   // ALERTS_AUTO_SEND=1 (interval via ALERTS_SEND_INTERVAL_MIN, default 5 min).
   if (config.alerts.autoSend) {

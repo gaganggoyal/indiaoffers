@@ -315,24 +315,24 @@ router.post('/deals/save', async (req, res, next) => {
       await db.query(`
         UPDATE deals SET slug=COALESCE(?, slug), store_id=?, title=?, description=?, category=?, image_url=?, mrp=?, price=?,
           true_price=?, savings_note=?, savings_rows=?, coupon_code=?, deal_url=?, how_to=?, badge=?, cashback_text=?, video_url=?,
-          is_trending=?, hotness=?, is_active=?, expiry_date=?, updated_at=?
+          is_trending=?, hotness=?, is_active=?, expiry_date=?, verified_at=?, updated_at=?
         WHERE id=?
       `, [slug, b.store_id, b.title, b.description || '', b.category || '', b.image_url || null,
           numOrNull(b.mrp), numOrNull(b.price), numOrNull(b.true_price), (b.savings_note || '').trim() || null, savingsRows,
           b.coupon_code || null, b.deal_url || null, howTo,
           b.badge || null, b.cashback_text || null, b.video_url || null, boolInt(b.is_trending), hotness, boolInt(b.is_active),
-          b.expiry_date || null, nowSql(), b.id]);
+          b.expiry_date || null, nowSql(), nowSql(), b.id]);
     } else {
       const slug = await ensureUniqueSlug('deals', wantSlug || b.title);
       await db.query(`
         INSERT INTO deals (id, slug, store_id, title, description, category, image_url, mrp, price,
-          true_price, savings_note, savings_rows, coupon_code, deal_url, how_to, badge, cashback_text, video_url, is_trending, hotness, is_active, expiry_date, posted_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+          true_price, savings_note, savings_rows, coupon_code, deal_url, how_to, badge, cashback_text, video_url, is_trending, hotness, is_active, expiry_date, verified_at, posted_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `, [uid('dl'), slug, b.store_id, b.title,
           b.description || '', b.category || '', b.image_url || null, numOrNull(b.mrp), numOrNull(b.price),
           numOrNull(b.true_price), (b.savings_note || '').trim() || null, savingsRows,
           b.coupon_code || null, b.deal_url || null, howTo, b.badge || null, b.cashback_text || null, b.video_url || null,
-          boolInt(b.is_trending), hotness, boolInt(b.is_active), b.expiry_date || null]);
+          boolInt(b.is_trending), hotness, boolInt(b.is_active), b.expiry_date || null, nowSql()]);
     }
     res.redirect('/admin/deals');
   } catch (err) { next(err); }

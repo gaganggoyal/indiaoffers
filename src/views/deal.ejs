@@ -2,7 +2,13 @@
 <%- include('partials/header') %>
 
 <section class="wrap">
-  <nav class="crumbs"><a href="/">Home</a> / <a href="/deals">Deals</a> / <span><%= deal.title %></span></nav>
+  <nav class="crumbs"><a href="/">Home</a> / <a href="/deals">Deals</a> / <% if (deal.category) { %><a href="/category/<%= deal.category %>"><%= categoryName ? categoryName(deal.category) : deal.category %></a> / <% } %><span><%= deal.title %></span></nav>
+
+  <% if (expired) { %>
+    <div class="deal-expired">
+      ⌛ <b>This deal has expired.</b> Prices move fast — the fresh <%= store ? store.name : '' %> deals below are live right now<% if (deal.category) { %>, or browse today's <a href="/category/<%= deal.category %>">best <%= categoryName ? categoryName(deal.category).toLowerCase() : '' %> deals</a><% } %>.
+    </div>
+  <% } %>
 
   <div class="dd">
     <div class="dd-media">
@@ -35,11 +41,18 @@
            rather than in a separate box. -->
       <div class="dd-action">
         <div class="dd-grab">
-          <a class="btn-go" href="/go/d/<%= deal.id %>" target="_blank" rel="noopener nofollow">Grab this deal at <%= store.name %> →</a>
+          <% if (expired) { %>
+            <a class="btn-go btn-go-expired" href="/store/<%= store.slug %>">Deal expired — see live <%= store.name %> deals →</a>
+          <% } else { %>
+            <a class="btn-go" href="/go/d/<%= deal.id %>" target="_blank" rel="noopener nofollow">Grab this deal at <%= store.name %> →</a>
+          <% } %>
           <div class="dd-meta">
-            ⏰ Expires <%= deal.expiry_date ? String(deal.expiry_date).slice(0,10) : 'soon' %>
-            · 👆 <%= (deal.clicks || 0).toLocaleString('en-IN') %> clicks
+            <% if (!expired) { %>⏰ Expires <%= deal.expiry_date ? String(deal.expiry_date).slice(0,10) : 'soon' %>
+            · <% } %>👆 <%= (deal.clicks || 0).toLocaleString('en-IN') %> clicks
             <% if (deal.cashback_text) { %> · 💰 <%= deal.cashback_text %><% } %>
+          </div>
+          <div class="dd-trust">
+            <% if (deal.verified_at) { %>✅ Last verified <%= String(deal.verified_at).slice(0,10) %> · <% } %><a href="/how-we-verify">How we verify deals</a> · We may earn a commission on purchases — it never affects our picks.
           </div>
         </div>
 

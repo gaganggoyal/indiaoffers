@@ -2,6 +2,8 @@
   // expects: d (decorated deal with .stack), storeMap
   const st = storeMap[d.store_id] || { name: '', color: '#64748b' };
   const stack = d.stack;
+  // "Verified" chip only while the human check is fresh (≤ 7 days old)
+  const vFresh = d.verified_at && (Date.now() - new Date(String(d.verified_at).replace(' ', 'T')).getTime()) < 7 * 864e5;
 %>
 <a class="card" href="/deal/<%= d.slug %>">
   <div class="card-img" style="background-image:url('<%= d.image_url || '' %>')">
@@ -9,7 +11,7 @@
     <% if (d.badge) { %><span class="chip chip-badge"><%= d.badge %></span><% } %>
   </div>
   <div class="card-body">
-    <div class="card-store"><i style="background:<%= st.color %>"></i><%= st.name %></div>
+    <div class="card-store"><i style="background:<%= st.color %>"></i><%= st.name %><% if (vFresh) { %><span class="card-verified">✅ Verified</span><% } %></div>
     <h3 class="card-title"><%= d.title %></h3>
     <% if (stack.price != null) { %>
       <div class="card-prices">

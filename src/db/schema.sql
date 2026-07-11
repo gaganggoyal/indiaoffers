@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS deals (
   is_active       INTEGER DEFAULT 1,
   clicks          INTEGER DEFAULT 0,
   expiry_date     TEXT,
+  verified_at     TEXT,                      -- stamped on every admin save = "last human-checked"
   posted_at       TEXT DEFAULT (datetime('now')),
   updated_at      TEXT DEFAULT (datetime('now'))
 );
