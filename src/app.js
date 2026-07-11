@@ -43,6 +43,7 @@ function ver(u) {
 app.use((req, res, next) => {
   res.locals.siteName = config.siteName;
   res.locals.siteUrl = config.siteUrl;
+  res.locals.gaId = config.gaMeasurementId;
   res.locals.path = req.path;
   res.locals.fmt = n => n == null ? '' : '₹' + Number(n).toLocaleString('en-IN');
   res.locals.ver = ver;

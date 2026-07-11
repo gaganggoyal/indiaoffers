@@ -9,6 +9,10 @@ module.exports = {
   siteName: 'IndiaOffers.in',
   jwtSecret: process.env.JWT_SECRET || 'dev_only_change_in_production',
 
+  // Google Analytics 4 measurement id. Rendered on every page via partials/head.ejs;
+  // set GA_MEASUREMENT_ID='' locally to keep dev traffic out of Analytics.
+  gaMeasurementId: process.env.GA_MEASUREMENT_ID ?? 'G-G4CS9P7MP7',
+
   db: {
     driver: (process.env.DB_DRIVER || 'sqlite').toLowerCase(),
     host: process.env.DB_HOST || 'localhost',
