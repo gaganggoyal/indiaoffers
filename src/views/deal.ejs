@@ -16,7 +16,18 @@
     </div>
 
     <div class="dd-main">
-      <a class="dd-store" href="/store/<%= store.slug %>"><i style="background:<%= store.color %>"></i><%= store.name %></a>
+      <%# Store identity: uploaded logo → site favicon → colour dot fallback %>
+      <% const storeSite = store.website_url || ''; const storeDomain = (storeSite.match(/^https?:\/\/([^\/]+)/) || [])[1]; %>
+      <a class="dd-store" href="/store/<%= store.slug %>">
+        <% if (store.logo_url) { %>
+          <img class="dd-store-logo" src="<%= ver(store.logo_url) %>" alt="" width="20" height="20">
+        <% } else if (storeDomain) { %>
+          <img class="dd-store-logo" src="https://www.google.com/s2/favicons?domain=<%= storeDomain %>&sz=64" alt="" width="20" height="20" loading="lazy">
+        <% } else { %>
+          <i style="background:<%= store.color %>"></i>
+        <% } %>
+        <%= store.name %>
+      </a>
       <h1><%= deal.title %></h1>
 
       <% if (stack.price != null) { %>
@@ -52,7 +63,7 @@
             <% if (deal.cashback_text) { %> · 💰 <%= deal.cashback_text %><% } %>
           </div>
           <div class="dd-trust">
-            <% if (deal.verified_at) { %>✅ Last verified <%= String(deal.verified_at).slice(0,10) %> · <% } %><a href="/how-we-verify">How we verify deals</a> · We may earn a commission on purchases — it never affects our picks.
+            <% if (deal.verified_at) { %>✅ Last verified <%= String(deal.verified_at).slice(0,10) %> · <% } %><a href="/how-we-verify">How we verify deals</a>
           </div>
         </div>
 
