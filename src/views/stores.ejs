@@ -7,11 +7,19 @@
     <p>Deals, working coupons and this week's card offers — per store.</p>
   </div>
 
+  <div class="store-search">
+    <input type="search" id="store-filter" placeholder="🔍 Search stores — Amazon, Myntra, Ajio…" autocomplete="off" aria-label="Search stores">
+  </div>
+
   <div class="store-grid">
     <% stores.forEach(s => { %>
       <a class="store-card" href="/store/<%= s.slug %>">
+        <%# Store identity: uploaded logo → site favicon → colour tile %>
+        <% const sDomain = ((s.website_url || '').match(/^https?:\/\/([^\/]+)/) || [])[1]; %>
         <% if (s.logo_url) { %>
           <span class="sc-logo has-logo"><img src="<%= ver(s.logo_url) %>" alt="<%= s.name %> logo" loading="lazy"></span>
+        <% } else if (sDomain) { %>
+          <span class="sc-logo has-logo"><img src="https://www.google.com/s2/favicons?domain=<%= sDomain %>&sz=128" alt="<%= s.name %> logo" loading="lazy"></span>
         <% } else { %>
           <span class="sc-logo" style="background:<%= s.color %>"><%= s.name.charAt(0) %></span>
         <% } %>
@@ -21,6 +29,7 @@
       </a>
     <% }) %>
   </div>
+  <div class="empty" id="store-filter-empty" hidden>No stores match — try a shorter name or <a href="/search">search the whole site</a>.</div>
 </section>
 
 <%- include('partials/footer') %>

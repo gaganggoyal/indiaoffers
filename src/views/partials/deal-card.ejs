@@ -1,6 +1,8 @@
 <%
   // expects: d (decorated deal with .stack), storeMap
   const st = storeMap[d.store_id] || { name: '', color: '#64748b' };
+  // Store identity: uploaded logo → site favicon → colour dot (same as deal page)
+  const stDomain = ((st.website_url || '').match(/^https?:\/\/([^\/]+)/) || [])[1];
   const stack = d.stack;
   // "Verified" chip only while the human check is fresh (≤ 7 days old)
   const vFresh = d.verified_at && (Date.now() - new Date(String(d.verified_at).replace(' ', 'T')).getTime()) < 7 * 864e5;
@@ -11,7 +13,16 @@
     <% if (d.badge) { %><span class="chip chip-badge"><%= d.badge %></span><% } %>
   </div>
   <div class="card-body">
-    <div class="card-store"><i style="background:<%= st.color %>"></i><%= st.name %><% if (vFresh) { %><span class="card-verified">✅ Verified</span><% } %></div>
+    <div class="card-store">
+      <% if (st.logo_url) { %>
+        <img class="card-store-logo" src="<%= ver(st.logo_url) %>" alt="" width="16" height="16" loading="lazy">
+      <% } else if (stDomain) { %>
+        <img class="card-store-logo" src="https://www.google.com/s2/favicons?domain=<%= stDomain %>&sz=64" alt="" width="16" height="16" loading="lazy">
+      <% } else { %>
+        <i style="background:<%= st.color %>"></i>
+      <% } %>
+      <%= st.name %><% if (vFresh) { %><span class="card-verified">✅ Verified</span><% } %>
+    </div>
     <h3 class="card-title"><%= d.title %></h3>
     <% if (stack.price != null) { %>
       <div class="card-prices">

@@ -142,7 +142,13 @@ router.get('/deals', async (req, res, next) => {
       params.push(...catLeaves, ...catLeaves.map(s => `%,${s},%`));
     }
     if (store) { where += ' AND d.store_id = ?'; params.push(store); }
-    if (q) { where += ' AND (d.title LIKE ? OR d.description LIKE ?)'; params.push(`%${q}%`, `%${q}%`); }
+    if (q) {
+      // Tokenized: every word must appear in the title or description.
+      q.trim().split(/\s+/).slice(0, 6).forEach(t => {
+        where += ' AND (d.title LIKE ? OR d.description LIKE ?)';
+        params.push(`%${t}%`, `%${t}%`);
+      });
+    }
     const order = 'd.posted_at DESC';
 
     // Pagination — keeps each page light so it loads fast.
@@ -578,10 +584,83 @@ router.post('/contact', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// ── Search (nav box submits here) ─────────────────────────────────────────────
-router.get('/search', (req, res) => {
-  const q = (req.query.q || '').trim();
-  res.redirect(q ? `/deals?q=${encodeURIComponent(q)}` : '/deals');
+// ── Search (nav box submits here) — one box for the whole site ────────────────
+// Matches deals, stores, coupons, bank cards, guides, plus category hubs and
+// collection pages. Multi-word queries are tokenized: every word must match.
+router.get('/search', async (req, res, next) => {
+  try {
+    const q = (req.query.q || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    const tokens = q ? q.split(' ').slice(0, 6) : [];
+    const meta = {
+      description: 'Search IndiaOffers — deals, stores, coupons, card offers, bank cards and buying guides.',
+      robots: 'noindex,follow'
+    };
+
+    if (!tokens.length) {
+      const topStores = await db.query(`
+        SELECT s.*, (SELECT COUNT(*) FROM deals d WHERE d.store_id = s.id AND d.is_active = 1) AS deal_count
+        FROM stores s WHERE s.is_active = 1 ORDER BY deal_count DESC, s.name ASC LIMIT 12`);
+      return res.render('search', {
+        title: 'Search — IndiaOffers.in', meta,
+        q: '', searchQ: '', results: null, total: 0, topStores, catIcons: CAT_ICONS
+      });
+    }
+
+    const and = expr => tokens.map(() => expr).join(' AND ');
+    const lp = n => tokens.flatMap(t => Array(n).fill(`%${t}%`));
+
+    const [storeRows, dealRows, couponRows, cardRows, guideRows, offers, storeMap] = await Promise.all([
+      db.query(`
+        SELECT s.*, (SELECT COUNT(*) FROM deals d WHERE d.store_id = s.id AND d.is_active = 1) AS deal_count
+        FROM stores s WHERE s.is_active = 1 AND ${and('(s.name LIKE ? OR s.slug LIKE ?)')}
+        ORDER BY deal_count DESC, s.name ASC LIMIT 12`, lp(2)),
+      db.query(`
+        SELECT d.* FROM deals d WHERE d.is_active = 1 AND ${and('(d.title LIKE ? OR d.description LIKE ?)')}
+        ORDER BY CASE WHEN ${and('d.title LIKE ?')} THEN 0 ELSE 1 END, d.posted_at DESC LIMIT 24`,
+        [...lp(2), ...lp(1)]),
+      db.query(`
+        SELECT c.*, s.name AS store_name, s.slug AS store_slug
+        FROM coupons c JOIN stores s ON s.id = c.store_id
+        WHERE c.is_active = 1 AND ${and('(c.title LIKE ? OR c.code LIKE ? OR s.name LIKE ?)')}
+        ORDER BY c.is_verified DESC, c.created_at DESC LIMIT 12`, lp(3)),
+      db.query(`
+        SELECT * FROM bank_cards WHERE is_active = 1 AND ${and('(name LIKE ? OR bank LIKE ?)')}
+        ORDER BY is_featured DESC, sort_order ASC LIMIT 8`, lp(2)),
+      db.query(`
+        SELECT * FROM guides WHERE is_active = 1 AND ${and('(title LIKE ? OR subtitle LIKE ?)')}
+        ORDER BY updated_at DESC LIMIT 8`, lp(2)),
+      activeBankOffers(),
+      storesById()
+    ]);
+
+    // Category hubs, collection pages and live card offers are small in-memory
+    // lists — match them without extra queries.
+    const tl = tokens.map(t => t.toLowerCase());
+    const matchName = s => { const n = String(s).toLowerCase(); return tl.every(t => n.includes(t)); };
+    const catHits = [];
+    for (const dept of CATEGORY_TREE) {
+      if (matchName(dept.name)) catHits.push(dept);
+      for (const grp of dept.children) {
+        if (matchName(grp.name)) catHits.push(grp);
+        for (const leaf of grp.children) if (matchName(leaf.name)) catHits.push(leaf);
+      }
+    }
+    const colHits = COLLECTIONS.filter(c => matchName(`${c.nav} ${c.h1 || ''}`));
+    const offerHits = offers.filter(o => matchName(`${o.title || ''} ${o.bank || ''}`)).slice(0, 8);
+
+    const deals = decorateDeals(dealRows, offers);
+    const results = {
+      stores: storeRows, deals, coupons: couponRows, cards: cardRows, guides: guideRows,
+      cats: catHits.slice(0, 10), cols: colHits.slice(0, 6), offers: offerHits
+    };
+    const total = storeRows.length + deals.length + couponRows.length + cardRows.length
+      + guideRows.length + results.cats.length + results.cols.length + offerHits.length;
+
+    res.render('search', {
+      title: `“${q}” — Search — IndiaOffers.in`, meta,
+      q, searchQ: q, results, total, storeMap, topStores: [], catIcons: CAT_ICONS
+    });
+  } catch (err) { next(err); }
 });
 
 // ── SEO landing pages — loot deals, ₹1 deals, coupons, … ───────────────────────

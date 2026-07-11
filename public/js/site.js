@@ -57,6 +57,99 @@ document.addEventListener('click', e => {
   });
 });
 
+// ── Header search: live suggestions (stores, deals, cards, guides) ────────────
+(function () {
+  const form = document.querySelector('.header .search');
+  if (!form) return;
+  const input = form.querySelector('input[name=q]');
+  const box = document.createElement('div');
+  box.className = 'sg-box';
+  box.hidden = true;
+  form.appendChild(box);
+
+  const fmt = n => '₹' + Number(n).toLocaleString('en-IN');
+  let ctrl = null, timer = null, items = [], sel = -1;
+
+  const close = () => { box.hidden = true; sel = -1; };
+  const esc = s => { const d = document.createElement('span'); d.textContent = s; return d.innerHTML; };
+
+  function render(r, q) {
+    const rows = [];
+    r.stores.forEach(s => rows.push({
+      url: '/store/' + s.slug,
+      html: `${s.icon ? `<img src="${esc(s.icon)}" alt="" loading="lazy">` : `<i style="background:${esc(s.color || '#64748b')}"></i>`}<span><b>${esc(s.name)}</b><small>Store — deals &amp; coupons</small></span>`
+    }));
+    r.deals.forEach(d => rows.push({
+      url: '/deal/' + d.slug,
+      html: `<em>🛍️</em><span><b>${esc(d.title)}</b><small>${d.price != null ? 'Deal — ' + fmt(d.price) : 'Deal'}</small></span>`
+    }));
+    r.cards.forEach(c => rows.push({
+      url: '/card/' + c.slug,
+      html: `<em>💳</em><span><b>${esc(c.name)}</b><small>${esc(c.bank)} — bank card</small></span>`
+    }));
+    r.guides.forEach(g => rows.push({
+      url: '/guide/' + g.slug,
+      html: `<em>📖</em><span><b>${esc(g.title)}</b><small>Buying guide</small></span>`
+    }));
+    rows.push({ url: '/search?q=' + encodeURIComponent(q), html: `<em>🔍</em><span><b>Search everything for “${esc(q)}”</b></span>`, all: true });
+
+    items = rows;
+    sel = -1;
+    box.innerHTML = rows.map((row, i) =>
+      `<a class="sg-item${row.all ? ' sg-all' : ''}" data-i="${i}" href="${row.url}">${row.html}</a>`).join('');
+    box.hidden = false;
+  }
+
+  function fetchSuggest() {
+    const q = input.value.trim();
+    if (q.length < 2) { close(); return; }
+    if (ctrl) ctrl.abort();
+    ctrl = new AbortController();
+    fetch('/api/suggest?q=' + encodeURIComponent(q), { signal: ctrl.signal })
+      .then(r => r.json())
+      .then(r => render(r, q))
+      .catch(() => {});
+  }
+
+  input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(fetchSuggest, 180); });
+  input.addEventListener('focus', () => { if (input.value.trim().length >= 2) fetchSuggest(); });
+  input.addEventListener('keydown', e => {
+    if (box.hidden) return;
+    const links = [...box.querySelectorAll('.sg-item')];
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      sel = e.key === 'ArrowDown' ? Math.min(sel + 1, links.length - 1) : Math.max(sel - 1, -1);
+      links.forEach((l, i) => l.classList.toggle('on', i === sel));
+      if (sel >= 0) links[sel].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && sel >= 0) {
+      e.preventDefault();
+      location.href = links[sel].href;
+    } else if (e.key === 'Escape') {
+      close();
+    }
+  });
+  document.addEventListener('click', e => { if (!form.contains(e.target)) close(); });
+})();
+
+// ── /stores: instant store filter (all stores are already on the page) ────────
+(function () {
+  const input = document.getElementById('store-filter');
+  if (!input) return;
+  const cards = [...document.querySelectorAll('.store-grid .store-card')];
+  const empty = document.getElementById('store-filter-empty');
+  const names = cards.map(c => (c.querySelector('b') || c).textContent.trim().toLowerCase());
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    let shown = 0;
+    cards.forEach((c, i) => {
+      const hit = !q || names[i].includes(q);
+      c.style.display = hit ? '' : 'none';
+      if (hit) shown++;
+    });
+    if (empty) empty.hidden = shown > 0;
+  });
+})();
+
 // ── Searchable grouped multi-select (categories / bank cards) ─────────────────
 document.querySelectorAll('.msearch').forEach(root => {
   root.classList.add('js');                         // signals CSS to hide the raw list

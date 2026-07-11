@@ -9,7 +9,7 @@
       <span></span><span></span><span></span>
     </button>
     <form class="search" action="/search" method="get" role="search">
-      <input type="search" name="q" placeholder="Search deals, products, stores…" autocomplete="off">
+      <input type="search" name="q" value="<%= typeof searchQ !== 'undefined' && searchQ ? searchQ : (typeof active !== 'undefined' && active && active.q ? active.q : '') %>" placeholder="Search deals, products, stores…" autocomplete="off">
       <button type="submit" aria-label="Search">🔍</button>
     </form>
     <nav class="nav" id="site-nav">

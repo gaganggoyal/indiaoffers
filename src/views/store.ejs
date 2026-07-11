@@ -5,8 +5,12 @@
   <nav class="crumbs"><a href="/">Home</a> / <a href="/stores">Stores</a> / <span><%= store.name %></span></nav>
 
   <div class="store-hero">
+    <%# Store identity: uploaded logo → site favicon → colour tile %>
+    <% const heroDomain = ((store.website_url || '').match(/^https?:\/\/([^\/]+)/) || [])[1]; %>
     <% if (store.logo_url) { %>
       <span class="sc-logo lg has-logo"><img src="<%= ver(store.logo_url) %>" alt="<%= store.name %> logo"></span>
+    <% } else if (heroDomain) { %>
+      <span class="sc-logo lg has-logo"><img src="https://www.google.com/s2/favicons?domain=<%= heroDomain %>&sz=128" alt="<%= store.name %> logo"></span>
     <% } else { %>
       <span class="sc-logo lg" style="background:<%= store.color %>"><%= store.name.charAt(0) %></span>
     <% } %>

@@ -1,0 +1,163 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <div class="page-head">
+    <h1><%= q ? `Search results for “${q}”` : 'Search IndiaOffers' %></h1>
+    <% if (q) { %>
+      <p><%= total %> result<%= total === 1 ? '' : 's' %> across deals, stores, coupons, bank cards and guides.</p>
+    <% } else { %>
+      <p>One box for everything — deals, stores, coupons, card offers, bank cards and buying guides.</p>
+    <% } %>
+  </div>
+
+  <form class="search search-page" action="/search" method="get" role="search">
+    <input type="search" name="q" value="<%= q %>" placeholder="Search deals, products, stores, coupons, cards…" autocomplete="off" autofocus>
+    <button type="submit" aria-label="Search">🔍</button>
+  </form>
+
+  <% if (!q) { %>
+    <div class="srch-sec">
+      <h2>Popular stores</h2>
+      <div class="store-grid">
+        <% topStores.forEach(s => { %>
+          <a class="store-card" href="/store/<%= s.slug %>">
+            <% const sDomain = ((s.website_url || '').match(/^https?:\/\/([^\/]+)/) || [])[1]; %>
+            <% if (s.logo_url) { %>
+              <span class="sc-logo has-logo"><img src="<%= ver(s.logo_url) %>" alt="<%= s.name %> logo" loading="lazy"></span>
+            <% } else if (sDomain) { %>
+              <span class="sc-logo has-logo"><img src="https://www.google.com/s2/favicons?domain=<%= sDomain %>&sz=128" alt="<%= s.name %> logo" loading="lazy"></span>
+            <% } else { %>
+              <span class="sc-logo" style="background:<%= s.color %>"><%= s.name.charAt(0) %></span>
+            <% } %>
+            <b><%= s.name %></b>
+            <small><%= s.deal_count %> live deal<%= s.deal_count == 1 ? '' : 's' %></small>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+    <p class="srch-links">Or browse <a href="/deals">today's deals</a> · <a href="/coupons">coupons</a> · <a href="/bank-offers">card offers</a> · <a href="/cards">bank cards</a> · <a href="/guides">buying guides</a>.</p>
+  <% } else if (total === 0) { %>
+    <div class="empty">
+      Nothing matched <b>“<%= q %>”</b>. Try a shorter word (e.g. brand or product name),
+      or browse <a href="/deals">today's deals</a>, <a href="/stores">all stores</a> and <a href="/coupons">coupons</a>.
+    </div>
+  <% } else { %>
+
+    <% if (results.stores.length) { %>
+      <div class="srch-sec">
+        <h2>🏬 Stores <span class="srch-n"><%= results.stores.length %></span></h2>
+        <div class="store-grid">
+          <% results.stores.forEach(s => { %>
+            <a class="store-card" href="/store/<%= s.slug %>">
+              <% if (s.logo_url) { %>
+                <span class="sc-logo has-logo"><img src="<%= ver(s.logo_url) %>" alt="<%= s.name %> logo" loading="lazy"></span>
+              <% } else { %>
+                <span class="sc-logo" style="background:<%= s.color %>"><%= s.name.charAt(0) %></span>
+              <% } %>
+              <b><%= s.name %></b>
+              <small><%= s.deal_count %> live deal<%= s.deal_count == 1 ? '' : 's' %></small>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (results.cats.length || results.cols.length) { %>
+      <div class="srch-sec">
+        <h2>🗂️ Categories &amp; collections</h2>
+        <div class="filters">
+          <% results.cats.forEach(c => { %>
+            <a class="f" href="/category/<%= c.slug %>"><%= c.icon || '🗂️' %> <%= c.name %> deals</a>
+          <% }) %>
+          <% results.cols.forEach(c => { %>
+            <a class="f" href="/<%= c.slug %>">🔥 <%= c.nav %></a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (results.deals.length) { %>
+      <div class="srch-sec">
+        <h2>🛍️ Deals <span class="srch-n"><%= results.deals.length %><%= results.deals.length === 24 ? '+' : '' %></span></h2>
+        <div class="grid">
+          <% results.deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+        </div>
+        <% if (results.deals.length === 24) { %>
+          <p class="srch-more"><a href="/deals?q=<%= encodeURIComponent(q) %>">See all deals matching “<%= q %>” →</a></p>
+        <% } %>
+      </div>
+    <% } %>
+
+    <% if (results.coupons.length) { %>
+      <div class="srch-sec">
+        <h2>🎟️ Coupons <span class="srch-n"><%= results.coupons.length %></span></h2>
+        <div class="coupon-list coupon-grid">
+          <% results.coupons.forEach(c => { %>
+            <div class="coupon">
+              <div>
+                <b><%= c.title %></b>
+                <small>
+                  <a href="/store/<%= c.store_slug %>"><%= c.store_name %></a>
+                  <%= c.discount_text ? ` · ${c.discount_text}` : '' %><%= c.min_order ? ` · min order ${fmt(c.min_order)}` : '' %><%= c.is_verified ? ' · ✅ verified' : '' %>
+                </small>
+              </div>
+              <button class="btn-copy" data-code="<%= c.code %>"><%= c.code %></button>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (results.cards.length) { %>
+      <div class="srch-sec">
+        <h2>💳 Bank cards <span class="srch-n"><%= results.cards.length %></span></h2>
+        <div class="srch-cards">
+          <% results.cards.forEach(c => { %>
+            <a class="srch-card" href="/card/<%= c.slug %>">
+              <span class="srch-card-art" style="background-image:url('<%= c.image_url || '' %>')"></span>
+              <span>
+                <b><%= c.name %></b>
+                <small><%= c.bank %> · <%= c.card_type === 'debit' ? 'Debit' : 'Credit' %> Card<%= c.joining_fee ? ` · Joining ${c.joining_fee}` : '' %></small>
+              </span>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (results.offers.length) { %>
+      <div class="srch-sec">
+        <h2>🏦 Card offers</h2>
+        <div class="filters">
+          <% results.offers.forEach(o => { %>
+            <a class="f" href="/bank-offers">💳 <%= o.bank ? `${o.bank} — ` : '' %><%= o.title %></a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (results.guides.length) { %>
+      <div class="srch-sec">
+        <h2>📖 Buying guides <span class="srch-n"><%= results.guides.length %></span></h2>
+        <div class="guide-grid">
+          <% results.guides.forEach(g => { %>
+            <a class="guide-card" href="/guide/<%= g.slug %>">
+              <div class="gc-img" style="background-image:url('<%= g.hero_image || '' %>')">
+                <span class="gc-badge"><%= catIcons[g.category] || '🏆' %> Guide</span>
+              </div>
+              <div class="gc-body">
+                <h3><%= g.title %></h3>
+                <p><%= g.subtitle || g.intro || '' %></p>
+                <span class="gc-cta">Read the guide →</span>
+              </div>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>
