@@ -343,7 +343,7 @@ router.get('/cards', async (req, res, next) => {
     const cards = await db.query('SELECT * FROM bank_cards WHERE is_active = 1 ORDER BY is_featured DESC, sort_order ASC');
     res.render('cards', {
       title: 'Best Credit Cards in India — Compare & Apply Online — IndiaOffers.in',
-      meta: { description: 'Compare the best credit cards for shopping, cashback, travel and dining. See benefits, fees, eligibility and apply online in minutes.' },
+      meta: { description: 'Compare the best credit cards for shopping, travel, UPI and everyday spends. See benefits, fees, eligibility and apply online in minutes.' },
       cards: cards.map(c => ({ ...c, benefitsList: parseJson(c.benefits) }))
     });
   } catch (err) { next(err); }
