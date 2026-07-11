@@ -81,6 +81,9 @@ const CATEGORY_TREE = [
     { slug: 'grp-travel', name: 'Travel & Entertainment', icon: '✈️', children: [
       { slug: 'travel',        name: 'Travel & Hotels',    icon: '✈️' },
       { slug: 'entertainment', name: 'OTT & Entertainment', icon: '🎬' }
+    ] },
+    { slug: 'grp-payments', name: 'Payments & Bills', icon: '🧾', children: [
+      { slug: 'bills-recharges', name: 'Recharges & Bill Payments', icon: '🧾' }
     ] }
   ] },
 ];

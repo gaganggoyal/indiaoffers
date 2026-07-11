@@ -64,6 +64,22 @@
     </div>
   </div>
 
+  <% if (deal.video_url) { %>
+    <div class="panel">
+      <h2>🎬 Watch: how this deal works</h2>
+      <div class="video-wrap">
+        <% const vm = String(deal.video_url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{6,})/); %>
+        <% if (vm) { %>
+          <iframe src="https://www.youtube.com/embed/<%= vm[1] %>" title="How this deal works" allowfullscreen loading="lazy"></iframe>
+        <% } else if (/\.(mp4|webm)(\?|$)/i.test(deal.video_url)) { %>
+          <video src="<%= deal.video_url %>" controls playsinline preload="metadata"></video>
+        <% } else { %>
+          <a href="<%= deal.video_url %>" target="_blank" rel="noopener">▶ Watch how this deal works</a>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
   <% if (deal.description) { %>
     <div class="panel"><h2>ℹ️ About this deal</h2><div class="deal-desc"><%- richText(deal.description) %></div></div>
   <% } %>

@@ -50,6 +50,7 @@
   <label>Badge<input name="badge" value="<%= deal ? (deal.badge || '') : '' %>" placeholder="HOT / LOOT / SALE"></label>
   <label>Expiry date<input type="date" name="expiry_date" value="<%= deal && deal.expiry_date ? String(deal.expiry_date).slice(0,10) : '' %>"></label>
   <label>Cashback note<input name="cashback_text" value="<%= deal ? (deal.cashback_text || '') : '' %>" placeholder="Upto 4% IO rewards"></label>
+  <label class="full">Video URL (YouTube link, or an uploaded .mp4 path — how this deal works)<input name="video_url" value="<%= deal ? (deal.video_url || '') : '' %>" placeholder="https://www.youtube.com/watch?v=… or /uploads/video.mp4"></label>
   <label class="full">Product image
     <input name="image_url" id="f_deal_image" value="<%= deal ? (deal.image_url || '') : '' %>" placeholder="Paste an image URL, or upload a file below">
     <span class="uploader" data-target="f_deal_image">

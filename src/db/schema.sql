@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS deals (
   how_to          TEXT,                     -- JSON array of steps
   badge           TEXT,                     -- HOT / LOOT / NEW ...
   cashback_text   TEXT,
+  video_url       TEXT,                     -- YouTube link or uploaded .mp4 path
   is_trending     INTEGER DEFAULT 0,        -- ticked = shown in home hero banners
   hotness         INTEGER DEFAULT 0,        -- >0 pins the deal to the top of the homepage grid
   is_active       INTEGER DEFAULT 1,

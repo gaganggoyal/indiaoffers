@@ -51,6 +51,7 @@ if (config.db.driver === 'mysql') {
   addColumn('alerts', 'sent_at', 'sent_at TEXT');
   addColumn('users', 'points', 'points INTEGER DEFAULT 0');
   addColumn('deals', 'hotness', 'hotness INTEGER DEFAULT 0');
+  addColumn('deals', 'video_url', 'video_url TEXT');
   addColumn('guides', 'is_trending', 'is_trending INTEGER DEFAULT 0');
   // DEFAULT 1 grandfathers users who registered before email verification existed;
   // new signups explicitly insert 0 and must verify.
