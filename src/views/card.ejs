@@ -52,6 +52,8 @@
             <% const m = String(card.video_url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{6,})/); %>
             <% if (m) { %>
               <iframe src="https://www.youtube.com/embed/<%= m[1] %>" title="How to apply" allowfullscreen loading="lazy"></iframe>
+            <% } else if (/\.(mp4|webm)(\?|$)/i.test(card.video_url)) { %>
+              <video src="<%= card.video_url %>" controls muted playsinline preload="metadata"></video>
             <% } else { %>
               <a href="<%= card.video_url %>" target="_blank" rel="noopener">▶ Watch the application walkthrough</a>
             <% } %>

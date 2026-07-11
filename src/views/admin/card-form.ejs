@@ -24,7 +24,7 @@
     </span>
   </label>
   <label class="full">Apply URL (affiliate)<input name="apply_url" value="<%= card ? (card.apply_url || '') : '' %>" placeholder="https://…"></label>
-  <label class="full">Video URL (YouTube — how to apply)<input name="video_url" value="<%= card ? (card.video_url || '') : '' %>" placeholder="https://www.youtube.com/watch?v=…"></label>
+  <label class="full">Video URL (YouTube link, or an uploaded .mp4 path — how to apply)<input name="video_url" value="<%= card ? (card.video_url || '') : '' %>" placeholder="https://www.youtube.com/watch?v=… or /uploads/video.mp4"></label>
   <label class="full">Benefits (one per line)<textarea name="benefits" rows="5"><%= card ? JSON.parse(card.benefits || '[]').join('\n') : '' %></textarea></label>
   <label class="full">How to apply — steps (one per line)<textarea name="how_to_apply" rows="4"><%= card ? JSON.parse(card.how_to_apply || '[]').join('\n') : '' %></textarea></label>
   <label class="full">Eligibility<textarea name="eligibility" rows="2"><%= card ? (card.eligibility || '') : '' %></textarea></label>
