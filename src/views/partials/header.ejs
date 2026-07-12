@@ -2,7 +2,7 @@
 <header class="header">
   <div class="header-in">
     <a class="brand" href="/">
-      <img src="/img/logo-icon.png" alt="IndiaOffers logo" width="34" height="34">
+      <img src="<%= ver('/img/logo-icon.png') %>" alt="IndiaOffers logo" width="34" height="34">
       <span>India<em>Offers</em>.in</span>
     </a>
     <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
@@ -28,4 +28,9 @@
     </nav>
   </div>
 </header>
+<%# Collapse the mobile nav before first paint — doing this from site.js (loaded
+    at the end of body) let the stacked nav render first, then vanish, shifting
+    the whole page up (CLS ~0.4 on mobile). No-JS browsers skip this and keep
+    the stacked, fully usable nav. %>
+<script>document.querySelector('.header').classList.add('js-nav');</script>
 <main>

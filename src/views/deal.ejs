@@ -12,7 +12,8 @@
 
   <div class="dd">
     <div class="dd-media">
-      <img src="<%= deal.image_url || '' %>" alt="<%= deal.title %>" loading="lazy">
+      <%# LCP element of the deal page — never lazy-load it %>
+      <img src="<%= thumb(deal.image_url, 800) || '' %>" alt="<%= deal.title %>" fetchpriority="high">
     </div>
 
     <div class="dd-main">

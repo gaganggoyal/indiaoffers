@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <% if (gaId) { %>
+<link rel="preconnect" href="https://www.googletagmanager.com">
+<link rel="preconnect" href="https://www.google-analytics.com">
+<% } %>
+<%# Deal images are hotlinked from Amazon's CDN on most listing pages %>
+<link rel="preconnect" href="https://m.media-amazon.com">
+<% if (meta && meta.preloadImage) { %>
+<%# The LCP hero is a CSS background-image, invisible to the preload scanner —
+    without this hint the browser only discovers it after layout (~2s late). %>
+<link rel="preload" as="image" href="<%= meta.preloadImage %>" fetchpriority="high">
+<% } %>
+<% if (gaId) { %>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=<%= gaId %>"></script>
 <script>
@@ -27,8 +38,8 @@
 <meta property="og:url" content="<%= siteUrl %><%= (meta && meta.canonical) || path %>">
 <meta property="og:image" content="<%= ogImage %>">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/png" href="/img/logo-icon.png">
-<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="icon" type="image/png" href="<%= ver('/img/logo-icon.png') %>">
+<link rel="icon" type="image/png" href="<%= ver('/favicon.png') %>">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <!-- Installable PWA (Add to Home Screen) -->
 <link rel="manifest" href="/manifest.webmanifest">

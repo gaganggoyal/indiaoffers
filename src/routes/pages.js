@@ -104,12 +104,22 @@ router.get('/', async (req, res, next) => {
       .sort((a, b) => (b.max_discount || b.discount_value * 40) - (a.max_discount || a.discount_value * 40))
       .slice(0, 6);
 
+    // The first hero slot is the mobile LCP element, rendered as a CSS
+    // background-image the preload scanner can't see — hint it in <head>.
+    // Must produce the exact URL home.ejs renders (thumb() for deals/guides).
+    const h0 = heroItems[0];
+    const preloadImage = !h0 ? null
+      : h0.type === 'banner' ? h0.b.image_url
+      : h0.type === 'deal' ? res.locals.thumb(h0.d.image_url, 800)
+      : res.locals.thumb(h0.g.hero_image, 800);
+
     res.render('home', {
       title: "IndiaOffers.in — India's No.1 Loot Deals, ₹1 Deals, Offers & Coupons",
       meta: {
         description: "India's No.1 site for loot deals, Re.1 deals, offers and coupon codes. Handpicked deals with real discounts on Amazon, Flipkart, Myntra & more — plus working coupons and bank card offers, all in one place.",
         keywords: 'loot deals, re.1 deals, rupee 1 deals, offers, coupons, coupon codes, deals today, online shopping deals, cashback offers, bank offers, discount coupons India',
-        jsonld: [WEBSITE_LD, ORGANIZATION_LD]
+        jsonld: [WEBSITE_LD, ORGANIZATION_LD],
+        preloadImage
       },
       heroItems, deals, topOffers, storeMap, featuredCards, collections: COLLECTIONS,
       categories: CATEGORIES, categoryTree: CATEGORY_TREE, catIcons: CAT_ICONS,

@@ -58,7 +58,7 @@
     <div class="empty">No live deals right now — check the coupons above.</div>
   <% } else { %>
     <div class="grid">
-      <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+      <% deals.forEach((d, i) => { %><%- include('partials/deal-card', { d, storeMap, eager: i < 2 }) %><% }) %>
     </div>
   <% } %>
 

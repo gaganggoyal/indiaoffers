@@ -35,7 +35,7 @@
       <% } else if (item.type === 'deal') { const d = item.d; const st = storeMap[d.store_id] || { name: '', color: '#4f46e5' }; %>
         <a class="hero-banner" href="/deal/<%= d.slug %>"
            style="--sc:<%= st.color %>">
-          <div class="hb-img" style="background-image:url('<%= d.image_url || '' %>')"></div>
+          <div class="hb-img" style="background-image:url('<%= thumb(d.image_url, 800) || '' %>')"></div>
           <div class="hb-shade"></div>
           <div class="hb-txt">
             <span class="hb-tag"><%= d.badge || 'JUST IN' %> · <%= st.name %></span>
@@ -51,7 +51,7 @@
         </a>
       <% } else { const g = item.g; %>
         <a class="hero-banner" href="/guide/<%= g.slug %>" style="--sc:#7c3aed">
-          <div class="hb-img" style="background-image:url('<%= g.hero_image || '' %>')"></div>
+          <div class="hb-img" style="background-image:url('<%= thumb(g.hero_image, 800) || '' %>')"></div>
           <div class="hb-shade"></div>
           <div class="hb-txt">
             <span class="hb-tag">📖 BUYING GUIDE</span>

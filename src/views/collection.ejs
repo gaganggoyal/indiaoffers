@@ -42,7 +42,7 @@
       <div class="empty">No <%= col.nav.toLowerCase() %> live at this moment — new ones drop through the day. Meanwhile, see <a href="/deals">all deals</a> or set an <a href="/account">alert</a>.</div>
     <% } else { %>
       <div class="grid">
-        <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+        <% deals.forEach((d, i) => { %><%- include('partials/deal-card', { d, storeMap, eager: i < 2 }) %><% }) %>
       </div>
     <% } %>
   <% } %>

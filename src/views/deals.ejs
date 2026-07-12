@@ -22,7 +22,7 @@
       <div class="fallback-note">No live deals in <b><%= catName || 'this search' %></b> right now — here are today's top deals instead.</div>
     <% } %>
     <div class="grid">
-      <% deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+      <% deals.forEach((d, i) => { %><%- include('partials/deal-card', { d, storeMap, eager: i < 2 }) %><% }) %>
     </div>
 
     <% if (!fallback && pagination.totalPages > 1) {

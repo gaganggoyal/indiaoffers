@@ -20,7 +20,7 @@
     <% items.forEach((it, i) => { %>
       <li class="pick">
         <div class="pk-rank">#<%= it.rank_no || (i + 1) %></div>
-        <div class="pk-img" style="background-image:url('<%= it.image_url || '' %>')"></div>
+        <div class="pk-img" style="background-image:url('<%= thumb(it.image_url, 400) || '' %>')"></div>
         <div class="pk-body">
           <div class="pk-top">
             <% if (it.award) { %><span class="pk-award"><%= it.award %></span><% } %>

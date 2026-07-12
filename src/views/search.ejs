@@ -81,7 +81,7 @@
       <div class="srch-sec">
         <h2>🛍️ Deals <span class="srch-n"><%= results.deals.length %><%= results.deals.length === 24 ? '+' : '' %></span></h2>
         <div class="grid">
-          <% results.deals.forEach(d => { %><%- include('partials/deal-card', { d, storeMap }) %><% }) %>
+          <% results.deals.forEach((d, i) => { %><%- include('partials/deal-card', { d, storeMap, eager: i < 2 }) %><% }) %>
         </div>
         <% if (results.deals.length === 24) { %>
           <p class="srch-more"><a href="/deals?q=<%= encodeURIComponent(q) %>">See all deals matching “<%= q %>” →</a></p>

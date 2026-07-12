@@ -95,7 +95,8 @@ main { min-height: 60vh; padding-bottom: 50px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; display: flex; flex-direction: column; transition: all .18s; }
 .card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: #cbd5e1; }
 /* Product shots keep their proportions: contain (never crop/stretch) on white */
-.card-img { height: 170px; background: #fff center/contain no-repeat; background-origin: content-box; padding: 10px; border-bottom: 1px solid var(--line); position: relative; }
+.card-img { height: 170px; background: #fff; padding: 10px; border-bottom: 1px solid var(--line); position: relative; }
+.card-img img { display: block; width: 100%; height: 100%; object-fit: contain; }
 /* Compact cards for secondary strips ("More from <store>", related deals) */
 .grid-sm .card-img { height: 122px; padding: 8px; }
 .grid-sm .card-title { font-size: 13px; min-height: 34px; }

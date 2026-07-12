@@ -2,14 +2,13 @@
 'use strict';
 
 // ── Mobile nav: hamburger toggle ──────────────────────────────────────────────
-// Without JS the nav simply shows stacked; adding `js-nav` lets CSS collapse it
-// behind the hamburger button, which we then wire up here.
+// Without JS the nav simply shows stacked. The `js-nav` class that collapses it
+// is added by an inline script in header.ejs (must happen before first paint to
+// avoid a layout shift); here we only wire up the hamburger button.
 (function () {
-  const header = document.querySelector('.header');
   const toggle = document.querySelector('.nav-toggle');
   const nav = document.getElementById('site-nav');
-  if (!header || !toggle || !nav) return;
-  header.classList.add('js-nav');
+  if (!toggle || !nav) return;
   const setOpen = open => {
     nav.classList.toggle('open', open);
     toggle.setAttribute('aria-expanded', open ? 'true' : 'false');

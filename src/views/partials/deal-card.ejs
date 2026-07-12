@@ -1,5 +1,8 @@
 <%
   // expects: d (decorated deal with .stack), storeMap
+  // optional: eager — set on the first couple of cards of a listing page (they
+  // can be the mobile LCP element; everything else lazy-loads)
+  const eagerImg = typeof eager !== 'undefined' && eager;
   const st = storeMap[d.store_id] || { name: '', color: '#64748b' };
   // Store identity: uploaded logo → site favicon → colour dot (same as deal page)
   const stDomain = ((st.website_url || '').match(/^https?:\/\/([^\/]+)/) || [])[1];
@@ -8,7 +11,10 @@
   const vFresh = d.verified_at && (Date.now() - new Date(String(d.verified_at).replace(' ', 'T')).getTime()) < 7 * 864e5;
 %>
 <a class="card" href="/deal/<%= d.slug %>">
-  <div class="card-img" style="background-image:url('<%= d.image_url || '' %>')">
+  <div class="card-img">
+    <%# real <img> (not a CSS background) so below-fold cards lazy-load and
+        Amazon links get downscaled — admins paste 1500px originals %>
+    <% if (d.image_url) { %><img src="<%= thumb(d.image_url, 400) %>" alt="" <%- eagerImg ? 'fetchpriority="high"' : 'loading="lazy"' %> decoding="async"><% } %>
     <% if (stack.discountPct) { %><span class="chip chip-off"><%= stack.discountPct %>% OFF</span><% } %>
     <% if (d.badge) { %><span class="chip chip-badge"><%= d.badge %></span><% } %>
   </div>
