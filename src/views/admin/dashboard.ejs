@@ -22,4 +22,15 @@
     </tbody>
   </table>
 </div>
+
+<div class="panel">
+  <h2>Offline backup</h2>
+  <p class="muted" style="font-size:13px;margin-bottom:12px">
+    Downloads one <b>.tar.gz</b> with the full database dump (all deals, stores, users, clicks…)
+    plus every image uploaded via the admin panel — everything that isn't already in the GitHub
+    repo. The archive includes a README with step-by-step restore instructions, so this file +
+    the repo is enough to rebuild the whole site on a new machine.
+  </p>
+  <a class="btn" href="/admin/backup.tar.gz">⬇️ Download full backup</a>
+</div>
 <%- include('_bottom') %>

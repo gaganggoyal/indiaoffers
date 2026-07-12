@@ -132,5 +132,8 @@ sudo systemctl restart indiaoffers
   so the app knows it's behind HTTPS and marks cookies `secure`.
 - **CSP is disabled** ([src/app.js](src/app.js)) so inline handlers, the manifest and
   the service worker load. If you tighten this later, allow-list them first.
-- **Backups**: with managed MySQL, use the provider's automated backups. There is no
-  local DB file to back up in the MySQL setup.
+- **Backups**: Admin → Dashboard → **Download full backup** streams a `.tar.gz` with a
+  full SQL data dump plus `public/uploads/` — everything not in git. The archive's
+  README has restore steps; `.env` secrets are intentionally excluded and must be
+  re-entered on a fresh deploy. With managed MySQL, the provider's automated backups
+  are a good second layer.

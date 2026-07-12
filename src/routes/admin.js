@@ -8,6 +8,8 @@
 const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
+const { spawn } = require('child_process');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
@@ -18,6 +20,7 @@ const { deliverPendingAlerts } = require('../services/alertSender');
 const { mailerMode, verifyTransport } = require('../services/mailer');
 const { entityList, templateCsv, importCsv, exportCsv } = require('../services/importer');
 const { buildFromLink, geminiConfigured } = require('../services/quickdeal');
+const { sqlDump, readmeText } = require('../services/backup');
 const { CATEGORIES, CAT_NAMES } = require('../data/taxonomy');
 
 const { uid, slugify, nowSql } = db;
@@ -115,6 +118,39 @@ router.get('/export/:entity.csv', async (req, res, next) => {
     res.setHeader('Content-Disposition', `attachment; filename="${out.filename}"`);
     res.send(out.csv);
   } catch (e) { res.status(404).send(e.message); }
+});
+
+// ── Full offline backup ───────────────────────────────────────────────────────
+// One .tar.gz with everything that is not in git: dump.sql (all tables, restores
+// into MySQL or SQLite), README.md with restore steps, and public/uploads/.
+// Dump + README are staged in a temp dir, then `tar` streams the archive so the
+// full file is never buffered in memory or left on disk.
+router.get('/backup.tar.gz', async (req, res, next) => {
+  try {
+    const stage = fs.mkdtempSync(path.join(os.tmpdir(), 'io-backup-'));
+    fs.writeFileSync(path.join(stage, 'dump.sql'), await sqlDump());
+    fs.writeFileSync(path.join(stage, 'README.md'), readmeText());
+
+    res.setHeader('Content-Type', 'application/gzip');
+    res.setHeader('Content-Disposition', `attachment; filename="indiaoffers-backup-${db.today()}.tar.gz"`);
+
+    const tar = spawn('tar', [
+      '-czf', '-',
+      '-C', stage, 'dump.sql', 'README.md',
+      '-C', path.join(__dirname, '..', '..', 'public'), 'uploads'
+    ]);
+    tar.stdout.pipe(res);
+    tar.stderr.on('data', d => console.error('[backup] tar:', d.toString().trim()));
+    const cleanup = () => fs.rmSync(stage, { recursive: true, force: true });
+    tar.on('error', err => { cleanup(); next(err); });
+    tar.on('close', code => {
+      cleanup();
+      if (code !== 0 && !res.headersSent) next(new Error(`tar exited with code ${code}`));
+      else res.end();
+    });
+    // Browser cancelled the download → stop tar instead of writing to a dead socket.
+    res.on('close', () => { if (!res.writableEnded) tar.kill(); });
+  } catch (err) { next(err); }
 });
 
 // Reserve a unique slug: if the wanted one is taken by another row, append -2,
