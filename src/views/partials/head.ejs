@@ -49,6 +49,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="IndiaOffers">
 <% if (meta && meta.jsonld) { %><script type="application/ld+json"><%- JSON.stringify(meta.jsonld) %></script><% } %>
-<link rel="stylesheet" href="<%= ver('/css/site.css') %>">
+<%# Inlined (not <link>ed) so first paint needs no extra round trip — see siteCss() in app.js %>
+<style><%- siteCss() %></style>
 </head>
 <body>

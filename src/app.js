@@ -33,6 +33,18 @@ app.use(express.static(publicDir, {
   }
 }));
 
+// site.css is inlined into every page's <head> (see partials/head.ejs): it's
+// ~14KB gzipped, and shipping it with the HTML removes the render-blocking
+// stylesheet round trip (~600ms on a mobile PageSpeed run). The file is still
+// served at /css/site.css for the service worker and offline page.
+let siteCssCache = null;
+function siteCss() {
+  if (siteCssCache === null || !config.isProd) {
+    siteCssCache = fs.readFileSync(path.join(publicDir, 'css', 'site.css'), 'utf8');
+  }
+  return siteCssCache;
+}
+
 // Cache-busting: append a local file's mtime as ?v=… so a swapped image (same filename)
 // updates instantly for browsers despite the long cache. External URLs pass through unchanged.
 const verCache = new Map();
@@ -56,6 +68,7 @@ app.use((req, res, next) => {
   res.locals.path = req.path;
   res.locals.fmt = n => n == null ? '' : '₹' + Number(n).toLocaleString('en-IN');
   res.locals.ver = ver;
+  res.locals.siteCss = siteCss;
   // Amazon's image CDN serves any size via the `._SL{px}_` flag in the filename;
   // admins paste full-size links (often 1500px), so downscale to what we render.
   // Non-Amazon URLs pass through unchanged.
