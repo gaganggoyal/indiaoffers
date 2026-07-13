@@ -298,28 +298,30 @@ router.get('/deal/:slug', async (req, res, next) => {
     const howTo = parseJson(deal.how_to);
 
     // JSON-LD: Product + Offer (rich results) and a breadcrumb trail. Google
-    // rejects Offers without a price and relative image URLs, so both are
-    // guarded/absolutised here.
-    const productLd = {
+    // requires a Product to carry one of offers/review/aggregateRating, and an
+    // Offer to carry a price — so a price-less deal (e.g. "5% off recharges")
+    // emits NO Product node at all rather than an invalid one. Relative image
+    // URLs are absolutised because Google rejects them.
+    const productLd = deal.price != null ? {
       '@context': 'https://schema.org', '@type': 'Product',
       name: deal.title,
       ...(deal.image_url ? { image: [/^https?:\/\//.test(deal.image_url) ? deal.image_url : abs(deal.image_url)] } : {}),
       ...(deal.description ? { description: deal.description } : {}),
       sku: deal.id,
-      ...(deal.price != null ? { offers: {
+      offers: {
         '@type': 'Offer', priceCurrency: 'INR', price: deal.price,
         availability: expired ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
         url: abs(`/deal/${deal.slug}`),
         ...(deal.expiry_date ? { priceValidUntil: String(deal.expiry_date).slice(0, 10) } : {}),
         seller: { '@type': 'Organization', name: store ? store.name : '' }
-      } } : {})
-    };
+      }
+    } : null;
     const jsonld = [productLd, breadcrumb([
       { name: 'Home', path: '/' },
       { name: 'Deals', path: '/deals' },
       deal.category ? { name: categoryName(deal.category), path: `/category/${deal.category}` } : null,
       { name: deal.title }
-    ])];
+    ])].filter(Boolean);
 
     res.render('deal', {
       title: `${deal.title}${stack.price != null ? ' — ₹' + stack.price.toLocaleString('en-IN') : ''} | IndiaOffers.in`,
