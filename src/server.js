@@ -15,8 +15,11 @@ app.listen(config.port, () => {
   // Expired-deal sweep: deals past their expiry date drop out of listings and
   // the sitemap automatically (their pages stay live with an "expired" notice
   // and fresh alternatives — see the /deal/:slug route). Runs at boot, then daily.
+  // MySQL's expiry_date is a real DATE and rejects the '' literal under strict
+  // mode; the empty-string guard is only needed for SQLite (TEXT column).
+  const notEmpty = db.driver === 'mysql' ? '' : ` AND expiry_date != ''`;
   const sweepExpired = () =>
-    db.query(`UPDATE deals SET is_active = 0 WHERE is_active = 1 AND expiry_date IS NOT NULL AND expiry_date != '' AND expiry_date < ?`, [db.today()])
+    db.query(`UPDATE deals SET is_active = 0 WHERE is_active = 1 AND expiry_date IS NOT NULL${notEmpty} AND expiry_date < ?`, [db.today()])
       .then(r => { if (r && r.affectedRows) console.log(`[deals] expired sweep: ${r.affectedRows} deal(s) retired`); })
       .catch(e => console.error('[deals] expired sweep failed:', e.message));
   setTimeout(sweepExpired, 5000);
