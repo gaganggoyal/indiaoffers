@@ -76,9 +76,12 @@ if (config.db.driver === 'mysql') {
 
 const nowSql = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
 const today  = () => new Date().toISOString().slice(0, 10);
+// today + `days` as YYYY-MM-DD — used by the rolling deal refresh to keep a
+// deal's expiry_date permanently a few days out in the future.
+const futureDate = (days = 0) => new Date(Date.now() + days * 864e5).toISOString().slice(0, 10);
 const uid    = p => `${p}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 const slugify = s => String(s).toLowerCase()
   .replace(/[₹%]/g, '').replace(/&/g, 'and')
   .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
 
-module.exports = { query, driver: config.db.driver, nowSql, today, uid, slugify };
+module.exports = { query, driver: config.db.driver, nowSql, today, futureDate, uid, slugify };
