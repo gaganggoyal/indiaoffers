@@ -228,10 +228,15 @@ function listFilter(query, spec) {
     const iso = ms => new Date(ms).toISOString().slice(0, 10);
     const today = iso(Date.now());
     const soonEnd = iso(Date.now() + 8 * 864e5);           // today + 7 days, inclusive
-    if (v === 'expired')      { where.push(`(${col} IS NOT NULL AND ${col} <> '' AND ${col} < ?)`); params.push(today); }
+    // In MySQL expiry_date is a real DATE (empty = NULL); comparing it to '' throws
+    // "Incorrect DATE value: ''". Only SQLite (TEXT column) can hold an empty-string
+    // date, so the '' guards are added for that driver alone.
+    const notEmpty = db.driver === 'mysql' ? '' : ` AND ${col} <> ''`;
+    const orEmpty  = db.driver === 'mysql' ? '' : ` OR ${col} = ''`;
+    if (v === 'expired')      { where.push(`(${col} IS NOT NULL${notEmpty} AND ${col} < ?)`); params.push(today); }
     else if (v === 'soon')    { where.push(`(${col} >= ? AND ${col} < ?)`); params.push(today, soonEnd); }
-    else if (v === 'active')  { where.push(`(${col} IS NULL OR ${col} = '' OR ${col} >= ?)`); params.push(today); }
-    else if (v === 'none')    { where.push(`(${col} IS NULL OR ${col} = '')`); }
+    else if (v === 'active')  { where.push(`(${col} IS NULL${orEmpty} OR ${col} >= ?)`); params.push(today); }
+    else if (v === 'none')    { where.push(`(${col} IS NULL${orEmpty})`); }
   }
   return { clause: where.length ? ' WHERE ' + where.join(' AND ') : '', params, active };
 }
