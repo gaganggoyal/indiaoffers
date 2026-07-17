@@ -3,6 +3,12 @@
 Every deal shows its **true price**: product discount + your bank/card offer + coupon code, stacked into one number. The "Best way to pay" widget ranks every applicable card, UPI and EMI offer so visitors always pay the lowest effective price.
 
 Server-rendered (SEO-first), admin-managed, zero-config to run locally.
+Live at [indiaoffers.in](https://indiaoffers.in).
+
+> Rebuilt ground-up in 2024–25 with AI-assisted development — openly so.
+> The product itself (what to build and why) comes from a decade of running
+> affiliate commerce. [More ↓](#the-build-honestly) · Portfolio:
+> [gagan.indiaoffers.in](https://gagan.indiaoffers.in)
 
 ## Quick start
 
@@ -167,3 +173,28 @@ The whole site behaves like an app on phones (≤900px):
 - Price-history tracking + drop alerts (email/Telegram)
 - Watchlists
 - Cashback wallet (v1 tracking pixel code is in git history at tag/commit `620967d`)
+
+## The build, honestly
+
+This platform is the site I run in production, rebuilt from the ground up
+with AI pair-programming — a workflow I taught myself and now use on
+everything I ship. What AI accelerated was the typing; what it couldn't
+supply is the reason any of this exists:
+
+- **True-price stacking** (discount + bank offer + coupon in one number) and
+  the **"Best way to pay" ranking** are the product. They come from ten years
+  of watching deal-site visitors bounce because the "real price" needed three
+  tabs and a calculator.
+- The **admin-first content ops**, the outbound-click analytics, and the
+  mobile app-like experience were all specified feature by feature — the
+  roadmap above is mine too, in priority order, for the same reason: it's
+  what my actual traffic asks for.
+
+Solo-built, solo-operated, and open here for review.
+
+---
+
+**Gagandeep Goyal** — founder of IndiaOffers.in; 10+ years in e-commerce,
+affiliate networks and retail. Portfolio:
+[gagan.indiaoffers.in](https://gagan.indiaoffers.in) · GitHub:
+[@gaganggoyal](https://github.com/gaganggoyal)
