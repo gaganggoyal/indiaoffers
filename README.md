@@ -10,6 +10,21 @@ Live at [indiaoffers.in](https://indiaoffers.in).
 > affiliate commerce. [More ↓](#the-build-honestly) · Portfolio:
 > [gagan.indiaoffers.in](https://gagan.indiaoffers.in)
 
+## At a glance
+
+|  |  |
+|---|---|
+| **What** | Deal platform that computes the **true price** of every deal — product discount + best stacking bank/card offer + coupon — and ranks every way to pay |
+| **Stack** | Node.js · Express · EJS server-side rendering · one `query()` layer over better-sqlite3 **and** MySQL · vanilla JS/CSS (no frontend framework) · nginx + systemd on a VPS |
+| **Live** | [indiaoffers.in](https://indiaoffers.in) — a real production business, not a demo |
+| **Depth** | Savings/ranking engine · config-driven SEO landing-page framework with 301 alias handling · OTP-verified user accounts · FK-safe admin operations · outbound-click analytics |
+
+**Where to look first** (for reviewers):
+
+- [src/services/savings.js](src/services/savings.js) — the true-price engine: offer applicability, percent/flat caps, ranked pay options
+- [src/data/collections.js](src/data/collections.js) + [src/routes/pages.js](src/routes/pages.js) — add one config object, get a fully SEO'd landing page (route, sitemap, FAQ JSON-LD, 301 aliases)
+- [src/db/index.js](src/db/index.js) — a single `query()` abstraction that runs unchanged on SQLite (dev) and MySQL (prod)
+
 ## Quick start
 
 ```bash
