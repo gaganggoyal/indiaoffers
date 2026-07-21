@@ -323,10 +323,22 @@ router.get('/deal/:slug', async (req, res, next) => {
       { name: deal.title }
     ])].filter(Boolean);
 
+    // Meta description. Priced deals get the price-led snippet. A price-less
+    // deal (giveaway, service offer, "5% off recharges") must NOT claim a price
+    // to check — fall back to its own opening paragraph, which is what the
+    // admin actually wrote about it and makes a far better SERP snippet.
+    const firstPara = String(deal.description || '').trim().split(/\r?\n\s*\r?\n/)[0] || '';
+    const snippet = firstPara.replace(/\s+/g, ' ').trim();
+    const metaDescription = stack.price != null
+      ? `${deal.title} at ₹${stack.price.toLocaleString('en-IN')}${stack.discountPct ? ` (${stack.discountPct}% off)` : ''}${store ? ` on ${store.name}` : ''}. Check the latest price, coupons and offers on IndiaOffers.`
+      : snippet
+        ? (snippet.length > 158 ? snippet.slice(0, 155).replace(/\s+\S*$/, '') + '…' : snippet)
+        : `${deal.title}${store ? ` on ${store.name}` : ''}. Verified by IndiaOffers.`;
+
     res.render('deal', {
       title: `${deal.title}${stack.price != null ? ' — ₹' + stack.price.toLocaleString('en-IN') : ''} | IndiaOffers.in`,
       meta: {
-        description: `${deal.title}${stack.price != null ? ` at ₹${stack.price.toLocaleString('en-IN')}` : ''}${stack.discountPct ? ` (${stack.discountPct}% off)` : ''}${store ? ` on ${store.name}` : ''}. Check the latest price, coupons and offers on IndiaOffers.`,
+        description: metaDescription,
         image: deal.image_url,
         jsonld
       },
