@@ -113,6 +113,18 @@ True-wireless earbuds and budget smartwatches are aggressive festive-sale catego
 Controller and accessory deals appear weekly and expire fast; AAA physical titles under ₹1,499 are the recurring sweet spot worth waiting for.`
   },
 
+  'ai-tools': {
+    intro: `AI subscriptions are the one category where the sticker price in India finally started moving in 2026. Anthropic switched Claude to rupee billing in July 2026 (Pro at ₹2,399/month, or roughly ₹2,000/month on annual), and OpenAI, Google and Perplexity have all run India-specific pricing or carrier bundles in the same window. Local pricing matters more than any coupon here: paying in INR removes the 2–3.5% forex markup your card was quietly adding on every USD renewal.
+
+Real discounts on AI tools come from four places, in rough order of value: annual billing (usually 15–20% off monthly), student and educator programmes, telco or bank bundles that ship a subscription alongside another plan, and genuine promotional giveaways. Treat anything advertising a "free premium account" via a login page or an APK as credential theft — legitimate free access always runs through the vendor's own signup, an official gift subscription, or a named partner. Every AI deal on this page is checked against the vendor's own pricing page before it goes live.`,
+    faqs: [
+      { q: 'How much does Claude Pro cost in India?', a: 'Claude Pro is ₹2,399 per month on monthly billing, or about ₹2,000 per month when billed annually. Anthropic began showing rupee pricing (inclusive of taxes) in July 2026. Claude Max 5x is ₹11,999/month and Max 20x is ₹23,999/month. Payment still requires a credit or debit card — UPI is not supported yet.' },
+      { q: 'Is there a free way to use Claude or ChatGPT in India?', a: 'Yes — both run genuine free tiers with usage limits, no payment details required. The free tier is the honest route to trying them. Paid plans add higher limits, longer context and priority access during peak hours.' },
+      { q: 'Can you gift someone a Claude Pro subscription?', a: 'Yes. Anthropic launched official gift subscriptions in December 2025 at claude.ai/gift, covering Pro, Max 5x and Max 20x in 1, 3, 6 and 12-month durations. Gift codes expire 365 days after purchase, and a recipient cannot stack multiple gift redemptions at once.' },
+      { q: 'Are "free premium AI account" offers safe?', a: 'Usually not. Offers that ask you to log in with your existing account, download an APK, or enter card details to "verify" are phishing or credential harvesting. Legitimate free access comes from the vendor\'s own free tier, an official gift subscription, a student programme, or a named partner giveaway with published terms.' }
+    ]
+  },
+
   // ── Fashion leaves ──────────────────────────────────────────────────────────
   'fashion': {
     intro: `Clothing online in India is a permanent sale with occasional real ones — the trick is telling them apart. Genuine lows arrive at end-of-season (January and July), during Myntra EOSS and Ajio Big Bold Sale, and on festive-sale opening days when fresh stock gets its one honest discount. Outside those windows, "70% off" usually means "normal price".

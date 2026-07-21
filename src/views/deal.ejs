@@ -10,11 +10,16 @@
     </div>
   <% } %>
 
-  <div class="dd">
-    <div class="dd-media">
-      <%# LCP element of the deal page — never lazy-load it %>
-      <img src="<%= thumb(deal.image_url, 800) || '' %>" alt="<%= deal.title %>" fetchpriority="high">
-    </div>
+  <%# No image (e.g. a giveaway or a service offer) → drop the media column and
+      go full-width, rather than rendering <img src=""> which browsers resolve
+      to the page URL itself and re-request. %>
+  <div class="dd<%= deal.image_url ? '' : ' dd-noimg' %>">
+    <% if (deal.image_url) { %>
+      <div class="dd-media">
+        <%# LCP element of the deal page — never lazy-load it %>
+        <img src="<%= thumb(deal.image_url, 800) %>" alt="<%= deal.title %>" fetchpriority="high">
+      </div>
+    <% } %>
 
     <div class="dd-main">
       <%# Store identity: uploaded logo → site favicon → colour dot fallback %>

@@ -24,6 +24,9 @@ const CATEGORY_TREE = [
     ] },
     { slug: 'grp-gaming', name: 'Gaming', icon: '🎮', children: [
       { slug: 'video-games', name: 'Video Games', icon: '🎮' }
+    ] },
+    { slug: 'grp-software', name: 'Software & Subscriptions', icon: '💾', children: [
+      { slug: 'ai-tools', name: 'AI Tools & Subscriptions', icon: '🤖' }
     ] }
   ] },
 
