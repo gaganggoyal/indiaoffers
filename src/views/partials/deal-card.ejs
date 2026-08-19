@@ -16,7 +16,8 @@
         Amazon links get downscaled — admins paste 1500px originals %>
     <% if (d.image_url) { %><img src="<%= thumb(d.image_url, 400) %>" alt="" <%- eagerImg ? 'fetchpriority="high"' : 'loading="lazy"' %> decoding="async"><% } %>
     <% if (stack.discountPct) { %><span class="chip chip-off"><%= stack.discountPct %>% OFF</span><% } %>
-    <% if (d.badge) { %><span class="chip chip-badge"><%= d.badge %></span><% } %>
+    <%# A "SCAM ALERT" badge is a warning, not a promo label — flag it in red. %>
+    <% if (d.badge) { %><span class="chip chip-badge<%= String(d.badge).trim().toUpperCase() === 'SCAM ALERT' ? ' chip-scam' : '' %>"><%= d.badge %></span><% } %>
   </div>
   <div class="card-body">
     <div class="card-store">

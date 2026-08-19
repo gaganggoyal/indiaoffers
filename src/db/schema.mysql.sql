@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS deals (
   badge           VARCHAR(30),
   cashback_text   VARCHAR(100),
   video_url       VARCHAR(1000),
+  gallery         TEXT,                     -- JSON array of {src, caption} evidence/extra images shown under the deal
   is_trending     TINYINT(1) DEFAULT 0,
   hotness         INT DEFAULT 0,
   is_active       TINYINT(1) DEFAULT 1,

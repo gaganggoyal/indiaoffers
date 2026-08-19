@@ -38,7 +38,8 @@
           <div class="hb-img" style="background-image:url('<%= thumb(d.image_url, 800) || '' %>')"></div>
           <div class="hb-shade"></div>
           <div class="hb-txt">
-            <span class="hb-tag"><%= d.badge || 'JUST IN' %> · <%= st.name %></span>
+            <% const heroAlert = String(d.badge || '').trim().toUpperCase() === 'SCAM ALERT'; %>
+            <span class="hb-tag<%= heroAlert ? ' hb-tag-scam' : '' %>"><%= d.badge || 'JUST IN' %> · <%= st.name %></span>
             <h2><%= d.title %></h2>
             <div class="hb-price">
               <% if (d.stack.price != null) { %><b><%= fmt(d.stack.price) %></b><% } %>
@@ -46,7 +47,8 @@
               <% if (d.stack.discountPct) { %><span class="hb-off"><%= d.stack.discountPct %>% OFF</span><% } %>
             </div>
             <% if (d.stack.hasSavings && d.stack.truePrice != null && d.stack.truePrice < d.stack.price) { %><span class="hb-true">Best price <%= fmt(d.stack.truePrice) %><% if (d.stack.best && d.stack.best.bank) { %> with <%= d.stack.best.bank %><% } %></span><% } %>
-            <span class="hb-cta">Grab this deal →</span>
+            <%# A "SCAM ALERT" deal in the hero is a warning — never invite a click on it as an offer. %>
+            <span class="hb-cta"><%= heroAlert ? 'Read the warning →' : 'Grab this deal →' %></span>
           </div>
         </a>
       <% } else { const g = item.g; %>

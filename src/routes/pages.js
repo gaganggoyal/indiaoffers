@@ -296,6 +296,7 @@ router.get('/deal/:slug', async (req, res, next) => {
     const store = stores[0];
     const stack = savingsStack(deal, offers);
     const howTo = parseJson(deal.how_to);
+    const gallery = parseJson(deal.gallery);
 
     // JSON-LD: Product + Offer (rich results) and a breadcrumb trail. Google
     // requires a Product to carry one of offers/review/aggregateRating, and an
@@ -342,7 +343,7 @@ router.get('/deal/:slug', async (req, res, next) => {
         image: deal.image_url,
         jsonld
       },
-      deal, store, stack, howTo, expired, categoryName,
+      deal, store, stack, howTo, gallery, expired, categoryName,
       related: decorateDeals(related, offers),
       coupons,
       storeMap: { [deal.store_id]: store }
