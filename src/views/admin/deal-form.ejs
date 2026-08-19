@@ -61,6 +61,7 @@
   </label>
   <label class="full">Deal URL (merchant page) *<input name="deal_url" required value="<%= deal ? (deal.deal_url || '') : '' %>" placeholder="https://www.amazon.in/dp/…"></label>
   <label class="full">Description<textarea name="description" rows="3"><%= deal ? (deal.description || '') : '' %></textarea></label>
+  <label class="full">Evidence gallery <small>— one <code>/uploads/file.jpg | caption</code> per line; shown as a screenshot strip under the deal (used by SCAM ALERT posts)</small><textarea name="gallery" rows="4" placeholder="/uploads/screenshot-1.jpg | What this screenshot shows"><%= deal ? (JSON.parse(deal.gallery || '[]').map(g => g.caption ? `${g.src} | ${g.caption}` : g.src).join('\n')) : '' %></textarea></label>
   <label class="full">How to get it (one step per line)<textarea name="how_to" rows="5"><%= deal ? (JSON.parse(deal.how_to || '[]').join('\n')) : '' %></textarea></label>
   <label>🔥 Hotness <small>— 0 = normal (homepage shows newest deals first). Any number above 0 pins this deal to the top of the homepage grid no matter how old it is; higher number = higher position.</small>
     <input type="number" name="hotness" min="0" step="1" value="<%= deal && deal.hotness ? deal.hotness : 0 %>"></label>

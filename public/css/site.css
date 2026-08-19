@@ -177,6 +177,22 @@ main { min-height: 60vh; padding-bottom: 50px; }
 /* Expired-deal notice — the page stays live with alternatives instead of 404ing */
 .deal-expired { background: #fef3c7; border: 1px solid #fcd34d; color: #78350f; border-radius: 12px; padding: 13px 18px; font-size: 14px; margin-bottom: 16px; }
 .deal-expired a { color: #92400e; font-weight: 700; text-decoration: underline; }
+/* Scam alert — a deal badged "SCAM ALERT" is a public warning, styled to be
+   impossible to mistake for an offer. */
+.deal-scam { background: #fef2f2; border: 1px solid #fca5a5; border-left: 5px solid var(--danger); color: #7f1d1d; border-radius: 12px; padding: 13px 18px; font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+.deal-scam b { display: block; font-size: 15px; margin-bottom: 3px; }
+.deal-scam a { color: #b91c1c; font-weight: 700; text-decoration: underline; }
+.chip-scam { background: var(--danger); color: #fff; }
+.btn-go.btn-go-safe { background: #16a34a; box-shadow: 0 4px 12px rgba(22,163,74,.25); }
+.btn-go.btn-go-safe:hover { background: #15803d; }
+.dd-howto.dd-howto-alert { border-color: #fca5a5; background: #fff7f7; }
+.dd-howto.dd-howto-alert .steps li::marker { color: var(--danger); }
+.hb-tag.hb-tag-scam { background: var(--danger); }
+/* Evidence screenshots (scam alerts and any deal with a gallery) */
+.dd-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.dd-gallery figure { margin: 0; border: 1px solid var(--line, #e2e8f0); border-radius: 10px; overflow: hidden; background: #fff; }
+.dd-gallery img { display: block; width: 100%; height: auto; }
+.dd-gallery figcaption { padding: 9px 12px; font-size: 12.5px; line-height: 1.5; color: var(--muted, #64748b); border-top: 1px solid var(--line, #e2e8f0); }
 /* "✅ Verified" chip on deal cards while the human check is under 7 days old */
 .card-verified { margin-left: auto; color: var(--good); font-size: 10.5px; font-weight: 800; letter-spacing: .01em; }
 

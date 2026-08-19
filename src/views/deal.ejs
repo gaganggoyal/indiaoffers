@@ -4,6 +4,21 @@
 <section class="wrap">
   <nav class="crumbs"><a href="/">Home</a> / <a href="/deals">Deals</a> / <% if (deal.category) { %><a href="/category/<%= deal.category %>"><%= categoryName ? categoryName(deal.category) : deal.category %></a> / <% } %><span><%= deal.title %></span></nav>
 
+  <%# A deal badged "SCAM ALERT" is a public warning, not an offer: it gets a red
+      banner, a link to the merchant's real site instead of a "grab this" CTA,
+      and safety steps instead of redemption steps. %>
+  <% const isAlert = String(deal.badge || '').trim().toUpperCase() === 'SCAM ALERT'; %>
+
+  <% if (isAlert) { %>
+    <div class="deal-scam">
+      <b>⚠️ Scam alert — this is a warning, not a deal.</b>
+      Do not buy from the site described below and never pay it by UPI, card or netbanking.
+      IndiaOffers publishes this so shoppers can recognise the fraud. Report scams you hit to
+      <a href="https://cybercrime.gov.in" target="_blank" rel="noopener nofollow">cybercrime.gov.in</a>
+      or call 1930.
+    </div>
+  <% } %>
+
   <% if (expired) { %>
     <div class="deal-expired">
       ⌛ <b>This deal has expired.</b> Prices move fast — the fresh <%= store ? store.name : '' %> deals below are live right now<% if (deal.category) { %>, or browse today's <a href="/category/<%= deal.category %>">best <%= categoryName ? categoryName(deal.category).toLowerCase() : '' %> deals</a><% } %>.
@@ -58,26 +73,31 @@
            rather than in a separate box. -->
       <div class="dd-action">
         <div class="dd-grab">
-          <% if (expired) { %>
+          <% if (isAlert) { %>
+            <a class="btn-go btn-go-safe" href="<%= store.website_url %>" target="_blank" rel="noopener nofollow">🔒 Open the real <%= store.name %> site instead →</a>
+          <% } else if (expired) { %>
             <a class="btn-go btn-go-expired" href="/store/<%= store.slug %>">Deal expired — see live <%= store.name %> deals →</a>
           <% } else { %>
             <a class="btn-go" href="/go/d/<%= deal.id %>" target="_blank" rel="noopener nofollow">Grab this deal at <%= store.name %> →</a>
           <% } %>
-          <div class="dd-meta">
-            <% if (!expired) { %>⏰ Expires <%= deal.expiry_date ? String(deal.expiry_date).slice(0,10) : 'soon' %>
-            · <% } %>👆 <%= (deal.clicks || 0).toLocaleString('en-IN') %> clicks
-            <% if (deal.cashback_text) { %> · 💰 <%= deal.cashback_text %><% } %>
-          </div>
+          <% if (!isAlert) { %>
+            <div class="dd-meta">
+              <% if (!expired) { %>⏰ Expires <%= deal.expiry_date ? String(deal.expiry_date).slice(0,10) : 'soon' %>
+              · <% } %>👆 <%= (deal.clicks || 0).toLocaleString('en-IN') %> clicks
+              <% if (deal.cashback_text) { %> · 💰 <%= deal.cashback_text %><% } %>
+            </div>
+          <% } %>
           <div class="dd-trust">
             <% if (deal.verified_at) { %>✅ Last verified <%= String(deal.verified_at).slice(0,10) %> · <% } %><a href="/how-we-verify">How we verify deals</a>
           </div>
         </div>
 
-        <div class="dd-howto">
-          <div class="dd-howto-h">📋 How to get this deal</div>
+        <div class="dd-howto<%= isAlert ? ' dd-howto-alert' : '' %>">
+          <div class="dd-howto-h"><%= isAlert ? '🛡️ How to protect yourself' : '📋 How to get this deal' %></div>
           <ol class="steps">
-            <%# First step is always the same; any admin-entered steps follow it. %>
-            <li>Click on <b>Grab this Deal at <%= store.name %></b>.</li>
+            <%# First step is always the same; any admin-entered steps follow it.
+                A scam alert has no "grab" button, so it skips straight to its own steps. %>
+            <% if (!isAlert) { %><li>Click on <b>Grab this Deal at <%= store.name %></b>.</li><% } %>
             <% howTo.forEach(s => { %><li><%= s %></li><% }) %>
             <%# Extra savings are woven in as the next steps (2nd/3rd point) rather than a separate box %>
             <% if (stack.savingsNote) { %><li><%= stack.savingsNote %></li><% } %>
@@ -94,9 +114,25 @@
     </div>
   </div>
 
+  <%# Evidence / extra screenshots. Full-size on click so a reader (or an
+      investigator) can actually read the URL bar in the shot. %>
+  <% if (gallery && gallery.length) { %>
+    <div class="panel">
+      <h2><%= isAlert ? '🔍 Evidence — screenshots of the scam' : '📸 Screenshots' %></h2>
+      <div class="dd-gallery">
+        <% gallery.forEach(g => { %>
+          <figure>
+            <a href="<%= g.src %>" target="_blank" rel="noopener"><img src="<%= g.src %>" alt="<%= g.caption || '' %>" loading="lazy" decoding="async"></a>
+            <% if (g.caption) { %><figcaption><%= g.caption %></figcaption><% } %>
+          </figure>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
   <% if (deal.video_url) { %>
     <div class="panel">
-      <h2>🎬 Watch: how this deal works</h2>
+      <h2><%= isAlert ? '🎬 Watch: how this scam works' : '🎬 Watch: how this deal works' %></h2>
       <div class="video-wrap">
         <% const vm = String(deal.video_url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{6,})/); %>
         <% if (vm) { %>
@@ -111,7 +147,7 @@
   <% } %>
 
   <% if (deal.description) { %>
-    <div class="panel"><h2>ℹ️ About this deal</h2><div class="deal-desc"><%- richText(deal.description) %></div></div>
+    <div class="panel"><h2><%= isAlert ? 'ℹ️ What we found' : 'ℹ️ About this deal' %></h2><div class="deal-desc"><%- richText(deal.description) %></div></div>
   <% } %>
 
   <% if (coupons.length) { %>
