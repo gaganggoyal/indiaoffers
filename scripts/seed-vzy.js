@@ -90,7 +90,7 @@ VZY is operated by Dish TV India Ltd. JioHotstar, SonyLIV, ZEE5 and the other pl
 
 // Steps shown after the automatic "Click Grab this deal at VZY" first step.
 const HOW_TO = [
-  `Install the VZY app from Google Play or the App Store (also on Android TV, Google TV, LG TVs and Fire TV Stick), or open vzy.one in a browser, and sign in with your mobile number and OTP.`,
+  `Click to grab deal — it opens VZY's offer page directly. Sign in there with your mobile number and OTP.`,
   `Try the free section first — 2,000+ hours of movies and series stream without any plan, so you can check the app on your device before paying.`,
   `Open Subscriptions and pick an OTT plan (1, 3 or 12 months; from ₹${OTT_FROM}/month). The plan screen lists exactly which of the ${APP_COUNT} apps it unlocks — read it before you pay. Live TV (200+ channels) is a separate plan at ₹${LIVE_TV.m1} / ₹${LIVE_TV.m3} / ₹${LIVE_TV.m12.toLocaleString('en-IN')} for 1 / 3 / 12 months.`,
   `Pay in the app. Partner apps unlock under the same VZY login — open them from inside VZY, no separate passwords to manage.`,
