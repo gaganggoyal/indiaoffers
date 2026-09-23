@@ -134,6 +134,23 @@ Add a new zone by appending one config object to `src/data/collections.js`
 (`slug`, `aliases`, `title`, `h1`, `description`, `keywords`, `intro`, `where`,
 `order`, `faqs`); the route and sitemap entry are wired up automatically.
 
+## Browser extension feed
+
+`GET /api/extension/deals.json` serves the live deal list to the AmaFast Chrome
+extension (`../amafast`). Public, CORS-open, `ETag`-revalidated, 5-minute
+`Cache-Control`, capped at 100 deals, optional `?badge=LOOT`.
+
+The payload **deliberately contains no merchant URL**. Each deal carries
+`go: "/go/d/<id>"` and nothing else outbound, so the affiliate tag is attached
+only by `routes/go.js`, on a click made against our own listing. A client that
+never receives a merchant URL cannot tag, re-tag, or rewrite one — the extension
+enforces the mirror image of this rule in its own `test/invariant.sh`.
+
+`asin` is parsed out of `deal_url` so the extension can match a deal to the
+Amazon product page the user is on, locally, without sending us the product.
+Deals whose `deal_url` is a short link (`amzn.to`, `bitli.in`) resolve to a null
+`asin` and simply won't match in-page; they still appear in the popup list.
+
 ## User accounts & community
 
 Visitors can register (`/register`) and become IndiaOffers partners:
