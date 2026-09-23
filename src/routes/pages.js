@@ -528,6 +528,12 @@ router.get('/how-we-verify', (req, res) => res.render('how-we-verify', {
   meta: { description: 'Every deal on IndiaOffers.in is checked by a human before it goes live: real price vs MRP, working coupon codes, stackable card offers — with a visible last-verified timestamp and automatic retirement of expired deals.' }
 }));
 
+router.get('/amafast', (req, res) => res.render('amafast', {
+  title: 'AmaFast — Fast Amazon.in Checkout for Loot Deals (Free Chrome Extension) — IndiaOffers.in',
+  meta: { description: 'Free Chrome extension that speeds up Amazon.in checkout on loot deals: keeps your address, picks Internet Banking and your bank, and places the order — then leaves the paying to you. Shows today\'s IndiaOffers deals in your browser.' },
+  release: require('../data/extension')
+}));
+
 router.get('/become-partner', (req, res) => res.render('become-partner', {
   title: 'Become a Partner — Submit Deals, Earn Gifts & Real Money — IndiaOffers.in',
   meta: { description: 'Submit the deals you find on IndiaOffers.in and earn points redeemable for free gifts, shopping vouchers and real money. How to submit a deal in 15 seconds.' }
@@ -765,6 +771,7 @@ router.get('/sitemap.xml', async (req, res, next) => {
       { loc: '/about', pri: '0.5' }, { loc: '/careers', pri: '0.4' },
       { loc: '/contact', pri: '0.5' }, { loc: '/help', pri: '0.5' },
       { loc: '/become-partner', pri: '0.6' }, { loc: '/how-we-verify', pri: '0.5' },
+      { loc: '/amafast', pri: '0.7' },
       { loc: '/privacy', pri: '0.3' }, { loc: '/terms', pri: '0.3' },
       ...COLLECTIONS.map(c => ({ loc: `/${c.slug}`, pri: '0.9' })),
       ...catUrls,

@@ -80,13 +80,10 @@ const EXT_MAX = 100;
 
 /* AmaFast is distributed from our own site, not the Chrome Web Store, so it has
    no auto-update channel. The extension polls this feed anyway, so the feed is
-   also how an installed copy learns a newer build exists. Bump on every release
-   the users need. */
-const EXT_LATEST = {
-  version: '0.4.0',
-  url: 'https://indiaoffers.in/amafast',
-  notes: 'Deals list and bank offers inside the extension.'
-};
+   also how an installed copy learns a newer build exists. Release details live
+   in data/extension.js, which the /amafast download page reads too. */
+const RELEASE = require('../data/extension');
+const EXT_LATEST = { version: RELEASE.version, url: RELEASE.url, notes: RELEASE.notes };
 
 function asinOf(url) {
   const u = String(url || '');

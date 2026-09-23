@@ -889,3 +889,25 @@ html, body { overscroll-behavior-x: none; }
 .sec-head { gap: 12px; }
 .sec-head a { white-space: nowrap; flex: 0 0 auto; }
 .ah-verified { white-space: nowrap; }
+
+/* ---- AmaFast download page -------------------------------------------- */
+
+.af-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 0;
+}
+
+.af-meta { color: var(--muted, #5e584e); font-size: 14px; }
+
+.af-steps { padding-left: 20px; }
+.af-steps > li { margin-bottom: 10px; }
+
+.af-note {
+  padding: 12px 14px;
+  border-left: 3px solid #e0a419;
+  background: rgba(224, 164, 25, .08);
+  border-radius: 0 8px 8px 0;
+}

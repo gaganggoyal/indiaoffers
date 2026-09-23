@@ -1,0 +1,65 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<section class="wrap">
+  <div class="page-hero">
+    <h1>AmaFast — checkout on Amazon before the deal dies ⚡</h1>
+    <p>A free Chrome extension for loot-deal hunters. Click <b>Buy Now</b> and AmaFast does the clicking for you — keeps the address you already picked, chooses Internet Banking, picks your bank, and places the order. It also shows today's IndiaOffers deals right inside your browser.</p>
+    <p class="af-actions">
+      <a class="btn-primary btn-lg" href="<%= release.download %>" download>Download AmaFast v<%= release.version %></a>
+      <span class="af-meta">Free · Chrome <%= release.minChrome %>+ · Amazon.in · ~40&nbsp;KB</span>
+    </p>
+  </div>
+
+  <div class="prose">
+    <h2>What it actually does</h2>
+    <ul>
+      <li><b>Skips the clicking.</b> Address, delivery speed, Internet Banking, bank — the steps you'd do by hand while stock runs out.</li>
+      <li><b>Shows our deals in the popup.</b> Today's loot deals with prices, one click to open.</li>
+      <li><b>Flags a deal on the product page.</b> If you're on a product we track, AmaFast shows our price for it.</li>
+      <li><b>Leaves the paying to you.</b> It stops at the bank page and opens Your Orders, where you pay with UPI, a card, or whatever you like.</li>
+    </ul>
+
+    <h2>Install it</h2>
+    <p>AmaFast is <b>not on the Chrome Web Store</b> — it needs a permission the store does not hand out easily, so you install it yourself. It takes a minute.</p>
+    <ol class="af-steps">
+      <li><b>Download</b> the zip above and <b>unzip it</b>. You'll get a folder called <code>amafast</code>. Keep that folder somewhere permanent — if you delete it, the extension stops working.</li>
+      <li>Open <code>chrome://extensions</code> in Chrome.</li>
+      <li>Turn on <b>Developer mode</b> (top-right toggle).</li>
+      <li>Click <b>Load unpacked</b> and choose the <code>amafast</code> folder — the one with <code>manifest.json</code> inside it, not the <code>src</code> folder.</li>
+      <li>Pin AmaFast to your toolbar so the deals popup is one click away.</li>
+    </ol>
+    <p class="af-note"><b>Chrome will warn you.</b> Every time you restart Chrome you'll see a bubble asking you to disable developer-mode extensions. Click <b>Keep</b> or just close it. That warning appears for every extension installed this way — it is not about AmaFast specifically.</p>
+
+    <h2>First run</h2>
+    <p>AmaFast starts in <b>Test mode</b> on purpose. In Test mode it does everything up to choosing your bank and then <b>stops without placing the order</b>, so you can watch exactly what it does before trusting it with real money. Once you're happy, turn Test mode off in Settings.</p>
+
+    <h2>Updates</h2>
+    <p>Because it isn't in the Web Store, AmaFast can't update itself. When we ship a new build, the extension's popup shows an <b>Update available</b> banner linking back to this page — download the new zip, unzip over the old folder, then hit the reload arrow on <code>chrome://extensions</code>.</p>
+
+    <h2>What it will never do</h2>
+    <ul>
+      <li>Type your bank user ID, password, OTP, PIN, card number or CVV. It leaves the bank page without signing in.</li>
+      <li>Solve CAPTCHAs, or retry Buy Now in the background to snipe stock.</li>
+      <li>Change your quantity, variant, address or delivery option.</li>
+      <li>Place an order when something other than Internet Banking is selected.</li>
+      <li>Run on your bank's website.</li>
+    </ul>
+
+    <h2>Your privacy</h2>
+    <p>AmaFast has no account and no tracking. It downloads our public deals list every 20 minutes — that request carries no cookies and tells us nothing about you or what you're shopping for. When it matches a deal to a product page, the matching happens <b>on your own machine</b>, against the list already downloaded. The product you're looking at is never sent anywhere. Full detail ships in <code>PRIVACY.md</code> inside the zip.</p>
+
+    <h2>Affiliate disclosure</h2>
+    <p>Opening a deal from the AmaFast popup uses an affiliate link, and we may earn a commission on what you buy through it — at <b>no extra cost to you</b>. That's what pays for the deal hunting. AmaFast <b>never adds or changes an affiliate tag on a page you opened yourself</b>: if you found a product on your own, it only shows you the price we have on record and gets out of the way. That rule is enforced in the code, not just promised — see <code>test/invariant.sh</code> in the source.</p>
+
+    <h2>Fine print</h2>
+    <p>AmaFast is not affiliated with, endorsed by, or connected to Amazon. It automates clicks you would otherwise make yourself, on your own account, in your own browser. You are responsible for the orders you place with it — always check the order before you pay. If something goes wrong, <a href="/contact">tell us</a> and we'll fix it.</p>
+
+    <p class="af-actions">
+      <a class="btn-primary btn-lg" href="<%= release.download %>" download>Download AmaFast v<%= release.version %></a>
+      <a class="btn-ghost" href="/loot-deals">Browse today's loot deals</a>
+    </p>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
