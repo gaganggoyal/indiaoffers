@@ -528,11 +528,35 @@ router.get('/how-we-verify', (req, res) => res.render('how-we-verify', {
   meta: { description: 'Every deal on IndiaOffers.in is checked by a human before it goes live: real price vs MRP, working coupon codes, stackable card offers — with a visible last-verified timestamp and automatic retirement of expired deals.' }
 }));
 
-router.get('/amafast', (req, res) => res.render('amafast', {
-  title: 'AmaFast — Fast Amazon.in Checkout for Loot Deals (Free Chrome Extension) — IndiaOffers.in',
-  meta: { description: 'Free Chrome extension that speeds up Amazon.in checkout on loot deals: keeps your address, picks Internet Banking and your bank, and places the order — then leaves the paying to you. Shows today\'s IndiaOffers deals in your browser.' },
-  release: require('../data/extension')
-}));
+router.get('/amafast', async (req, res, next) => {
+  try {
+    // The page argues "these vanish in seconds" — so it shows the ones that
+    // actually do. Amazon first, because that is the only store the extension
+    // can check out on; anything else would be a confusing thing to advertise
+    // next to an Amazon-only tool.
+    const [showcaseRaw, storeMap] = await Promise.all([
+      db.query(`SELECT d.* FROM deals d
+                JOIN stores s ON s.id = d.store_id
+                WHERE d.is_active = 1
+                  AND d.price IS NOT NULL
+                  AND (d.price <= 99
+                       OR (d.mrp IS NOT NULL AND d.mrp > 0 AND d.price / d.mrp <= 0.15)
+                       OR UPPER(COALESCE(d.badge, '')) LIKE '%LOOT%')
+                ORDER BY CASE WHEN s.slug = 'amazon' THEN 0 ELSE 1 END,
+                         COALESCE(d.hotness, 0) DESC,
+                         d.posted_at DESC
+                LIMIT 6`),
+      storesById()
+    ]);
+    res.render('amafast', {
+      title: 'AmaFast — Fast Amazon.in Checkout for Loot Deals (Free Chrome Extension) — IndiaOffers.in',
+      meta: { description: 'Free Chrome extension that speeds up Amazon.in checkout on loot deals: keeps your address, picks Internet Banking and your bank, and places the order — then leaves the paying to you. Shows today\'s IndiaOffers deals in your browser.' },
+      release: require('../data/extension'),
+      showcase: decorateDeals(showcaseRaw),
+      storeMap
+    });
+  } catch (err) { next(err); }
+});
 
 router.get('/become-partner', (req, res) => res.render('become-partner', {
   title: 'Become a Partner — Submit Deals, Earn Gifts & Real Money — IndiaOffers.in',

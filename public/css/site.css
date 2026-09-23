@@ -892,6 +892,39 @@ html, body { overscroll-behavior-x: none; }
 
 /* ---- AmaFast download page -------------------------------------------- */
 
+:root {
+  --af-ui-bg: #fffdf8;
+  --af-ui-line: #ddd6c8;
+  --af-ui-ink: #1d1a16;
+  --af-ui-muted: #6b6455;
+  --af-ui-accent: #1a73e8;
+  --af-ui-chip: #ece7dc;
+}
+
+.af-hero {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin: 8px 0 28px;
+}
+
+.af-hero-copy { flex: 1 1 420px; min-width: 0; }
+
+.af-kicker {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(15, 110, 86, .12);
+  color: #0f6e56;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+.af-hero h1 { margin: 10px 0 8px; line-height: 1.15; }
+.af-lede { font-size: 17px; line-height: 1.5; margin: 0; }
+
 .af-actions {
   display: flex;
   flex-wrap: wrap;
@@ -900,14 +933,111 @@ html, body { overscroll-behavior-x: none; }
   margin: 18px 0 0;
 }
 
-.af-meta { color: var(--muted, #5e584e); font-size: 14px; }
+.af-meta { color: var(--af-ui-muted); font-size: 13px; margin: 10px 0 0; }
+.af-sub  { color: var(--af-ui-muted); margin: 0 0 16px; }
+.af-tiny { color: var(--af-ui-muted); font-size: 13px; margin: 8px 0 0; }
 
-.af-steps { padding-left: 20px; }
-.af-steps > li { margin-bottom: 10px; }
+/* The "it's already gone" clock */
+.af-hero-art { flex: 0 0 168px; display: grid; place-items: center; }
+
+.af-clock { position: relative; width: 148px; height: 148px; }
+
+.af-clock-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(#e0483f 0turn, #e0a419 .55turn, rgba(0, 0, 0, .06) .55turn);
+  animation: af-spin 4s linear infinite;
+}
+
+.af-clock-face {
+  position: absolute;
+  inset: 11px;
+  border-radius: 50%;
+  background: var(--af-ui-bg);
+  border: 1px solid var(--af-ui-line);
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+.af-clock-face b { display: block; font-size: 30px; line-height: 1; }
+.af-clock-face span { font-size: 12px; color: var(--af-ui-muted); letter-spacing: .12em; text-transform: uppercase; }
+
+@keyframes af-spin { to { transform: rotate(1turn); } }
+@media (prefers-reduced-motion: reduce) { .af-clock-ring { animation: none; } }
+
+.af-showcase { margin: 0 0 32px; }
+.af-showcase-foot { margin: 16px 0 0; }
+
+/* Install steps */
+.af-install { margin: 8px 0 32px; }
+
+.af-stepgrid { list-style: none; margin: 0; padding: 0; }
+
+.af-stepgrid > li {
+  display: flex;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--af-ui-line);
+}
+
+.af-stepnum {
+  flex: 0 0 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #0f6e56;
+  color: #fff;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.af-stepbody { min-width: 0; flex: 1; }
+.af-stepbody h3 { margin: 2px 0 6px; }
+.af-stepbody p { margin: 0 0 10px; }
+
+.af-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.af-copy code {
+  flex: 1 1 200px;
+  padding: 9px 12px;
+  border: 1px dashed var(--af-ui-line);
+  border-radius: 8px;
+  background: var(--af-ui-chip);
+  font-size: 15px;
+  user-select: all;
+}
+
+.af-ui {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  margin-top: 4px;
+}
 
 .af-note {
   padding: 12px 14px;
+  margin: 14px 0 0;
   border-left: 3px solid #e0a419;
   background: rgba(224, 164, 25, .08);
   border-radius: 0 8px 8px 0;
+}
+
+.af-note-good {
+  border-left-color: #0f6e56;
+  background: rgba(15, 110, 86, .08);
+}
+
+@media (max-width: 720px) {
+  .af-hero { flex-direction: column-reverse; align-items: flex-start; gap: 16px; }
+  .af-hero-art { flex: none; align-self: center; }
+  .af-clock { width: 112px; height: 112px; }
+  .af-clock-face b { font-size: 24px; }
 }
