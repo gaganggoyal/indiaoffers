@@ -68,7 +68,7 @@ router.get('/health', async (req, res) => {
 });
 
 /* ---------------------------------------------------------------------------
- * Deals feed for the AmaFast browser extension.
+ * Deals feed for the Zap browser extension.
  *
  * The feed never exposes a merchant URL — extensions receive the /go/ path and
  * nothing else. The affiliate tag is therefore only ever attached here, by the
@@ -78,10 +78,10 @@ router.get('/health', async (req, res) => {
 
 const EXT_MAX = 100;
 
-/* AmaFast is distributed from our own site, not the Chrome Web Store, so it has
+/* Zap is distributed from our own site, not the Chrome Web Store, so it has
    no auto-update channel. The extension polls this feed anyway, so the feed is
    also how an installed copy learns a newer build exists. Release details live
-   in data/extension.js, which the /amafast download page reads too. */
+   in data/extension.js, which the /zap download page reads too. */
 const RELEASE = require('../data/extension');
 const EXT_LATEST = { version: RELEASE.version, url: RELEASE.url, notes: RELEASE.notes };
 

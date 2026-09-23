@@ -136,8 +136,8 @@ Add a new zone by appending one config object to `src/data/collections.js`
 
 ## Browser extension feed
 
-`GET /api/extension/deals.json` serves the live deal list to the AmaFast Chrome
-extension (`../amafast`). Public, CORS-open, `ETag`-revalidated, 5-minute
+`GET /api/extension/deals.json` serves the live deal list to the Zap Chrome
+extension (`../zap`). Public, CORS-open, `ETag`-revalidated, 5-minute
 `Cache-Control`, capped at 100 deals, optional `?badge=LOOT`.
 
 The payload **deliberately contains no merchant URL**. Each deal carries

@@ -528,7 +528,12 @@ router.get('/how-we-verify', (req, res) => res.render('how-we-verify', {
   meta: { description: 'Every deal on IndiaOffers.in is checked by a human before it goes live: real price vs MRP, working coupon codes, stackable card offers — with a visible last-verified timestamp and automatic retirement of expired deals.' }
 }));
 
-router.get('/amafast', async (req, res, next) => {
+/* Installed copies of the old AmaFast build have /amafast baked into their
+   update banner. That link has to keep working or they can never be told the
+   extension was renamed. Permanent, so it can retire once nobody is on 0.4.x. */
+router.get('/amafast', (req, res) => res.redirect(301, '/zap'));
+
+router.get('/zap', async (req, res, next) => {
   try {
     // The page argues "these vanish in seconds" — so it shows the ones that
     // actually do. Amazon first, because that is the only store the extension
@@ -548,8 +553,8 @@ router.get('/amafast', async (req, res, next) => {
                 LIMIT 6`),
       storesById()
     ]);
-    res.render('amafast', {
-      title: 'AmaFast — Fast Amazon.in Checkout for Loot Deals (Free Chrome Extension) — IndiaOffers.in',
+    res.render('zap', {
+      title: 'Zap — Fast Amazon.in Checkout for Loot Deals (Free Chrome Extension) — IndiaOffers.in',
       meta: { description: 'Free Chrome extension that speeds up Amazon.in checkout on loot deals: keeps your address, picks Internet Banking and your bank, and places the order — then leaves the paying to you. Shows today\'s IndiaOffers deals in your browser.' },
       release: require('../data/extension'),
       showcase: decorateDeals(showcaseRaw),
@@ -795,7 +800,7 @@ router.get('/sitemap.xml', async (req, res, next) => {
       { loc: '/about', pri: '0.5' }, { loc: '/careers', pri: '0.4' },
       { loc: '/contact', pri: '0.5' }, { loc: '/help', pri: '0.5' },
       { loc: '/become-partner', pri: '0.6' }, { loc: '/how-we-verify', pri: '0.5' },
-      { loc: '/amafast', pri: '0.7' },
+      { loc: '/zap', pri: '0.7' },
       { loc: '/privacy', pri: '0.3' }, { loc: '/terms', pri: '0.3' },
       ...COLLECTIONS.map(c => ({ loc: `/${c.slug}`, pri: '0.9' })),
       ...catUrls,
