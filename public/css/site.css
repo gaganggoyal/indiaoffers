@@ -930,8 +930,12 @@ html, body { overscroll-behavior-x: none; }
 .zap-lede { font-size: 16.5px; line-height: 1.5; color: rgba(255, 255, 255, .92); margin: 0; }
 .zap-lede b { color: #fff; }
 
-.zap-hero .btn-ghost { border-color: rgba(255, 255, 255, .45); color: #fff; }
-.zap-hero .btn-ghost:hover { border-color: #fff; color: #fff; background: rgba(255, 255, 255, .12); }
+/* .btn-ghost is declared twice in this file (see ~line 303 and ~line 652) and
+   the later one sets background: var(--card) — white. On the gradient hero
+   that rendered a white block with white text, so the background is set
+   explicitly here rather than inherited. */
+.zap-hero .btn-ghost { background: transparent; border-color: rgba(255, 255, 255, .55); color: #fff; }
+.zap-hero .btn-ghost:hover { background: rgba(255, 255, 255, .16); border-color: #fff; color: #fff; }
 .zap-hero .btn-primary { background: #fff; color: var(--primary-dark); }
 .zap-hero .btn-primary:hover { background: #f1f5f9; }
 
