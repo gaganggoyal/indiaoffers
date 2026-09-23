@@ -10,9 +10,9 @@
  * zip to public/downloads/ in the same commit.
  */
 module.exports = {
-  version: '0.4.2',
+  version: '0.4.3',
   url: 'https://indiaoffers.in/amafast',
-  notes: 'Reloading the extension no longer resets your settings.',
-  download: '/downloads/amafast-0.4.2.zip',
+  notes: 'Browse more Amazon deals straight from the popup.',
+  download: '/downloads/amafast-0.4.3.zip',
   minChrome: 114
 };

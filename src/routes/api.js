@@ -104,13 +104,19 @@ router.get('/extension/deals.json', async (req, res) => {
     let where = 'WHERE d.is_active = 1';
     if (badge) { where += ' AND UPPER(d.badge) = ?'; params.push(badge); }
 
-    const rows = await db.query(`
-      SELECT d.*, s.slug AS store_slug, s.name AS store_name
-      FROM deals d JOIN stores s ON s.id = d.store_id
-      ${where}
-      ORDER BY COALESCE(d.hotness, 0) DESC, d.posted_at DESC
-      LIMIT ${EXT_MAX}
-    `, params);
+    const [rows, browseRows] = await Promise.all([
+      db.query(`
+        SELECT d.*, s.slug AS store_slug, s.name AS store_name
+        FROM deals d JOIN stores s ON s.id = d.store_id
+        ${where}
+        ORDER BY COALESCE(d.hotness, 0) DESC, d.posted_at DESC
+        LIMIT ${EXT_MAX}
+      `, params),
+      // "Browse more deals" — a store-level referral the extension can offer
+      // from its own popup. Emitted as a /go/ path like everything else, so
+      // the extension still never handles a merchant URL.
+      db.query(`SELECT id, slug, name FROM stores WHERE slug = 'amazon' AND is_active = 1 LIMIT 1`)
+    ]);
 
     const deals = decorateDeals(rows).map(d => ({
       id: d.id,
@@ -137,7 +143,11 @@ router.get('/extension/deals.json', async (req, res) => {
     // Derived from the data, not the clock, so the body is byte-stable between
     // deal edits and the ETag can actually serve 304s.
     const updated = rows.map(r => r.updated_at || r.posted_at).filter(Boolean).sort().pop() || null;
-    const body = JSON.stringify({ updated, extension: EXT_LATEST, count: deals.length, deals });
+    const browse = browseRows[0]
+      ? { label: `Browse more deals on ${browseRows[0].name}`, store: browseRows[0].slug, go: `/go/s/${browseRows[0].id}` }
+      : null;
+
+    const body = JSON.stringify({ updated, extension: EXT_LATEST, browse, count: deals.length, deals });
     const etag = '"' + crypto.createHash('sha1').update(body).digest('base64').slice(0, 27) + '"';
     res.set('ETag', etag);
     if (req.headers['if-none-match'] === etag) return res.status(304).end();
