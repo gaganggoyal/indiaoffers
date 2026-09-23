@@ -890,11 +890,11 @@ html, body { overscroll-behavior-x: none; }
 .sec-head a { white-space: nowrap; flex: 0 0 auto; }
 .ah-verified { white-space: nowrap; }
 
-/* ---- AmaFast download page -------------------------------------------- */
+/* ---- Zap download page -------------------------------------------- */
 /* Uses the site palette throughout — this page should read as part of
    IndiaOffers, not as the extension's own cream-and-green UI. */
 
-.af-hero {
+.zap-hero {
   background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
   color: #fff;
   border-radius: 18px;
@@ -905,9 +905,9 @@ html, body { overscroll-behavior-x: none; }
   gap: 32px;
 }
 
-.af-hero-copy { flex: 1 1 420px; min-width: 0; }
+.zap-hero-copy { flex: 1 1 420px; min-width: 0; }
 
-.af-kicker {
+.zap-kicker {
   display: inline-block;
   padding: 4px 11px;
   border-radius: 999px;
@@ -919,7 +919,7 @@ html, body { overscroll-behavior-x: none; }
   text-transform: uppercase;
 }
 
-.af-hero h1 {
+.zap-hero h1 {
   font-size: 34px;
   font-weight: 800;
   line-height: 1.15;
@@ -927,32 +927,32 @@ html, body { overscroll-behavior-x: none; }
   margin: 12px 0 10px;
 }
 
-.af-lede { font-size: 16.5px; line-height: 1.5; color: rgba(255, 255, 255, .92); margin: 0; }
-.af-lede b { color: #fff; }
+.zap-lede { font-size: 16.5px; line-height: 1.5; color: rgba(255, 255, 255, .92); margin: 0; }
+.zap-lede b { color: #fff; }
 
-.af-hero .btn-ghost { border-color: rgba(255, 255, 255, .45); color: #fff; }
-.af-hero .btn-ghost:hover { border-color: #fff; color: #fff; background: rgba(255, 255, 255, .12); }
-.af-hero .btn-primary { background: #fff; color: var(--primary-dark); }
-.af-hero .btn-primary:hover { background: #f1f5f9; }
+.zap-hero .btn-ghost { border-color: rgba(255, 255, 255, .45); color: #fff; }
+.zap-hero .btn-ghost:hover { border-color: #fff; color: #fff; background: rgba(255, 255, 255, .12); }
+.zap-hero .btn-primary { background: #fff; color: var(--primary-dark); }
+.zap-hero .btn-primary:hover { background: #f1f5f9; }
 
-.af-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 20px 0 0; }
-.af-meta { color: rgba(255, 255, 255, .75); font-size: 13px; margin: 12px 0 0; }
-.af-sub  { color: var(--muted); margin: 0 0 16px; }
-.af-tiny { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+.zap-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 20px 0 0; }
+.zap-meta { color: rgba(255, 255, 255, .75); font-size: 13px; margin: 12px 0 0; }
+.zap-sub  { color: var(--muted); margin: 0 0 16px; }
+.zap-tiny { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
 
 /* "it's already gone" clock */
-.af-hero-art { flex: 0 0 160px; display: grid; place-items: center; }
-.af-clock { position: relative; width: 150px; height: 150px; }
+.zap-hero-art { flex: 0 0 160px; display: grid; place-items: center; }
+.zap-clock { position: relative; width: 150px; height: 150px; }
 
-.af-clock-ring {
+.zap-clock-ring {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   background: conic-gradient(var(--accent) 0turn, #fb7185 .5turn, rgba(255, 255, 255, .22) .5turn);
-  animation: af-spin 4s linear infinite;
+  animation: zap-spin 4s linear infinite;
 }
 
-.af-clock-face {
+.zap-clock-face {
   position: absolute;
   inset: 12px;
   border-radius: 50%;
@@ -963,23 +963,23 @@ html, body { overscroll-behavior-x: none; }
   color: #fff;
 }
 
-.af-clock-face b { display: block; font-size: 30px; font-weight: 800; line-height: 1; }
-.af-clock-face span { font-size: 11px; color: rgba(255, 255, 255, .7); letter-spacing: .14em; text-transform: uppercase; }
+.zap-clock-face b { display: block; font-size: 30px; font-weight: 800; line-height: 1; }
+.zap-clock-face span { font-size: 11px; color: rgba(255, 255, 255, .7); letter-spacing: .14em; text-transform: uppercase; }
 
-@keyframes af-spin { to { transform: rotate(1turn); } }
-@media (prefers-reduced-motion: reduce) { .af-clock-ring { animation: none; } }
+@keyframes zap-spin { to { transform: rotate(1turn); } }
+@media (prefers-reduced-motion: reduce) { .zap-clock-ring { animation: none; } }
 
-.af-showcase { margin: 0 0 34px; }
-.af-showcase h2 { font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
-.af-showcase-foot { margin: 18px 0 0; }
+.zap-showcase { margin: 0 0 34px; }
+.zap-showcase h2 { font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+.zap-showcase-foot { margin: 18px 0 0; }
 
 /* install steps */
-.af-install { margin: 8px 0 34px; }
-.af-install h2 { font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+.zap-install { margin: 8px 0 34px; }
+.zap-install h2 { font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
 
-.af-stepgrid { list-style: none; margin: 0; padding: 0; }
+.zap-stepgrid { list-style: none; margin: 0; padding: 0; }
 
-.af-stepgrid > li {
+.zap-stepgrid > li {
   display: flex;
   gap: 16px;
   background: var(--card);
@@ -989,7 +989,7 @@ html, body { overscroll-behavior-x: none; }
   margin-bottom: 12px;
 }
 
-.af-stepnum {
+.zap-stepnum {
   flex: 0 0 32px;
   height: 32px;
   border-radius: 50%;
@@ -1000,13 +1000,13 @@ html, body { overscroll-behavior-x: none; }
   place-items: center;
 }
 
-.af-stepbody { min-width: 0; flex: 1; }
-.af-stepbody h3 { margin: 4px 0 8px; font-size: 16px; font-weight: 800; color: var(--ink); }
-.af-stepbody p { margin: 0 0 12px; }
+.zap-stepbody { min-width: 0; flex: 1; }
+.zap-stepbody h3 { margin: 4px 0 8px; font-size: 16px; font-weight: 800; color: var(--ink); }
+.zap-stepbody p { margin: 0 0 12px; }
 
-.af-copy { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.zap-copy { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 
-.af-copy code {
+.zap-copy code {
   flex: 1 1 220px;
   padding: 10px 13px;
   border: 1.5px dashed var(--line);
@@ -1018,7 +1018,7 @@ html, body { overscroll-behavior-x: none; }
   user-select: all;
 }
 
-.af-ui {
+.zap-ui {
   display: block;
   width: 100%;
   max-width: 340px;
@@ -1027,7 +1027,7 @@ html, body { overscroll-behavior-x: none; }
   border-radius: 10px;
 }
 
-.af-note {
+.zap-note {
   padding: 14px 16px;
   margin: 16px 0 0;
   border-left: 3px solid var(--accent);
@@ -1035,12 +1035,12 @@ html, body { overscroll-behavior-x: none; }
   border-radius: 0 10px 10px 0;
 }
 
-.af-note-good { border-left-color: var(--good); background: var(--good-soft); }
+.zap-note-good { border-left-color: var(--good); background: var(--good-soft); }
 
 @media (max-width: 760px) {
-  .af-hero { flex-direction: column-reverse; align-items: flex-start; gap: 20px; padding: 28px 22px; }
-  .af-hero h1 { font-size: 26px; }
-  .af-hero-art { flex: none; align-self: center; }
-  .af-clock { width: 112px; height: 112px; }
-  .af-clock-face b { font-size: 24px; }
+  .zap-hero { flex-direction: column-reverse; align-items: flex-start; gap: 20px; padding: 28px 22px; }
+  .zap-hero h1 { font-size: 26px; }
+  .zap-hero-art { flex: none; align-self: center; }
+  .zap-clock { width: 112px; height: 112px; }
+  .zap-clock-face b { font-size: 24px; }
 }

@@ -528,11 +528,6 @@ router.get('/how-we-verify', (req, res) => res.render('how-we-verify', {
   meta: { description: 'Every deal on IndiaOffers.in is checked by a human before it goes live: real price vs MRP, working coupon codes, stackable card offers — with a visible last-verified timestamp and automatic retirement of expired deals.' }
 }));
 
-/* Installed copies of the old AmaFast build have /amafast baked into their
-   update banner. That link has to keep working or they can never be told the
-   extension was renamed. Permanent, so it can retire once nobody is on 0.4.x. */
-router.get('/amafast', (req, res) => res.redirect(301, '/zap'));
-
 router.get('/zap', async (req, res, next) => {
   try {
     // The page argues "these vanish in seconds" — so it shows the ones that

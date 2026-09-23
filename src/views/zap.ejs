@@ -3,35 +3,35 @@
 
 <section class="wrap">
 
-  <div class="af-hero">
-    <div class="af-hero-copy">
-      <span class="af-kicker">Free Chrome extension</span>
+  <div class="zap-hero">
+    <div class="zap-hero-copy">
+      <span class="zap-kicker">Free Chrome extension</span>
       <h1>₹1 deals don't wait for you to finish typing 🏃</h1>
-      <p class="af-lede">By the time you've picked the address, scrolled to Net Banking, found your bank and hit Place Order, the good stuff is gone. <b>Zap does all of that the moment you click Buy&nbsp;Now.</b></p>
-      <div class="af-actions">
+      <p class="zap-lede">By the time you've picked the address, scrolled to Net Banking, found your bank and hit Place Order, the good stuff is gone. <b>Zap does all of that the moment you click Buy&nbsp;Now.</b></p>
+      <div class="zap-actions">
         <a class="btn-primary btn-lg" href="<%= release.download %>" download>⬇ Download Zap v<%= release.version %></a>
         <a class="btn-ghost" href="#install">How to install →</a>
       </div>
-      <p class="af-meta">Free forever · Chrome <%= release.minChrome %>+ · Amazon.in · 40&nbsp;KB · no account, no tracking</p>
+      <p class="zap-meta">Free forever · Chrome <%= release.minChrome %>+ · Amazon.in · 40&nbsp;KB · no account, no tracking</p>
     </div>
-    <div class="af-hero-art" aria-hidden="true">
-      <div class="af-clock">
-        <div class="af-clock-ring"></div>
-        <div class="af-clock-face"><b>0:04</b><span>gone</span></div>
+    <div class="zap-hero-art" aria-hidden="true">
+      <div class="zap-clock">
+        <div class="zap-clock-ring"></div>
+        <div class="zap-clock-face"><b>0:04</b><span>gone</span></div>
       </div>
     </div>
   </div>
 
   <% if (showcase && showcase.length) { %>
-    <div class="af-showcase">
+    <div class="zap-showcase">
       <h2>Deals that disappear in a blink</h2>
-      <p class="af-sub">Live on IndiaOffers right now. These are exactly the ones you lose by checking out slowly.</p>
+      <p class="zap-sub">Live on IndiaOffers right now. These are exactly the ones you lose by checking out slowly.</p>
       <div class="card-grid">
         <% showcase.forEach(function (d, i) { %>
           <%- include('partials/deal-card', { d: d, storeMap: storeMap, eager: i < 2 }) %>
         <% }); %>
       </div>
-      <p class="af-showcase-foot"><a class="btn-ghost" href="/loot-deals">See all loot deals →</a></p>
+      <p class="zap-showcase-foot"><a class="btn-ghost" href="/loot-deals">See all loot deals →</a></p>
     </div>
   <% } %>
 
@@ -45,16 +45,14 @@
     </ul>
   </div>
 
-  <div class="af-install" id="install">
+  <div class="zap-install" id="install">
     <h2>Install it in 4 steps ⚙️</h2>
-    <p class="af-sub">Zap is <b>not on the Chrome Web Store</b> — it needs a permission the store doesn't hand out easily, so you install it yourself. One minute, once.</p>
+    <p class="zap-sub">Zap is <b>not on the Chrome Web Store</b> — it needs a permission the store doesn't hand out easily, so you install it yourself. One minute, once.</p>
 
-    <p class="af-note"><b>Already running AmaFast?</b> Zap is the same extension under a new name. Chrome treats a renamed folder as a separate extension, so <b>remove AmaFast first</b> on <code>chrome://extensions</code> — otherwise both run on Amazon at once and fight over the same checkout. Your settings are stored per-extension, so set your preferred bank again after installing.</p>
-
-    <ol class="af-stepgrid">
+    <ol class="zap-stepgrid">
       <li>
-        <div class="af-stepnum">1</div>
-        <div class="af-stepbody">
+        <div class="zap-stepnum">1</div>
+        <div class="zap-stepbody">
           <h3>Download and unzip</h3>
           <p>You'll get a folder called <code>zap</code>. Put it somewhere permanent — Documents is fine. <b>If you delete this folder the extension stops working.</b></p>
           <a class="btn-primary" href="<%= release.download %>" download>⬇ Download v<%= release.version %></a>
@@ -62,24 +60,24 @@
       </li>
 
       <li>
-        <div class="af-stepnum">2</div>
-        <div class="af-stepbody">
+        <div class="zap-stepnum">2</div>
+        <div class="zap-stepbody">
           <h3>Open Chrome's extensions page</h3>
           <p>Chrome blocks websites from opening this page for you — a security rule, nothing we can change. So copy the address and paste it into your address bar:</p>
-          <div class="af-copy">
+          <div class="zap-copy">
             <code id="af-url">chrome://extensions</code>
-            <button type="button" class="btn-primary" id="af-copy-btn" data-copy="chrome://extensions">Copy</button>
+            <button type="button" class="btn-primary" id="zap-copy-btn" data-copy="chrome://extensions">Copy</button>
           </div>
-          <p class="af-tiny">Paste it in the address bar and press Enter.</p>
+          <p class="zap-tiny">Paste it in the address bar and press Enter.</p>
         </div>
       </li>
 
       <li>
-        <div class="af-stepnum">3</div>
-        <div class="af-stepbody">
+        <div class="zap-stepnum">3</div>
+        <div class="zap-stepbody">
           <h3>Turn on Developer mode</h3>
           <p>Top-right of that page. Flip it on and a new row of buttons appears.</p>
-          <svg class="af-ui" viewBox="0 0 320 84" role="img" aria-label="Developer mode toggle at the top right of the extensions page">
+          <svg class="zap-ui" viewBox="0 0 320 84" role="img" aria-label="Developer mode toggle at the top right of the extensions page">
             <rect x="1" y="1" width="318" height="82" rx="8" fill="var(--card)" stroke="var(--line)"/>
             <text x="16" y="28" font-size="13" font-weight="700" fill="var(--ink)">Extensions</text>
             <text x="196" y="28" font-size="11" fill="var(--muted)">Developer mode</text>
@@ -94,11 +92,11 @@
       </li>
 
       <li>
-        <div class="af-stepnum">4</div>
-        <div class="af-stepbody">
+        <div class="zap-stepnum">4</div>
+        <div class="zap-stepbody">
           <h3>Click "Load unpacked" and pick the folder</h3>
           <p>Choose the <code>zap</code> folder itself — the one with <code>manifest.json</code> inside. <b>Not</b> the <code>src</code> folder inside it.</p>
-          <svg class="af-ui" viewBox="0 0 320 96" role="img" aria-label="Choose the zap folder, not the src folder inside it">
+          <svg class="zap-ui" viewBox="0 0 320 96" role="img" aria-label="Choose the zap folder, not the src folder inside it">
             <rect x="1" y="1" width="318" height="94" rx="8" fill="var(--card)" stroke="var(--line)"/>
             <text x="16" y="24" font-size="11" fill="var(--muted)">Select the extension directory</text>
             <rect x="12" y="32" width="296" height="24" rx="6" fill="var(--good-soft)" stroke="var(--good)"/>
@@ -112,8 +110,8 @@
       </li>
     </ol>
 
-    <p class="af-note"><b>Chrome will warn you — that's normal.</b> Every time you restart Chrome you'll see a bubble asking you to disable developer-mode extensions. Click <b>Keep</b> or just close it. That appears for every extension installed this way, not just ours.</p>
-    <p class="af-note af-note-good"><b>It starts in Test mode on purpose.</b> On your first checkout it does everything up to choosing your bank, then <b>stops without placing the order</b> — so you can watch exactly what it does before trusting it with real money. Turn Test mode off in Settings when you're happy.</p>
+    <p class="zap-note"><b>Chrome will warn you — that's normal.</b> Every time you restart Chrome you'll see a bubble asking you to disable developer-mode extensions. Click <b>Keep</b> or just close it. That appears for every extension installed this way, not just ours.</p>
+    <p class="zap-note zap-note-good"><b>It starts in Test mode on purpose.</b> On your first checkout it does everything up to choosing your bank, then <b>stops without placing the order</b> — so you can watch exactly what it does before trusting it with real money. Turn Test mode off in Settings when you're happy.</p>
   </div>
 
   <div class="prose">
@@ -138,7 +136,7 @@
     <h2>Fine print</h2>
     <p>Zap is not affiliated with, endorsed by, or connected to Amazon. It automates clicks you would otherwise make yourself, on your own account, in your own browser. You are responsible for the orders you place with it — always check the order before you pay. If something goes wrong, <a href="/contact">tell us</a> and we'll fix it.</p>
 
-    <p class="af-actions">
+    <p class="zap-actions">
       <a class="btn-primary btn-lg" href="<%= release.download %>" download>⬇ Download Zap v<%= release.version %></a>
       <a class="btn-ghost" href="/loot-deals">Browse today's loot deals</a>
     </p>
@@ -147,7 +145,7 @@
 
 <script>
 (function () {
-  var btn = document.getElementById('af-copy-btn');
+  var btn = document.getElementById('zap-copy-btn');
   if (!btn) return;
   btn.addEventListener('click', function () {
     var text = btn.getAttribute('data-copy');

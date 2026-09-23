@@ -12,7 +12,7 @@
 module.exports = {
   version: '0.5.0',
   url: 'https://indiaoffers.in/zap',
-  notes: 'AmaFast is now Zap. Remove the old AmaFast before loading this one.',
+  notes: 'Deals, bank offers and fast checkout in one place.',
   download: '/downloads/zap-0.5.0.zip',
   minChrome: 114
 };
