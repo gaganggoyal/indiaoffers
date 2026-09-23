@@ -891,126 +891,130 @@ html, body { overscroll-behavior-x: none; }
 .ah-verified { white-space: nowrap; }
 
 /* ---- AmaFast download page -------------------------------------------- */
-
-:root {
-  --af-ui-bg: #fffdf8;
-  --af-ui-line: #ddd6c8;
-  --af-ui-ink: #1d1a16;
-  --af-ui-muted: #6b6455;
-  --af-ui-accent: #1a73e8;
-  --af-ui-chip: #ece7dc;
-}
+/* Uses the site palette throughout — this page should read as part of
+   IndiaOffers, not as the extension's own cream-and-green UI. */
 
 .af-hero {
+  background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+  color: #fff;
+  border-radius: 18px;
+  padding: 40px 38px;
+  margin: 20px 0 26px;
   display: flex;
   align-items: center;
-  gap: 28px;
-  margin: 8px 0 28px;
+  gap: 32px;
 }
 
 .af-hero-copy { flex: 1 1 420px; min-width: 0; }
 
 .af-kicker {
   display: inline-block;
-  padding: 3px 10px;
+  padding: 4px 11px;
   border-radius: 999px;
-  background: rgba(15, 110, 86, .12);
-  color: #0f6e56;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .03em;
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
   text-transform: uppercase;
 }
 
-.af-hero h1 { margin: 10px 0 8px; line-height: 1.15; }
-.af-lede { font-size: 17px; line-height: 1.5; margin: 0; }
-
-.af-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin: 18px 0 0;
+.af-hero h1 {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -.5px;
+  margin: 12px 0 10px;
 }
 
-.af-meta { color: var(--af-ui-muted); font-size: 13px; margin: 10px 0 0; }
-.af-sub  { color: var(--af-ui-muted); margin: 0 0 16px; }
-.af-tiny { color: var(--af-ui-muted); font-size: 13px; margin: 8px 0 0; }
+.af-lede { font-size: 16.5px; line-height: 1.5; color: rgba(255, 255, 255, .92); margin: 0; }
+.af-lede b { color: #fff; }
 
-/* The "it's already gone" clock */
-.af-hero-art { flex: 0 0 168px; display: grid; place-items: center; }
+.af-hero .btn-ghost { border-color: rgba(255, 255, 255, .45); color: #fff; }
+.af-hero .btn-ghost:hover { border-color: #fff; color: #fff; background: rgba(255, 255, 255, .12); }
+.af-hero .btn-primary { background: #fff; color: var(--primary-dark); }
+.af-hero .btn-primary:hover { background: #f1f5f9; }
 
-.af-clock { position: relative; width: 148px; height: 148px; }
+.af-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 20px 0 0; }
+.af-meta { color: rgba(255, 255, 255, .75); font-size: 13px; margin: 12px 0 0; }
+.af-sub  { color: var(--muted); margin: 0 0 16px; }
+.af-tiny { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+
+/* "it's already gone" clock */
+.af-hero-art { flex: 0 0 160px; display: grid; place-items: center; }
+.af-clock { position: relative; width: 150px; height: 150px; }
 
 .af-clock-ring {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: conic-gradient(#e0483f 0turn, #e0a419 .55turn, rgba(0, 0, 0, .06) .55turn);
+  background: conic-gradient(var(--accent) 0turn, #fb7185 .5turn, rgba(255, 255, 255, .22) .5turn);
   animation: af-spin 4s linear infinite;
 }
 
 .af-clock-face {
   position: absolute;
-  inset: 11px;
+  inset: 12px;
   border-radius: 50%;
-  background: var(--af-ui-bg);
-  border: 1px solid var(--af-ui-line);
+  background: var(--primary-dark);
   display: grid;
   place-content: center;
   text-align: center;
+  color: #fff;
 }
 
-.af-clock-face b { display: block; font-size: 30px; line-height: 1; }
-.af-clock-face span { font-size: 12px; color: var(--af-ui-muted); letter-spacing: .12em; text-transform: uppercase; }
+.af-clock-face b { display: block; font-size: 30px; font-weight: 800; line-height: 1; }
+.af-clock-face span { font-size: 11px; color: rgba(255, 255, 255, .7); letter-spacing: .14em; text-transform: uppercase; }
 
 @keyframes af-spin { to { transform: rotate(1turn); } }
 @media (prefers-reduced-motion: reduce) { .af-clock-ring { animation: none; } }
 
-.af-showcase { margin: 0 0 32px; }
-.af-showcase-foot { margin: 16px 0 0; }
+.af-showcase { margin: 0 0 34px; }
+.af-showcase h2 { font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+.af-showcase-foot { margin: 18px 0 0; }
 
-/* Install steps */
-.af-install { margin: 8px 0 32px; }
+/* install steps */
+.af-install { margin: 8px 0 34px; }
+.af-install h2 { font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
 
 .af-stepgrid { list-style: none; margin: 0; padding: 0; }
 
 .af-stepgrid > li {
   display: flex;
-  gap: 14px;
-  padding: 16px 0;
-  border-top: 1px solid var(--af-ui-line);
+  gap: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  margin-bottom: 12px;
 }
 
 .af-stepnum {
-  flex: 0 0 30px;
-  height: 30px;
+  flex: 0 0 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #0f6e56;
+  background: var(--primary);
   color: #fff;
-  font-weight: 700;
+  font-weight: 800;
   display: grid;
   place-items: center;
 }
 
 .af-stepbody { min-width: 0; flex: 1; }
-.af-stepbody h3 { margin: 2px 0 6px; }
-.af-stepbody p { margin: 0 0 10px; }
+.af-stepbody h3 { margin: 4px 0 8px; font-size: 16px; font-weight: 800; color: var(--ink); }
+.af-stepbody p { margin: 0 0 12px; }
 
-.af-copy {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
+.af-copy { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 
 .af-copy code {
-  flex: 1 1 200px;
-  padding: 9px 12px;
-  border: 1px dashed var(--af-ui-line);
-  border-radius: 8px;
-  background: var(--af-ui-chip);
+  flex: 1 1 220px;
+  padding: 10px 13px;
+  border: 1.5px dashed var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
   font-size: 15px;
+  font-weight: 600;
   user-select: all;
 }
 
@@ -1019,24 +1023,23 @@ html, body { overscroll-behavior-x: none; }
   width: 100%;
   max-width: 340px;
   height: auto;
-  margin-top: 4px;
+  margin-top: 6px;
+  border-radius: 10px;
 }
 
 .af-note {
-  padding: 12px 14px;
-  margin: 14px 0 0;
-  border-left: 3px solid #e0a419;
-  background: rgba(224, 164, 25, .08);
-  border-radius: 0 8px 8px 0;
+  padding: 14px 16px;
+  margin: 16px 0 0;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 10px 10px 0;
 }
 
-.af-note-good {
-  border-left-color: #0f6e56;
-  background: rgba(15, 110, 86, .08);
-}
+.af-note-good { border-left-color: var(--good); background: var(--good-soft); }
 
-@media (max-width: 720px) {
-  .af-hero { flex-direction: column-reverse; align-items: flex-start; gap: 16px; }
+@media (max-width: 760px) {
+  .af-hero { flex-direction: column-reverse; align-items: flex-start; gap: 20px; padding: 28px 22px; }
+  .af-hero h1 { font-size: 26px; }
   .af-hero-art { flex: none; align-self: center; }
   .af-clock { width: 112px; height: 112px; }
   .af-clock-face b { font-size: 24px; }
