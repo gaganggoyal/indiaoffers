@@ -5,11 +5,6 @@ Every deal shows its **true price**: product discount + your bank/card offer + c
 Server-rendered (SEO-first), admin-managed, zero-config to run locally.
 Live at [indiaoffers.in](https://indiaoffers.in).
 
-> Rebuilt ground-up in 2024–25 with AI-assisted development — openly so.
-> The product itself (what to build and why) comes from a decade of running
-> affiliate commerce. [More ↓](#the-build-honestly) · Portfolio:
-> [gagan.indiaoffers.in](https://gagan.indiaoffers.in)
-
 ## At a glance
 
 |  |  |
@@ -206,23 +201,20 @@ The whole site behaves like an app on phones (≤900px):
 - Watchlists
 - Cashback wallet (v1 tracking pixel code is in git history at tag/commit `620967d`)
 
-## The build, honestly
+## Why it's built this way
 
-This platform is the site I run in production, rebuilt from the ground up
-with AI pair-programming — a workflow I taught myself and now use on
-everything I ship. What AI accelerated was the typing; what it couldn't
-supply is the reason any of this exists:
+This is the site I run in production, rebuilt from the ground up in 2024–25.
+The parts that matter come from ten years of running affiliate commerce:
 
 - **True-price stacking** (discount + bank offer + coupon in one number) and
-  the **"Best way to pay" ranking** are the product. They come from ten years
-  of watching deal-site visitors bounce because the "real price" needed three
-  tabs and a calculator.
-- The **admin-first content ops**, the outbound-click analytics, and the
-  mobile app-like experience were all specified feature by feature — the
-  roadmap above is mine too, in priority order, for the same reason: it's
-  what my actual traffic asks for.
+  the **"Best way to pay" ranking** are the product. They exist because
+  deal-site visitors kept leaving when the real price took three tabs and a
+  calculator to work out.
+- The **admin-first content ops**, the outbound-click analytics and the
+  app-like mobile experience were specified feature by feature. The roadmap
+  above is in the order my actual traffic asks for.
 
-Solo-built, solo-operated, and open here for review.
+Built and run by one person, and open here for review.
 
 ---
 
