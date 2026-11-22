@@ -97,6 +97,7 @@
           <ol class="steps">
             <%# First step is always the same; any admin-entered steps follow it.
                 A scam alert has no "grab" button, so it skips straight to its own steps. %>
+            <% (typeof howToBefore !== 'undefined' ? howToBefore : []).forEach(s => { %><li><%= s %></li><% }) %>
             <% if (!isAlert) { %><li>Click on <b>Grab this Deal at <%= store.name %></b>.</li><% } %>
             <% howTo.forEach(s => { %><li><%= s %></li><% }) %>
             <%# Extra savings are woven in as the next steps (2nd/3rd point) rather than a separate box %>

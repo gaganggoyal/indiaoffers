@@ -295,7 +295,16 @@ router.get('/deal/:slug', async (req, res, next) => {
     ]);
     const store = stores[0];
     const stack = savingsStack(deal, offers);
-    const howTo = parseJson(deal.how_to);
+    // A step written as "[before] …" is shown ahead of the automatic "Click
+    // Grab this deal" step. Some offers start a clock at the click ("pay within
+    // 3 minutes of tapping the referral link"), so the reader has to get ready
+    // before clicking, not after. Plain strings keep the admin's one-step-per-
+    // line editor working unchanged.
+    const BEFORE = /^\s*\[before\]\s*/i;
+    const parsedSteps = parseJson(deal.how_to);
+    const steps = (Array.isArray(parsedSteps) ? parsedSteps : []).map(String);
+    const howToBefore = steps.filter(s => BEFORE.test(s)).map(s => s.replace(BEFORE, ''));
+    const howTo = steps.filter(s => !BEFORE.test(s));
     const gallery = parseJson(deal.gallery);
 
     // JSON-LD: Product + Offer (rich results) and a breadcrumb trail. Google
@@ -343,7 +352,7 @@ router.get('/deal/:slug', async (req, res, next) => {
         image: deal.image_url,
         jsonld
       },
-      deal, store, stack, howTo, gallery, expired, categoryName,
+      deal, store, stack, howTo, howToBefore, gallery, expired, categoryName,
       related: decorateDeals(related, offers),
       coupons,
       storeMap: { [deal.store_id]: store }
@@ -527,6 +536,15 @@ router.get('/how-we-verify', (req, res) => res.render('how-we-verify', {
   title: 'How We Verify Deals — Our Testing & Editorial Policy — IndiaOffers.in',
   meta: { description: 'Every deal on IndiaOffers.in is checked by a human before it goes live: real price vs MRP, working coupon codes, stackable card offers — with a visible last-verified timestamp and automatic retirement of expired deals.' }
 }));
+
+// Short, sayable paths for deals promoted in videos. YouTube Shorts links
+// aren't clickable, so a video speaks "indiaoffers.in/rally" and the viewer
+// types it. 302, not 301, so a path can be re-pointed when a promotion ends.
+const SHORT_PATHS = {
+  rally: '/deal/rally-app-refer-earn-1000-rallycash-pay-bill-in-3-minutes'
+};
+Object.entries(SHORT_PATHS).forEach(([p, to]) =>
+  router.get('/' + p, (req, res) => res.redirect(302, to)));
 
 router.get('/zap', async (req, res, next) => {
   try {
