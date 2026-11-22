@@ -31,10 +31,17 @@
  * written as "[before] …" and render above the automatic "Click Grab this
  * deal" step (see the deal route in src/routes/pages.js).
  *
+ * ── The button opens WhatsApp, not Rally ────────────────────────────────────
+ * Both buttons (deal /go/d and store /go/s) open a WhatsApp chat with
+ * IndiaOffers (+91 95696 08101) with a ready message; we reply with a personal
+ * Rally referral link. The clock starts only when the visitor taps THAT link,
+ * so they can read the checklist first. No button here sends anyone to Rally
+ * without a referral, which would make them an existing user who can no
+ * longer be referred.
+ *
  * ── Before running ──────────────────────────────────────────────────────────
- * 1. Paste the creator's own Rally referral link into REFERRAL_URL.
- * 2. Copy the five rally-*.jpg images into public/uploads/ on the server.
- * 3. Re-check the tiers in the app and both T&C pages on the day you run it.
+ * 1. Copy the five rally-*.jpg images into public/uploads/ on the server.
+ * 2. Re-check the tiers in the app and both T&C pages on the day you run it.
  *
  * Honours DB_DRIVER (.env): sqlite locally, mysql in production.
  */
@@ -44,10 +51,12 @@ const db = require('../src/db');
 const DRY = process.argv.includes('--dry');
 
 // ── Edit these when Rally changes the offer ──────────────────────────────────
-// The creator's own referral link from Rally → Refer & earn → share. Used for
-// the deal CTA (/go/d) and the store's "Visit store" button (/go/s).
-// RALLY_REFERRAL_URL in the environment overrides it (for local testing).
-const REFERRAL_URL = process.env.RALLY_REFERRAL_URL || '';
+// WhatsApp chat with IndiaOffers and a ready message; we reply with the
+// referral link. Used for the deal CTA (/go/d) and the store button (/go/s).
+const WHATSAPP_NUMBER = '919569608101';
+const WHATSAPP_SHOWN  = '+91 95696 08101';
+const WHATSAPP_TEXT   = 'Hi IndiaOffers! Mujhe Rally ka referral link chahiye (indiaoffers.in/rally)';
+const GET_LINK_URL    = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_TEXT)}`;
 const CHECKED_ON   = '22 November 2026';
 // The race dates come from the app screen ("19 Oct – 15 Dec"); the race T&C
 // only say the period is "as communicated through the Rally App". The
@@ -58,12 +67,6 @@ const REVIEW_ON    = '2026-12-15';
 const TOP3_POINTS  = { first: '23,051', second: '22,323', third: '16,646' };
 // Optional: the Chotu Seth Short once it is live (YouTube URL), else null.
 const VIDEO_URL    = null;
-
-if (!/^https?:\/\//.test(REFERRAL_URL)) {
-  console.error('REFERRAL_URL is empty. Paste your Rally referral link at the top of scripts/seed-rally.js\n' +
-                '(or set RALLY_REFERRAL_URL), then run again. Nothing was written.');
-  process.exit(1);
-}
 
 const STORE = {
   id:          'st_rally',
@@ -82,7 +85,7 @@ const TITLE = 'Rally App Refer & Earn: Pay Your First Bill Within 3 Minutes, You
 // Plain text. richText() escapes it, turns blank lines into <p> and single
 // newlines into <br>, so no HTML here. It has to answer the reader's real
 // question ("is this ₹1,000 free, and what's the catch?") honestly.
-const DESCRIPTION = `Join the Rally bill-payment app through a referral link and pay a bill within 3 minutes: you and the friend who shared the link each get 1,000 RallyCash. RallyCash is in-app credit for Rally's fees, not cash. Separately, the Rally Race gives a bike to each of its top 3 bill-payers.
+const DESCRIPTION = `Join the Rally bill-payment app through a referral link and pay a bill within 3 minutes: you and the friend who shared the link each get 1,000 RallyCash. RallyCash is in-app credit for Rally's fees, not cash. Separately, the Rally Race gives a bike to each of its top 3 bill-payers. Message us on WhatsApp and we'll send you a referral link.
 
 Rally (formerly Spaid) is a bill-payment app run by BeyoundExtra Tech Pvt Ltd. You pay credit-card bills, electricity and other utility bills, and mobile, DTH and broadband recharges from one app. Rally's website says bills clear over Bharat BillPay (BBPS). Two promotions are running together: a timed refer-and-earn offer, and the Rally Race, a bill-payment leaderboard whose top three each win a motorcycle.
 
@@ -102,7 +105,7 @@ The app shows the reward with a ₹ sign, but the referral terms define RallyCas
 
 How to make the 3 minutes
 
-Three minutes has to cover installing the app, signing up and paying. That is tight, but it works if everything is ready before you tap:
+The button on this page opens WhatsApp with a ready message to IndiaOffers (${WHATSAPP_SHOWN}). Send it and we reply with your personal Rally referral link. The clock doesn't start until you tap that link, so get ready before you open it. Three minutes has to cover installing the app, signing up and paying. That is tight, but it works if everything is ready before you tap:
 • Have the bill you'll pay at hand: the credit card, or the electricity consumer number, or the mobile/DTH number for a recharge.
 • Keep your UPI app or card on the same phone, and know your PIN.
 • Use good Wi-Fi or 4G/5G. The iPhone app alone is about 62 MB.
@@ -129,14 +132,15 @@ Rally is a young app. Its App Store listing is rated 4.5 from about 4,300 rating
 
 Safety: you only ever pay your own bill, inside the Rally app, to your own card or biller. Nobody from Rally or IndiaOffers will ask you to send money to a person, or for an OTP, UPI PIN or card PIN. If anyone does, it's a scam: report it at cybercrime.gov.in or call 1930.
 
-Disclosure: the button on this page is IndiaOffers' own Rally referral link. When you join through it and pay, Rally credits us the same RallyCash tier it credits you. That doesn't reduce your reward. IndiaOffers isn't affiliated with Rally or BeyoundExtra Tech. Aprilia, BMW and Triumph and their model names are trademarks of their owners, named here only to identify the prizes. Terms checked ${CHECKED_ON}: Referral T&C and Rally Race T&C at beyound.in/policies.`;
+Disclosure: the button on this page opens a WhatsApp chat with IndiaOffers (${WHATSAPP_SHOWN}), and the link we send you is our own Rally referral link. When you join through it and pay, Rally credits us the same RallyCash tier it credits you. That doesn't reduce your reward. On WhatsApp we only ever send the link: we never ask for money, an OTP or a PIN. IndiaOffers isn't affiliated with Rally or BeyoundExtra Tech. Aprilia, BMW and Triumph and their model names are trademarks of their owners, named here only to identify the prizes. Terms checked ${CHECKED_ON}: Referral T&C and Rally Race T&C at beyound.in/policies.`;
 
 // "[before]" steps render above the automatic "Click Grab this deal" step,
 // because the 3-minute clock starts at that click.
 const HOW_TO = [
-  `[before] Get ready first: the 3 minutes start the moment you tap the button. Keep the bill you'll pay at hand (credit card, electricity consumer number or mobile number) and your UPI app or card on this phone.`,
-  `[before] Use the phone you'll pay from, on good Wi-Fi or mobile data. Don't sign up for Rally any other way beforehand: only new users who join through the link qualify.`,
-  `Install Rally from the link and sign up with your mobile number and OTP.`,
+  `[before] Read this first: the 3-minute clock starts when you tap the Rally referral link we send you on WhatsApp, not when you tap the button below. Before you tap that link, keep the bill you'll pay at hand (credit card, electricity consumer number or mobile number) and your UPI app or card on this phone.`,
+  `[before] Don't install or sign up for Rally any other way first: only new users who join through the referral link qualify.`,
+  `WhatsApp opens with a ready message to IndiaOffers (${WHATSAPP_SHOWN}). Send it and we reply with your personal Rally referral link.`,
+  `When you're ready, tap that link on the phone you'll pay from (good Wi-Fi or mobile data), install Rally and sign up with your mobile number and OTP.`,
   `Pay a real bill in the app. Paid within 3 minutes of the tap = 1,000 RallyCash for you (and the same for us); within 10 minutes 500, within 30 minutes 250, later 100.`,
   `Check that the payment reached your card or biller and keep the receipt. RallyCash is credited after Rally verifies the payment; it offsets Rally's fees and can't be withdrawn.`,
   `Chasing the Rally Race bikes? Read the points maths and the "previous reward" rule on this page first.`
@@ -166,7 +170,7 @@ const GALLERY = [
           affiliate_type, cashback_text, is_active)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'none', NULL, 1)
       `, [STORE.id, STORE.slug, STORE.name, STORE.color, STORE.category, STORE.description,
-          STORE.website_url, REFERRAL_URL]);
+          STORE.website_url, GET_LINK_URL]);
     }
     console.log(`${DRY ? '[dry-run] would create' : 'Created'} store ${STORE.slug}`);
   } else {
@@ -176,7 +180,7 @@ const GALLERY = [
           affiliate_url = ?, affiliate_type = 'none', cashback_text = NULL, is_active = 1
         WHERE slug = ?
       `, [STORE.name, STORE.color, STORE.category, STORE.description, STORE.website_url,
-          REFERRAL_URL, STORE.slug]);
+          GET_LINK_URL, STORE.slug]);
     }
     console.log(`${DRY ? '[dry-run] would update' : 'Updated'} store ${STORE.slug} (${existingStore[0].id})`);
   }
@@ -198,7 +202,7 @@ const GALLERY = [
           is_active = 1, verified_at = NOW(), updated_at = NOW()
         WHERE id = ?
       `, [storeId, TITLE, DESCRIPTION, 'bills-recharges', seoCats, IMAGE, gallery, VIDEO_URL,
-          REFERRAL_URL, howTo, 'NEW', REVIEW_ON, existingDeal[0].id]);
+          GET_LINK_URL, howTo, 'NEW', REVIEW_ON, existingDeal[0].id]);
     }
     console.log(`${DRY ? '[dry-run] would update' : 'Updated'} deal ${SLUG} (${existingDeal[0].id})`);
   } else {
@@ -209,7 +213,7 @@ const GALLERY = [
           is_trending, hotness, is_active, expiry_date, verified_at, posted_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, ?, ?, ?, NULL, 1, 5, 1, ?, NOW(), NOW())
       `, [db.uid('dl'), SLUG, storeId, TITLE, DESCRIPTION, 'bills-recharges', seoCats,
-          IMAGE, gallery, VIDEO_URL, REFERRAL_URL, howTo, 'NEW', REVIEW_ON]);
+          IMAGE, gallery, VIDEO_URL, GET_LINK_URL, howTo, 'NEW', REVIEW_ON]);
     }
     console.log(`${DRY ? '[dry-run] would create' : 'Created'} deal ${SLUG}`);
   }
